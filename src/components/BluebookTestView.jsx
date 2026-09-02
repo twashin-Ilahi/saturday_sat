@@ -311,27 +311,82 @@ export default function BluebookTestView({
           </button>
         </div>
 
-        {/* Center: Timer + Hide button */}
+        {/* Center: Timer + Controls (Pause, Run, Restart, Hide) */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          <div style={{ fontSize: '1.15rem', fontWeight: 700, fontFamily: 'monospace', color: '#111827', letterSpacing: '0.5px' }}>
-            {isTimerHidden ? "--:--" : formatTime(timerSeconds)}
+          <div style={{ fontSize: '1.15rem', fontWeight: 700, fontFamily: 'monospace', color: isTimerRunning ? '#111827' : '#ea580c', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>{isTimerHidden ? "--:--" : formatTime(timerSeconds)}</span>
+            {!isTimerRunning && !isTimerHidden && (
+              <span style={{ fontSize: '0.65rem', background: '#ffedd5', color: '#c2410c', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }}>
+                PAUSED
+              </span>
+            )}
           </div>
-          <button
-            onClick={() => setIsTimerHidden(!isTimerHidden)}
-            style={{
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              padding: '1px 12px',
-              borderRadius: '12px',
-              border: '1px solid #94a3b8',
-              background: '#ffffff',
-              color: '#334155',
-              cursor: 'pointer',
-              marginTop: '1px'
-            }}
-          >
-            {isTimerHidden ? "Show" : "Hide"}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
+            {/* Pause / Run Button */}
+            <button
+              type="button"
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '1px 8px',
+                borderRadius: '12px',
+                border: `1px solid ${isTimerRunning ? '#94a3b8' : '#f97316'}`,
+                background: isTimerRunning ? '#ffffff' : '#fff7ed',
+                color: isTimerRunning ? '#334155' : '#c2410c',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}
+              title={isTimerRunning ? "Pause clock" : "Run / Resume clock"}
+            >
+              {isTimerRunning ? "⏸ Pause" : "▶ Run"}
+            </button>
+
+            {/* Restart / Re-run from 00:00 Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setTimerSeconds(0);
+                setIsTimerRunning(true);
+              }}
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '1px 8px',
+                borderRadius: '12px',
+                border: '1px solid #94a3b8',
+                background: '#ffffff',
+                color: '#334155',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+              title="Reset clock to 00:00 and run"
+            >
+              ↺ Restart
+            </button>
+
+            {/* Hide / Show Button */}
+            <button
+              type="button"
+              onClick={() => setIsTimerHidden(!isTimerHidden)}
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '1px 8px',
+                borderRadius: '12px',
+                border: '1px solid #94a3b8',
+                background: '#ffffff',
+                color: '#334155',
+                cursor: 'pointer'
+              }}
+            >
+              {isTimerHidden ? "Show" : "Hide"}
+            </button>
+          </div>
         </div>
 
         {/* Right: Battery, Highlights & Notes, More Menu */}
