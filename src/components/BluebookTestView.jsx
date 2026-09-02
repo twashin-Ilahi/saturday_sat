@@ -38,6 +38,7 @@ export default function BluebookTestView({
   const [selectionToolbar, setSelectionToolbar] = useState(null);
   const fileInputRef = useRef(null);
   const passageRef = useRef(null);
+  const currentRangeRef = useRef(null);
 
   const q = questions[currentIndex] || questions[0];
   const isCurrentChecked = checkedStatus[currentIndex];
@@ -71,50 +72,106 @@ export default function BluebookTestView({
     }
   }, [currentIndex, autoStartEnabled]);
 
+  // Track selection inside passage
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        return;
+      }
+      const text = selection.toString().trim();
+      if (!text) return;
+
+      const range = selection.getRangeAt(0);
+      if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
+        return;
+      }
+
+      currentRangeRef.current = range.cloneRange();
+      const rect = range.getBoundingClientRect();
+      if (rect && rect.width > 0) {
+        setSelectionToolbar({
+          x: Math.max(80, rect.left + rect.width / 2),
+          y: Math.max(70, rect.top - 46)
+        });
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
+
   const handlePassageMouseUp = () => {
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-      setSelectionToolbar(null);
-      return;
-    }
-    const text = selection.toString().trim();
-    if (!text) {
-      setSelectionToolbar(null);
-      return;
-    }
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        setSelectionToolbar(null);
+        currentRangeRef.current = null;
+        return;
+      }
+      const text = selection.toString().trim();
+      if (!text) {
+        setSelectionToolbar(null);
+        currentRangeRef.current = null;
+        return;
+      }
 
-    const range = selection.getRangeAt(0);
-    if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
-      setSelectionToolbar(null);
-      return;
-    }
+      const range = selection.getRangeAt(0);
+      if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
+        setSelectionToolbar(null);
+        currentRangeRef.current = null;
+        return;
+      }
 
-    const rect = range.getBoundingClientRect();
-    if (rect) {
-      setSelectionToolbar({
-        x: Math.max(80, rect.left + rect.width / 2),
-        y: Math.max(70, rect.top - 46)
-      });
-    }
+      currentRangeRef.current = range.cloneRange();
+
+      const rect = range.getBoundingClientRect();
+      if (rect) {
+        setSelectionToolbar({
+          x: Math.max(80, rect.left + rect.width / 2),
+          y: Math.max(70, rect.top - 46)
+        });
+      }
+    }, 10);
   };
 
   const applyHighlight = (color) => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-    const range = selection.getRangeAt(0);
+    let range = currentRangeRef.current;
+    const sel = window.getSelection();
 
-    if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) return;
+    if (!range && sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      range = sel.getRangeAt(0);
+    }
+
+    if (!range || !passageRef.current) {
+      setSelectionToolbar(null);
+      return;
+    }
+
+    if (!passageRef.current.contains(range.commonAncestorContainer)) {
+      setSelectionToolbar(null);
+      return;
+    }
 
     const mark = document.createElement('mark');
     mark.className = `sat-hl sat-hl-${color}`;
+    mark.style.backgroundColor = color === 'yellow' ? '#fef08a' : '#fbcfe8';
+    mark.style.color = '#111827';
+    mark.style.padding = '1px 3px';
+    mark.style.borderRadius = '3px';
+    mark.style.cursor = 'pointer';
     mark.title = 'Click to remove highlight';
 
     try {
       range.surroundContents(mark);
     } catch (e) {
-      const fragment = range.extractContents();
-      mark.appendChild(fragment);
-      range.insertNode(mark);
+      try {
+        const fragment = range.extractContents();
+        mark.appendChild(fragment);
+        range.insertNode(mark);
+      } catch (err2) {
+        console.warn("Could not apply highlight:", err2);
+      }
     }
 
     if (passageRef.current) {
@@ -124,7 +181,10 @@ export default function BluebookTestView({
       saveHighlights(newMap);
     }
 
-    selection.removeAllRanges();
+    if (sel) {
+      try { sel.removeAllRanges(); } catch (e) {}
+    }
+    currentRangeRef.current = null;
     setSelectionToolbar(null);
   };
 
@@ -893,7 +953,16 @@ export default function BluebookTestView({
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#cbd5e1', marginRight: '2px' }}>Highlight:</span>
           {/* Yellow Highlight Button */}
           <button 
-            onClick={() => applyHighlight('yellow')}
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              applyHighlight('yellow');
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -916,7 +985,16 @@ export default function BluebookTestView({
 
           {/* Pink Highlight Button */}
           <button 
-            onClick={() => applyHighlight('pink')}
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              applyHighlight('pink');
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -939,7 +1017,16 @@ export default function BluebookTestView({
 
           {/* Dismiss button */}
           <button 
-            onClick={() => setSelectionToolbar(null)}
+            type="button"
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectionToolbar(null);
+            }}
             style={{
               background: 'none',
               border: 'none',
@@ -982,6 +1069,11 @@ export default function BluebookTestView({
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <button 
+                type="button"
+                onMouseDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 onClick={() => applyHighlight('yellow')}
                 style={{
                   display: 'flex',
@@ -1003,6 +1095,11 @@ export default function BluebookTestView({
               </button>
 
               <button 
+                type="button"
+                onMouseDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 onClick={() => applyHighlight('pink')}
                 style={{
                   display: 'flex',
@@ -1024,6 +1121,11 @@ export default function BluebookTestView({
               </button>
 
               <button 
+                type="button"
+                onMouseDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 onClick={clearAllHighlightsForQuestion}
                 style={{
                   background: '#ffffff',
