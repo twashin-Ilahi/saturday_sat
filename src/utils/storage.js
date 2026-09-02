@@ -1,177 +1,130 @@
-import { ALL_QUESTIONS } from '../data/questions';
+const STORAGE_KEY_INDEX = "sat_practice_current_idx";
+const STORAGE_KEY_SELECTIONS = "sat_practice_selections";
+const STORAGE_KEY_CHECKED = "sat_practice_checked";
+const STORAGE_KEY_ERRORS = "sat_practice_error_log";
+const STORAGE_KEY_AUTOSTART = "sat_practice_autostart";
 
-const STORAGE_KEYS = {
-  PROFILE: 'bluebook_sat_profile',
-  RECORDS: 'bluebook_sat_records',
-  HISTORY: 'bluebook_sat_test_history',
-  SETTINGS: 'bluebook_sat_settings',
-};
+export function loadProgress(totalQuestions) {
+  let currentIndex = 0;
+  let selectedAnswers = new Array(totalQuestions).fill(null);
+  let checkedStatus = new Array(totalQuestions).fill(false);
+  let errorLog = [];
+  let autoStartEnabled = true;
 
-export function getProfile() {
-  const defaultProfile = {
-    name: "Mohamed Elkirsh",
-    targetScore: 750,
-    dailyGoal: 15,
-  };
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
-    return saved ? { ...defaultProfile, ...JSON.parse(saved) } : defaultProfile;
-  } catch (e) {
-    return defaultProfile;
-  }
-}
+    const savedIndex = localStorage.getItem(STORAGE_KEY_INDEX);
+    if (savedIndex !== null) currentIndex = parseInt(savedIndex, 10);
 
-export function saveProfile(profile) {
-  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-}
-
-export function getAllRecords() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEYS.RECORDS);
-    return saved ? JSON.parse(saved) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-export function saveQuestionRecord(questionId, { selectedChoice, isCorrect, flagged, notes }) {
-  const records = getAllRecords();
-  const existing = records[questionId] || {
-    attempts: 0,
-    history: [],
-  };
-
-  const newAttempts = existing.attempts + (selectedChoice !== undefined ? 1 : 0);
-  const newHistory = existing.history || [];
-  if (selectedChoice !== undefined) {
-    newHistory.push({
-      choice: selectedChoice,
-      isCorrect,
-      timestamp: Date.now(),
-    });
-  }
-
-  records[questionId] = {
-    ...existing,
-    questionId,
-    answered: selectedChoice !== undefined ? true : existing.answered || false,
-    selectedChoice: selectedChoice !== undefined ? selectedChoice : existing.selectedChoice,
-    isCorrect: isCorrect !== undefined ? isCorrect : existing.isCorrect,
-    flagged: flagged !== undefined ? flagged : existing.flagged || false,
-    attempts: newAttempts,
-    notes: notes !== undefined ? notes : existing.notes || "",
-    lastAttemptedAt: Date.now(),
-    history: newHistory,
-  };
-
-  localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(records));
-  return records[questionId];
-}
-
-export function toggleQuestionFlag(questionId) {
-  const records = getAllRecords();
-  const existing = records[questionId] || { answered: false, flagged: false, attempts: 0 };
-  existing.flagged = !existing.flagged;
-  records[questionId] = existing;
-  localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(records));
-  return existing.flagged;
-}
-
-export function getErrorLog() {
-  const records = getAllRecords();
-  const errorList = [];
-
-  for (const q of ALL_QUESTIONS) {
-    const rec = records[q.id];
-    if (rec && rec.answered && !rec.isCorrect) {
-      errorList.push({
-        question: q,
-        record: rec,
-      });
-    }
-  }
-
-  // Sort by most recently attempted
-  return errorList.sort((a, b) => (b.record.lastAttemptedAt || 0) - (a.record.lastAttemptedAt || 0));
-}
-
-export function getOverallStats() {
-  const records = getAllRecords();
-  const totalQuestions = ALL_QUESTIONS.length;
-  let answeredCount = 0;
-  let correctCount = 0;
-  let incorrectCount = 0;
-  let flaggedCount = 0;
-
-  const difficultyStats = {
-    Easy: { total: 0, answered: 0, correct: 0 },
-    Medium: { total: 0, answered: 0, correct: 0 },
-    Hard: { total: 0, answered: 0, correct: 0 },
-  };
-
-  for (const q of ALL_QUESTIONS) {
-    const diff = q.difficulty || 'Medium';
-    if (!difficultyStats[diff]) {
-      difficultyStats[diff] = { total: 0, answered: 0, correct: 0 };
-    }
-    difficultyStats[diff].total += 1;
-
-    const rec = records[q.id];
-    if (rec) {
-      if (rec.flagged) flaggedCount++;
-      if (rec.answered) {
-        answeredCount++;
-        difficultyStats[diff].answered += 1;
-        if (rec.isCorrect) {
-          correctCount++;
-          difficultyStats[diff].correct += 1;
-        } else {
-          incorrectCount++;
-        }
+    const savedSelections = localStorage.getItem(STORAGE_KEY_SELECTIONS);
+    if (savedSelections) {
+      const parsed = JSON.parse(savedSelections);
+      if (Array.isArray(parsed)) {
+        selectedAnswers = parsed;
+        // ensure length
+        while (selectedAnswers.length < totalQuestions) selectedAnswers.push(null);
       }
     }
+
+    const savedChecked = localStorage.getItem(STORAGE_KEY_CHECKED);
+    if (savedChecked) {
+      const parsed = JSON.parse(savedChecked);
+      if (Array.isArray(parsed)) {
+        checkedStatus = parsed;
+        while (checkedStatus.length < totalQuestions) checkedStatus.push(false);
+      }
+    }
+
+    const savedErrors = localStorage.getItem(STORAGE_KEY_ERRORS);
+    if (savedErrors) {
+      const parsed = JSON.parse(savedErrors);
+      if (Array.isArray(parsed)) errorLog = parsed;
+    }
+
+    const savedAutoStart = localStorage.getItem(STORAGE_KEY_AUTOSTART);
+    if (savedAutoStart !== null) {
+      autoStartEnabled = savedAutoStart === "true";
+    }
+  } catch (e) {
+    console.warn("Could not read from localStorage:", e);
   }
 
-  const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-  const completionRate = Math.round((answeredCount / totalQuestions) * 100);
+  // Bound index
+  if (currentIndex < 0 || currentIndex >= totalQuestions) currentIndex = 0;
 
   return {
-    totalQuestions,
-    answeredCount,
-    correctCount,
-    incorrectCount,
-    flaggedCount,
-    accuracy,
-    completionRate,
-    difficultyStats,
+    currentIndex,
+    selectedAnswers,
+    checkedStatus,
+    errorLog,
+    autoStartEnabled,
   };
 }
 
-export function saveTestHistorySession(session) {
+export function saveProgress({ currentIndex, selectedAnswers, checkedStatus, errorLog, autoStartEnabled }) {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.HISTORY);
-    const history = saved ? JSON.parse(saved) : [];
-    history.unshift({
-      id: 'test_' + Date.now(),
-      date: new Date().toISOString(),
-      ...session,
-    });
-    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history.slice(0, 30)));
+    if (currentIndex !== undefined) localStorage.setItem(STORAGE_KEY_INDEX, currentIndex);
+    if (selectedAnswers !== undefined) localStorage.setItem(STORAGE_KEY_SELECTIONS, JSON.stringify(selectedAnswers));
+    if (checkedStatus !== undefined) localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(checkedStatus));
+    if (errorLog !== undefined) localStorage.setItem(STORAGE_KEY_ERRORS, JSON.stringify(errorLog));
+    if (autoStartEnabled !== undefined) localStorage.setItem(STORAGE_KEY_AUTOSTART, String(autoStartEnabled));
   } catch (e) {
-    console.error("Failed to save test history", e);
+    console.warn("Could not save to localStorage:", e);
   }
 }
 
-export function getTestHistory() {
+export function resetAllProgress(totalQuestions) {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.HISTORY);
-    return saved ? JSON.parse(saved) : [];
+    localStorage.removeItem(STORAGE_KEY_INDEX);
+    localStorage.removeItem(STORAGE_KEY_SELECTIONS);
+    localStorage.removeItem(STORAGE_KEY_CHECKED);
+    localStorage.removeItem(STORAGE_KEY_ERRORS);
   } catch (e) {
-    return [];
+    console.warn("Could not clear localStorage:", e);
   }
+
+  return {
+    currentIndex: 0,
+    selectedAnswers: new Array(totalQuestions).fill(null),
+    checkedStatus: new Array(totalQuestions).fill(false),
+    errorLog: [],
+    autoStartEnabled: true,
+  };
 }
 
-export function resetAllProgress() {
-  localStorage.removeItem(STORAGE_KEYS.RECORDS);
-  localStorage.removeItem(STORAGE_KEYS.HISTORY);
+export function formatTime(totalSec) {
+  const mins = Math.floor(totalSec / 60).toString().padStart(2, '0');
+  const secs = (totalSec % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+export function exportProgressAsJson({ currentIndex, selectedAnswers, checkedStatus, errorLog }) {
+  const backupData = {
+    currentIndex,
+    selectedAnswers,
+    checkedStatus,
+    errorLog,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sat_transitions_progress_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function parseImportJson(jsonString, totalQuestions) {
+  const parsed = JSON.parse(jsonString);
+  if (!parsed || !Array.isArray(parsed.selectedAnswers) || !Array.isArray(parsed.checkedStatus)) {
+    throw new Error("Invalid SAT practice backup file format.");
+  }
+  const currentIndex = typeof parsed.currentIndex === 'number' && parsed.currentIndex < totalQuestions ? parsed.currentIndex : 0;
+  const selectedAnswers = parsed.selectedAnswers;
+  while (selectedAnswers.length < totalQuestions) selectedAnswers.push(null);
+  const checkedStatus = parsed.checkedStatus;
+  while (checkedStatus.length < totalQuestions) checkedStatus.push(false);
+  const errorLog = Array.isArray(parsed.errorLog) ? parsed.errorLog : [];
+
+  return { currentIndex, selectedAnswers, checkedStatus, errorLog };
 }

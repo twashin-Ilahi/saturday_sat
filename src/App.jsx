@@ -1,248 +1,143 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import BluebookTestView from './components/BluebookTestView';
-import ErrorLogView from './components/ErrorLogView';
-import QuestionBankView from './components/QuestionBankView';
-import AiTutorDrawer from './components/AiTutorDrawer';
-import TransitionGuideModal from './components/TransitionGuideModal';
-import SettingsModal from './components/SettingsModal';
-import TestResultsModal from './components/TestResultsModal';
-
 import { ALL_QUESTIONS } from './data/questions';
 import { 
-  getProfile, 
-  getAllRecords, 
-  saveQuestionRecord, 
-  toggleQuestionFlag, 
-  getErrorLog, 
-  getOverallStats, 
-  saveTestHistorySession, 
-  getTestHistory 
+  loadProgress, 
+  saveProgress, 
+  resetAllProgress, 
+  exportProgressAsJson, 
+  parseImportJson,
+  formatTime
 } from './utils/storage';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard' | 'bank' | 'errorLog' | 'test'
-  const [profile, setProfile] = useState(getProfile());
-  const [userRecords, setUserRecords] = useState(getAllRecords());
-  const [testHistory, setTestHistory] = useState(getTestHistory());
-  
-  // Active test state
-  const [activeTest, setActiveTest] = useState(null);
-  const [activeTestIndex, setActiveTestIndex] = useState(0);
-  const [completedSession, setCompletedSession] = useState(null);
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'practice'
+  const [state, setState] = useState(() => loadProgress(ALL_QUESTIONS.length));
 
-  // Modals & drawers
-  const [aiTutorState, setAiTutorState] = useState({ isOpen: false, question: null, userChoice: null });
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Sync state to localStorage
+  useEffect(() => {
+    saveProgress(state);
+  }, [state]);
 
-  // Sync state whenever records change
-  const refreshRecords = () => {
-    setUserRecords(getAllRecords());
-    setProfile(getProfile());
-    setTestHistory(getTestHistory());
+  const handleSelectChoice = (questionIndex, choiceIndex) => {
+    setState(prev => {
+      const newSelections = [...prev.selectedAnswers];
+      newSelections[questionIndex] = choiceIndex;
+      return { ...prev, selectedAnswers: newSelections };
+    });
   };
 
-  const overallStats = getOverallStats();
-  const errorList = getErrorLog();
+  const handleCheckAnswer = (questionIndex, timerSeconds) => {
+    setState(prev => {
+      const newChecked = [...prev.checkedStatus];
+      newChecked[questionIndex] = true;
 
-  // Test Launcher
-  const startTest = ({ mode = 'simulation', questions = null, count = 20, initialIndex = 0 }) => {
-    let testQuestions = questions;
-    if (!testQuestions) {
-      if (mode === 'errors') {
-        const errors = getErrorLog().map(e => e.question);
-        testQuestions = errors.length > 0 ? errors : ALL_QUESTIONS.slice(0, 10);
-      } else {
-        testQuestions = ALL_QUESTIONS.slice(0, count);
+      const q = ALL_QUESTIONS[questionIndex];
+      const selected = prev.selectedAnswers[questionIndex];
+      const newErrors = [...prev.errorLog];
+
+      if (selected !== q.answer) {
+        const errorRecord = {
+          id: q.id,
+          qIndex: questionIndex + 1,
+          difficulty: q.difficulty,
+          passage: q.passage,
+          yourAnswer: q.choices[selected] || "None",
+          correctAnswer: q.choices[q.answer],
+          rationale: q.rationale,
+          timeSpent: formatTime(timerSeconds)
+        };
+        const existingIdx = newErrors.findIndex(e => e.id === q.id);
+        if (existingIdx === -1) {
+          newErrors.push(errorRecord);
+        } else {
+          newErrors[existingIdx] = errorRecord;
+        }
       }
+
+      return {
+        ...prev,
+        checkedStatus: newChecked,
+        errorLog: newErrors
+      };
+    });
+  };
+
+  const handleNavigate = (newIndex) => {
+    if (newIndex >= 0 && newIndex < ALL_QUESTIONS.length) {
+      setState(prev => ({ ...prev, currentIndex: newIndex }));
     }
-
-    setActiveTest({
-      mode,
-      questions: testQuestions,
-    });
-    setActiveTestIndex(initialIndex);
-    setCurrentTab('test');
   };
 
-  const handleSaveAnswer = (questionId, choice, isCorrect) => {
-    saveQuestionRecord(questionId, { selectedChoice: choice, isCorrect });
-    setUserRecords(getAllRecords());
+  const handleToggleAutoStart = (val) => {
+    setState(prev => ({ ...prev, autoStartEnabled: val }));
   };
 
-  const handleToggleFlag = (questionId) => {
-    toggleQuestionFlag(questionId);
-    setUserRecords(getAllRecords());
+  const handleReset = () => {
+    const blank = resetAllProgress(ALL_QUESTIONS.length);
+    setState(blank);
   };
 
-  const handleCompleteTest = (session) => {
-    saveTestHistorySession({
-      mode: session.mode,
-      score: session.score,
-      total: session.total,
-      accuracy: Math.round((session.score / session.total) * 100),
-      timeTakenSec: session.timeTakenSec,
-      results: session.results,
-    });
-    setCompletedSession(session);
-    refreshRecords();
+  const handleExport = () => {
+    exportProgressAsJson(state);
   };
 
-  const handleCloseResults = () => {
-    setCompletedSession(null);
-    setActiveTest(null);
-    setCurrentTab('dashboard');
+  const handleImport = (jsonString) => {
+    const imported = parseImportJson(jsonString, ALL_QUESTIONS.length);
+    setState(prev => ({
+      ...prev,
+      ...imported
+    }));
   };
 
-  const handleRetryFromResults = () => {
-    if (!completedSession || !activeTest) return;
-    setCompletedSession(null);
-    startTest({
-      mode: activeTest.mode,
-      questions: activeTest.questions,
-    });
+  const handleStartPractice = (index = 0) => {
+    handleNavigate(index);
+    setCurrentView('practice');
   };
 
-  const handleRetrySingleQuestion = (question) => {
-    startTest({
-      mode: 'practice',
-      questions: [question],
-      initialIndex: 0,
-    });
+  const handleJumpToQuestion = (targetIndex) => {
+    handleNavigate(targetIndex);
+    setCurrentView('practice');
   };
 
-  const handleOpenAiTutor = (question, userChoice = null) => {
-    setAiTutorState({
-      isOpen: true,
-      question,
-      userChoice,
-    });
+  const handleReturnToDashboard = () => {
+    setCurrentView('dashboard');
   };
 
-  const handleCloseAiTutor = () => {
-    setAiTutorState(prev => ({ ...prev, isOpen: false }));
-  };
-
-  const handleUpdateNotes = (questionId, notes) => {
-    saveQuestionRecord(questionId, { notes });
-    setUserRecords(getAllRecords());
-  };
-
-  // If in active Bluebook test view
-  if (currentTab === 'test' && activeTest) {
+  if (currentView === 'practice') {
     return (
-      <div className="min-h-screen bg-[#f3f4f6]">
-        <BluebookTestView
-          questions={activeTest.questions}
-          initialIndex={activeTestIndex}
-          mode={activeTest.mode}
-          studentName={profile?.name || "Mohamed Elkirsh"}
-          onExitTest={() => {
-            if (window.confirm("Are you sure you want to leave the practice test? Your recorded answers are saved.")) {
-              setActiveTest(null);
-              setCurrentTab('dashboard');
-            }
-          }}
-          onCompleteTest={handleCompleteTest}
-          userRecords={userRecords}
-          onSaveAnswer={handleSaveAnswer}
-          onToggleFlag={handleToggleFlag}
-          onOpenAiTutor={handleOpenAiTutor}
-        />
-
-        {/* AI Tutor Drawer inside test */}
-        <AiTutorDrawer
-          isOpen={aiTutorState.isOpen}
-          onClose={handleCloseAiTutor}
-          question={aiTutorState.question}
-          userChoice={aiTutorState.userChoice}
-        />
-
-        {/* Results Modal */}
-        <TestResultsModal
-          session={completedSession}
-          questions={activeTest.questions}
-          onClose={handleCloseResults}
-          onRetryTest={handleRetryFromResults}
-          onReviewErrors={() => {
-            setCompletedSession(null);
-            setActiveTest(null);
-            setCurrentTab('errorLog');
-          }}
-          onOpenAiTutor={handleOpenAiTutor}
-        />
-      </div>
+      <BluebookTestView
+        questions={ALL_QUESTIONS}
+        currentIndex={state.currentIndex}
+        selectedAnswers={state.selectedAnswers}
+        checkedStatus={state.checkedStatus}
+        errorLog={state.errorLog}
+        autoStartEnabled={state.autoStartEnabled}
+        onSelectChoice={handleSelectChoice}
+        onCheckAnswer={handleCheckAnswer}
+        onNavigate={handleNavigate}
+        onToggleAutoStart={handleToggleAutoStart}
+        onReset={handleReset}
+        onExport={handleExport}
+        onImport={handleImport}
+        onReturnToDashboard={handleReturnToDashboard}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Standard Platform Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-        errorCount={errorList.length}
-        onStartSimulation={startTest}
-        profile={profile}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenGuide={() => setIsGuideOpen(true)}
-      />
-
-      {/* Main Tab Content */}
-      <main className="flex-1">
-        {currentTab === 'dashboard' && (
-          <Dashboard
-            stats={overallStats}
-            profile={profile}
-            onStartSimulation={startTest}
-            setCurrentTab={setCurrentTab}
-            onOpenGuide={() => setIsGuideOpen(true)}
-            testHistory={testHistory}
-          />
-        )}
-
-        {currentTab === 'bank' && (
-          <QuestionBankView
-            userRecords={userRecords}
-            onStartCustomTest={(qs) => startTest({ mode: 'practice', questions: qs })}
-            onPracticeSingleQuestion={handleRetrySingleQuestion}
-            onToggleFlag={handleToggleFlag}
-            onOpenGuide={() => setIsGuideOpen(true)}
-          />
-        )}
-
-        {currentTab === 'errorLog' && (
-          <ErrorLogView
-            errorList={errorList}
-            onRetryQuestion={handleRetrySingleQuestion}
-            onOpenAiTutor={handleOpenAiTutor}
-            onStartErrorTest={() => startTest({ mode: 'errors' })}
-            onUpdateNotes={handleUpdateNotes}
-          />
-        )}
-      </main>
-
-      {/* Persistent Modals and Drawers */}
-      <AiTutorDrawer
-        isOpen={aiTutorState.isOpen}
-        onClose={handleCloseAiTutor}
-        question={aiTutorState.question}
-        userChoice={aiTutorState.userChoice}
-      />
-
-      <TransitionGuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onProfileUpdated={refreshRecords}
-        onDataReset={refreshRecords}
-      />
-    </div>
+    <Dashboard
+      questions={ALL_QUESTIONS}
+      currentIndex={state.currentIndex}
+      selectedAnswers={state.selectedAnswers}
+      checkedStatus={state.checkedStatus}
+      errorLog={state.errorLog}
+      onStartPractice={handleStartPractice}
+      onJumpToQuestion={handleJumpToQuestion}
+      onReset={handleReset}
+      onExport={handleExport}
+      onImport={handleImport}
+    />
   );
 }

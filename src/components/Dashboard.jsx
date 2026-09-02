@@ -1,388 +1,508 @@
-import React from 'react';
-import { 
-  Trophy, 
-  Target, 
-  Flame, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Bookmark, 
-  ArrowRight, 
-  Sparkles, 
-  BrainCircuit, 
-  AlertTriangle, 
-  Play,
-  RotateCcw,
-  BookOpenCheck
-} from 'lucide-react';
-import { ALL_QUESTIONS } from '../data/questions';
+import React, { useState, useRef } from 'react';
+import { SYLLABUS } from '../data/questions';
 
-export default function Dashboard({ 
-  stats, 
-  profile, 
-  onStartSimulation, 
-  setCurrentTab, 
-  onOpenGuide, 
-  testHistory = [] 
+export default function Dashboard({
+  questions,
+  currentIndex,
+  selectedAnswers,
+  checkedStatus,
+  errorLog,
+  onStartPractice,
+  onJumpToQuestion,
+  onReset,
+  onExport,
+  onImport,
 }) {
-  const easyStats = stats.difficultyStats?.Easy || { total: 0, answered: 0, correct: 0 };
-  const mediumStats = stats.difficultyStats?.Medium || { total: 0, answered: 0, correct: 0 };
-  const hardStats = stats.difficultyStats?.Hard || { total: 0, answered: 0, correct: 0 };
+  const [selectedSection, setSelectedSection] = useState("Reading and Writing");
+  const [selectedSkillId, setSelectedSkillId] = useState("transitions");
+  const [difficultyFilter, setDifficultyFilter] = useState("All"); // All | Easy | Medium | Hard
+  const [statusFilter, setStatusFilter] = useState("All"); // All | Unanswered | Missed | Correct
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const easyAcc = easyStats.answered > 0 ? Math.round((easyStats.correct / easyStats.answered) * 100) : 0;
-  const medAcc = mediumStats.answered > 0 ? Math.round((mediumStats.correct / mediumStats.answered) * 100) : 0;
-  const hardAcc = hardStats.answered > 0 ? Math.round((hardStats.correct / hardStats.answered) * 100) : 0;
+  // Compute metrics
+  const totalCount = questions.length;
+  const answeredIndices = [];
+  let correctCount = 0;
+  let incorrectCount = 0;
+
+  questions.forEach((q, idx) => {
+    if (checkedStatus[idx]) {
+      answeredIndices.push(idx);
+      if (selectedAnswers[idx] === q.answer) {
+        correctCount++;
+      } else {
+        incorrectCount++;
+      }
+    }
+  });
+
+  const accuracy = answeredIndices.length > 0 
+    ? Math.round((correctCount / answeredIndices.length) * 100) 
+    : 0;
+
+  // Question counts by difficulty
+  const easyCount = questions.filter(q => q.difficulty === 'Easy').length;
+  const medCount = questions.filter(q => q.difficulty === 'Medium').length;
+  const hardCount = questions.filter(q => q.difficulty === 'Hard').length;
+
+  // Filter questions for the grid
+  const filteredQuestions = questions.map((q, idx) => ({ ...q, originalIndex: idx })).filter(q => {
+    if (difficultyFilter !== "All" && q.difficulty !== difficultyFilter) return false;
+    if (statusFilter === "Unanswered" && checkedStatus[q.originalIndex]) return false;
+    if (statusFilter === "Correct" && (!checkedStatus[q.originalIndex] || selectedAnswers[q.originalIndex] !== q.answer)) return false;
+    if (statusFilter === "Missed" && (!checkedStatus[q.originalIndex] || selectedAnswers[q.originalIndex] === q.answer)) return false;
+    return true;
+  });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        onImport(evt.target.result);
+        alert("Progress restored successfully!");
+      } catch (err) {
+        alert("Error importing backup: Invalid format.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const currentSectionData = SYLLABUS.find(s => s.section === selectedSection) || SYLLABUS[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-900 p-8 text-white shadow-xl">
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            Digital SAT Transition Mastery
+    <div style={{ minHeight: '100vh', background: '#f4f6f9', color: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+      {/* Top Header */}
+      <header style={{ background: '#ffffff', borderBottom: '1px solid var(--cb-border)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '32px', height: '32px', background: 'var(--cb-blue)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '1.1rem' }}>
+            CB
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Welcome back, {profile?.name || 'Student'}!
-          </h1>
-          <p className="text-blue-100/90 text-sm sm:text-base leading-relaxed">
-            Transitions are one of the most predictable, high-yield skills on the SAT Reading & Writing section. Practice with official College Board question styles and leverage Gemini 3.8 Flash for instant logical breakdown.
-          </p>
-
-          <div className="pt-3 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => onStartSimulation({ mode: 'simulation', count: 20 })}
-              className="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              Start Timed Bluebook Test (20 Qs)
-            </button>
-
-            <button
-              onClick={() => onStartSimulation({ mode: 'practice', count: 10 })}
-              className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm border border-white/20 backdrop-blur-sm transition-all"
-            >
-              <BrainCircuit className="w-4 h-4 text-cyan-300 inline mr-2" />
-              Practice Drill (Instant Tutor)
-            </button>
-
-            <button
-              onClick={onOpenGuide}
-              className="px-4 py-2.5 rounded-xl text-blue-200 hover:text-white text-sm font-medium transition-colors"
-            >
-              Transition Rules Cheat Sheet →
-            </button>
+          <div>
+            <h1 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111', lineHeight: 1.2 }}>
+              Digital SAT Practice Platform
+            </h1>
+            <p style={{ fontSize: '0.82rem', color: '#666' }}>
+              Official College Board Question Bank & Practice System
+            </p>
           </div>
         </div>
 
-        {/* Decorative background grid pattern */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none hidden md:block">
-          <div className="w-full h-full border-l border-white/20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button className="btn btn-danger" onClick={() => setShowErrorModal(true)}>
+            Error Log ({errorLog.length})
+          </button>
+          <button className="btn btn-backup" onClick={onExport}>
+            Backup Data
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            style={{ display: 'none' }} 
+            accept=".json" 
+            onChange={handleFileChange} 
+          />
+          <button className="btn btn-backup" onClick={() => fileInputRef.current?.click()}>
+            Load Backup
+          </button>
+          <button 
+            className="btn" 
+            style={{ color: '#666', fontSize: '0.8rem' }}
+            onClick={() => {
+              if (confirm("Are you sure you want to reset all progress and error log?")) {
+                onReset();
+              }
+            }}
+          >
+            Reset All
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Primary Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Completed */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Completed</span>
-            <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-              <BookOpenCheck className="w-5 h-5" />
+      {/* Main Dashboard Container */}
+      <div style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 20px', width: '100%', flex: 1 }}>
+        
+        {/* Progress Stats Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Questions</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#111', marginTop: '4px' }}>{totalCount}</div>
+            <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>Transitions Skill Set</div>
+          </div>
+
+          <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completed</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--cb-blue)', marginTop: '4px' }}>
+              {answeredIndices.length} <span style={{ fontSize: '1rem', color: '#888', fontWeight: 500 }}>/ {totalCount}</span>
+            </div>
+            <div style={{ background: '#e2e8f0', height: '6px', borderRadius: '3px', marginTop: '8px', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--cb-blue)', height: '100%', width: `${(answeredIndices.length / totalCount) * 100}%` }} />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-gray-900">{stats.answeredCount}</span>
-            <span className="text-xs text-gray-500">/ {stats.totalQuestions} questions</span>
-          </div>
-          <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-            <div 
-              className="bg-blue-600 h-full rounded-full transition-all duration-500" 
-              style={{ width: `${stats.completionRate}%` }} 
-            />
-          </div>
-        </div>
 
-        {/* Accuracy */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Accuracy Rate</span>
-            <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-              <Target className="w-5 h-5" />
+          <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Accuracy Rate</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--correct)', marginTop: '4px' }}>
+              {accuracy}%
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>
+              {correctCount} correct • {incorrectCount} incorrect
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-gray-900">{stats.accuracy}%</span>
-            <span className="text-xs text-emerald-600 font-medium">({stats.correctCount} correct)</span>
-          </div>
-          <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-            <div 
-              className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
-              style={{ width: `${stats.accuracy}%` }} 
-            />
-          </div>
-        </div>
 
-        {/* Error Log Count */}
-        <div 
-          onClick={() => setCurrentTab('errorLog')} 
-          className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-rose-200 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-rose-600 transition-colors">
-              Error Log
-            </span>
-            <div className="p-2 rounded-lg bg-rose-50 text-rose-600">
-              <XCircle className="w-5 h-5" />
+          <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Logged Mistakes</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: errorLog.length > 0 ? 'var(--incorrect)' : '#555', marginTop: '4px' }}>
+              {errorLog.length}
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>
+              {errorLog.length > 0 ? "Saved in Error Log for review" : "Clean sheet!"}
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-rose-600">{stats.incorrectCount}</span>
-            <span className="text-xs text-gray-500">to review</span>
-          </div>
-          <p className="mt-2 text-xs text-rose-500 group-hover:underline flex items-center gap-1">
-            Open error clinic <ArrowRight className="w-3 h-3" />
-          </p>
         </div>
 
-        {/* Flagged */}
-        <div 
-          onClick={() => setCurrentTab('bank')}
-          className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-amber-200 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">
-              Marked for Review
-            </span>
-            <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
-              <Bookmark className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-amber-600">{stats.flaggedCount}</span>
-            <span className="text-xs text-gray-500">bookmarked</span>
-          </div>
-          <p className="mt-2 text-xs text-amber-600 group-hover:underline flex items-center gap-1">
-            View in bank <ArrowRight className="w-3 h-3" />
-          </p>
-        </div>
-      </div>
-
-      {/* Difficulty Breakdown & Action Center */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Difficulty Breakdown (2 Cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-5">
-          <div className="flex items-center justify-between">
+        {/* Question Type & Skill Selector (The requested core feature!) */}
+        <div style={{ background: '#fff', borderRadius: '6px', border: '1px solid var(--cb-border)', marginBottom: '24px', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--cb-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Difficulty Mastery</h2>
-              <p className="text-xs text-gray-500">Track your performance across question difficulty tiers</p>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>
+                Question Types & Skill Navigator
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: '#666' }}>
+                Select your target SAT domain and skill to practice
+              </p>
             </div>
-            <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-gray-100 text-gray-700">
-              Total 70 Questions
-            </span>
+
+            {/* Section Switcher Tabs */}
+            <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '6px', gap: '4px' }}>
+              {SYLLABUS.map(sec => (
+                <button
+                  key={sec.section}
+                  onClick={() => setSelectedSection(sec.section)}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    borderRadius: '4px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: selectedSection === sec.section ? '#ffffff' : 'transparent',
+                    color: selectedSection === sec.section ? 'var(--cb-blue)' : '#555',
+                    boxShadow: selectedSection === sec.section ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {sec.section}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {/* Easy */}
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">
-                    EASY
-                  </span>
-                  <span className="text-gray-600 text-xs">
-                    {easyStats.answered} of {easyStats.total} attempted
-                  </span>
+          {/* Domains and Skills list */}
+          <div style={{ padding: '20px 22px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+              {currentSectionData.domains.map(dom => (
+                <div key={dom.name} style={{ border: '1px solid #e5e7eb', borderRadius: '6px', padding: '14px 16px', background: '#fafbfc' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#222', marginBottom: '4px' }}>
+                    {dom.name}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '12px', minHeight: '36px' }}>
+                    {dom.description}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {dom.skills.map(sk => {
+                      const isSelected = sk.id === selectedSkillId;
+                      return (
+                        <div
+                          key={sk.id}
+                          onClick={() => {
+                            if (sk.available) setSelectedSkillId(sk.id);
+                          }}
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '4px',
+                            border: isSelected ? '1.5px solid var(--cb-blue)' : '1px solid #e0e0e0',
+                            background: isSelected ? '#edf4fc' : sk.available ? '#ffffff' : '#f9fafb',
+                            cursor: sk.available ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            transition: 'all 0.15s'
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: isSelected ? 700 : 600, fontSize: '0.88rem', color: isSelected ? 'var(--cb-blue)' : sk.available ? '#111' : '#888' }}>
+                              {sk.name}
+                            </div>
+                            {sk.available && (
+                              <div style={{ fontSize: '0.78rem', color: '#666', marginTop: '2px' }}>
+                                {sk.questionCount} Questions Available
+                              </div>
+                            )}
+                          </div>
+
+                          <span style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            padding: '3px 8px',
+                            borderRadius: '10px',
+                            background: sk.available ? '#dcfce7' : '#f1f5f9',
+                            color: sk.available ? '#166534' : '#94a3b8'
+                          }}>
+                            {sk.available ? "Active" : "Coming Soon"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <span className="font-semibold text-gray-900">
-                  {easyStats.answered > 0 ? `${easyAcc}% Accuracy` : 'Not started'}
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Selected Skill: Practice Launch Bar & Question Matrix */}
+        <div style={{ background: '#fff', borderRadius: '6px', border: '1px solid var(--cb-border)', padding: '22px', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', borderBottom: '1px solid var(--cb-border)', paddingBottom: '18px', marginBottom: '18px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '0.78rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
+                  READY TO PRACTICE
+                </span>
+                <span style={{ fontSize: '0.85rem', color: '#555' }}>
+                  Reading and Writing &gt; Expression of Ideas
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden flex">
-                <div 
-                  className="bg-emerald-500 h-full rounded-full transition-all"
-                  style={{ width: `${(easyStats.correct / (easyStats.total || 1)) * 100}%` }}
-                />
-              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginTop: '4px' }}>
+                Transitions (70 Authentic Practice Questions)
+              </h3>
             </div>
 
-            {/* Medium */}
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 text-xs font-bold rounded bg-blue-100 text-blue-800">
-                    MEDIUM
-                  </span>
-                  <span className="text-gray-600 text-xs">
-                    {mediumStats.answered} of {mediumStats.total} attempted
-                  </span>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {mediumStats.answered > 0 ? `${medAcc}% Accuracy` : 'Not started'}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden flex">
-                <div 
-                  className="bg-blue-600 h-full rounded-full transition-all"
-                  style={{ width: `${(mediumStats.correct / (mediumStats.total || 1)) * 100}%` }}
-                />
-              </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {errorLog.length > 0 && (
+                <button 
+                  className="btn btn-danger" 
+                  style={{ padding: '9px 16px', fontSize: '0.92rem' }}
+                  onClick={() => {
+                    const firstError = errorLog[0];
+                    if (firstError) onJumpToQuestion(firstError.qIndex - 1);
+                  }}
+                >
+                  Review Missed Questions ({errorLog.length})
+                </button>
+              )}
+              <button 
+                className="btn btn-primary" 
+                style={{ padding: '9px 20px', fontSize: '0.95rem' }}
+                onClick={() => onStartPractice(currentIndex)}
+              >
+                {answeredIndices.length === 0 ? "Start Practice" : `Resume Practice (Q${currentIndex + 1})`} →
+              </button>
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#555' }}>Difficulty:</span>
+              {["All", "Easy", "Medium", "Hard"].map(diff => (
+                <button
+                  key={diff}
+                  onClick={() => setDifficultyFilter(diff)}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    borderRadius: '4px',
+                    border: '1px solid',
+                    borderColor: difficultyFilter === diff ? 'var(--cb-blue)' : '#dcdcdc',
+                    background: difficultyFilter === diff ? '#edf4fc' : '#fff',
+                    color: difficultyFilter === diff ? 'var(--cb-blue)' : '#444',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {diff} {diff === "All" ? `(${totalCount})` : diff === "Easy" ? `(${easyCount})` : diff === "Medium" ? `(${medCount})` : `(${hardCount})`}
+                </button>
+              ))}
             </div>
 
-            {/* Hard */}
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 text-xs font-bold rounded bg-purple-100 text-purple-800">
-                    HARD
-                  </span>
-                  <span className="text-gray-600 text-xs">
-                    {hardStats.answered} of {hardStats.total} attempted
-                  </span>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {hardStats.answered > 0 ? `${hardAcc}% Accuracy` : 'Not started'}
-                </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#555' }}>Status:</span>
+              {[
+                { id: "All", label: "All" },
+                { id: "Unanswered", label: `Unanswered (${totalCount - answeredIndices.length})` },
+                { id: "Correct", label: `Correct (${correctCount})` },
+                { id: "Missed", label: `Missed (${incorrectCount})` }
+              ].map(st => (
+                <button
+                  key={st.id}
+                  onClick={() => setStatusFilter(st.id)}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    borderRadius: '4px',
+                    border: '1px solid',
+                    borderColor: statusFilter === st.id ? 'var(--cb-blue)' : '#dcdcdc',
+                    background: statusFilter === st.id ? '#edf4fc' : '#fff',
+                    color: statusFilter === st.id ? 'var(--cb-blue)' : '#444',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {st.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Direct Question Matrix Grid (Click any number to jump directly) */}
+          <div style={{ marginTop: '12px' }}>
+            <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>Click any question number to start practicing immediately:</span>
+              <span style={{ fontSize: '0.78rem' }}>
+                Showing {filteredQuestions.length} of {totalCount} questions
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))', gap: '8px' }}>
+              {filteredQuestions.map((q) => {
+                const idx = q.originalIndex;
+                const isChecked = checkedStatus[idx];
+                const isCorrect = isChecked && selectedAnswers[idx] === q.answer;
+                const isIncorrect = isChecked && selectedAnswers[idx] !== q.answer;
+                const isCurrent = idx === currentIndex;
+
+                let bg = "#f8f9fa";
+                let borderColor = "#dcdcdc";
+                let textColor = "#333";
+
+                if (isCorrect) {
+                  bg = "#e8f5e9";
+                  borderColor = "var(--correct)";
+                  textColor = "var(--correct)";
+                } else if (isIncorrect) {
+                  bg = "#ffebee";
+                  borderColor = "var(--incorrect)";
+                  textColor = "var(--incorrect)";
+                }
+
+                // difficulty dot color
+                const dotColor = q.difficulty === "Easy" ? "#16a34a" : q.difficulty === "Medium" ? "#ea580c" : "#dc2626";
+
+                return (
+                  <button
+                    key={q.id || idx}
+                    onClick={() => onJumpToQuestion(idx)}
+                    title={`Q${idx + 1} (${q.difficulty}) - ${q.id} ${isChecked ? (isCorrect ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
+                    style={{
+                      height: '44px',
+                      borderRadius: '4px',
+                      border: `1px solid ${borderColor}`,
+                      background: bg,
+                      color: textColor,
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      boxShadow: isCurrent ? '0 0 0 2px var(--cb-blue)' : 'none',
+                      transition: 'transform 0.1s'
+                    }}
+                  >
+                    <span>{idx + 1}</span>
+                    <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: dotColor, marginTop: '2px' }} />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Matrix Legend */}
+            <div style={{ display: 'flex', gap: '18px', marginTop: '16px', fontSize: '0.8rem', color: '#666', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#e8f5e9', border: '1px solid var(--correct)' }} />
+                <span>Correct</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden flex">
-                <div 
-                  className="bg-purple-600 h-full rounded-full transition-all"
-                  style={{ width: `${(hardStats.correct / (hardStats.total || 1)) * 100}%` }}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#ffebee', border: '1px solid var(--incorrect)' }} />
+                <span>Incorrect</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#f8f9fa', border: '1px solid #dcdcdc' }} />
+                <span>Unanswered</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
+                <span>Easy</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ea580c' }} />
+                <span>Medium</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626' }} />
+                <span>Hard</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Launch Cards (1 Col) */}
-        <div className="space-y-4">
-          {/* Bluebook Exam Mode */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3 hover:border-blue-300 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
-                BB
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 text-sm">Full Bluebook Simulation</h3>
-                <p className="text-xs text-gray-500">Official timer, split screen, strikethrough</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => onStartSimulation({ mode: 'simulation', count: 10 })}
-                className="flex-1 py-2 px-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition-colors text-center"
-              >
-                10 Qs Quick Test
-              </button>
-              <button
-                onClick={() => onStartSimulation({ mode: 'simulation', count: 20 })}
-                className="flex-1 py-2 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-xs font-semibold transition-colors text-center"
-              >
-                20 Qs Module
-              </button>
-            </div>
-          </div>
-
-          {/* Practice & Tutor Mode */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3 hover:border-indigo-300 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 text-sm">Tutor Practice Mode</h3>
-                <p className="text-xs text-gray-500">Instant answers + Gemini 3.8 Flash Tutor</p>
-              </div>
-            </div>
-            <button
-              onClick={() => onStartSimulation({ mode: 'practice', count: ALL_QUESTIONS.length })}
-              className="w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition-colors flex items-center justify-center gap-1"
-            >
-              Practice Full 70 Questions Drill <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-
-          {/* Error Clinic Button */}
-          {stats.incorrectCount > 0 ? (
-            <div className="bg-rose-50/80 rounded-2xl border border-rose-200 p-5 space-y-2">
-              <div className="flex items-center gap-2 text-rose-800 font-bold text-sm">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
-                Error Log Weakness Clinic
-              </div>
-              <p className="text-xs text-rose-700 leading-relaxed">
-                You have {stats.incorrectCount} missed questions. Re-test them now to master tricky transitions!
-              </p>
-              <button
-                onClick={() => onStartSimulation({ mode: 'errors' })}
-                className="w-full mt-2 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Retry Missed Questions ({stats.incorrectCount})
-              </button>
-            </div>
-          ) : (
-            <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5 space-y-1">
-              <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Error Log Clean!
-              </div>
-              <p className="text-xs text-emerald-700">
-                You have no unresolved mistakes right now. Keep practicing to build exam stamina!
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Test History Section */}
-      {testHistory.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Recent Test Attempts</h2>
-            <span className="text-xs text-gray-500">{testHistory.length} completed tests</span>
-          </div>
+      {/* Footer */}
+      <footer style={{ background: '#fff', borderTop: '1px solid var(--cb-border)', padding: '14px 28px', textAlign: 'center', fontSize: '0.85rem', color: '#666' }}>
+        Digital SAT® Suite of Assessments • Transitions Practice Platform • Built to Bluebook Specifications
+      </footer>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 text-xs uppercase text-gray-400 font-semibold bg-gray-50/50">
-                <tr>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Mode</th>
-                  <th className="py-3 px-4">Score</th>
-                  <th className="py-3 px-4">Accuracy</th>
-                  <th className="py-3 px-4">Time Taken</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {testHistory.slice(0, 5).map((t, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-3 px-4 text-gray-600 font-medium">
-                      {new Date(t.date).toLocaleDateString()} at {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        t.mode === 'simulation' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {t.mode === 'simulation' ? 'Bluebook Simulation' : 'Practice Drill'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-bold text-gray-900">
-                      {t.score} / {t.total}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`font-semibold ${
-                        t.accuracy >= 80 ? 'text-emerald-600' : t.accuracy >= 60 ? 'text-amber-600' : 'text-rose-600'
-                      }`}>
-                        {t.accuracy}%
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-gray-500">
-                      {t.timeTakenSec ? `${Math.floor(t.timeTakenSec / 60)}m ${t.timeTakenSec % 60}s` : '--'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Error Log Modal */}
+      {showErrorModal && (
+        <div className="modal-backdrop" onClick={() => setShowErrorModal(false)}>
+          <div className="modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Missed Questions & Error Log ({errorLog.length})</h3>
+              <button className="btn" onClick={() => setShowErrorModal(false)}>Close</button>
+            </div>
+            <div className="modal-body">
+              {errorLog.length === 0 ? (
+                <p style={{ color: '#666' }}>No mistakes recorded yet. Keep solving!</p>
+              ) : (
+                errorLog.map((err, i) => (
+                  <div key={err.id || i} className="error-card">
+                    <div className="error-card-header">
+                      <span>#{err.qIndex} (ID: {err.id}) — Difficulty: {err.difficulty}</span>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ fontSize: '0.78rem', padding: '3px 8px' }}
+                        onClick={() => {
+                          setShowErrorModal(false);
+                          onJumpToQuestion(err.qIndex - 1);
+                        }}
+                      >
+                        Go to Question →
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
+                      <strong>Context:</strong> {err.passage}
+                    </p>
+                    <p style={{ color: 'var(--incorrect)', fontSize: '0.9rem', marginBottom: '4px' }}>
+                      <strong>Your Answer:</strong> {err.yourAnswer}
+                    </p>
+                    <p style={{ color: 'var(--correct)', fontSize: '0.9rem', marginBottom: '8px' }}>
+                      <strong>Correct Answer:</strong> {err.correctAnswer}
+                    </p>
+                    <div style={{ fontSize: '0.88rem', color: '#444', background: '#f9f9f9', padding: '8px', borderLeft: '3px solid #666' }}>
+                      <strong>Rationale:</strong> {err.rationale}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
