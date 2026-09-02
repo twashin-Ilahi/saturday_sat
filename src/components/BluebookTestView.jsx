@@ -35,7 +35,8 @@ export default function BluebookTestView({
   const [aiExplanation, setAiExplanation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [savedHighlights, setSavedHighlights] = useState(() => loadHighlights());
-  const [selectionToolbar, setSelectionToolbar] = useState(null);
+  const [activePen, setActivePen] = useState('yellow'); // 'yellow' | 'pink' | null
+  const [dustbinPopover, setDustbinPopover] = useState(null);
   const fileInputRef = useRef(null);
   const passageRef = useRef(null);
   const currentRangeRef = useRef(null);
@@ -64,7 +65,7 @@ export default function BluebookTestView({
     setAiLoading(false);
     setShowNavPopover(false);
     setShowMoreMenu(false);
-    setSelectionToolbar(null);
+    setDustbinPopover(null);
     if (autoStartEnabled && !checkedStatus[currentIndex]) {
       setIsTimerRunning(true);
     } else {
@@ -72,95 +73,34 @@ export default function BluebookTestView({
     }
   }, [currentIndex, autoStartEnabled]);
 
-  // Track selection inside passage
+  // Click outside dustbin popover closes it
   useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-        return;
-      }
-      const text = selection.toString().trim();
-      if (!text) return;
-
-      const range = selection.getRangeAt(0);
-      if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
-        return;
-      }
-
-      currentRangeRef.current = range.cloneRange();
-      const rect = range.getBoundingClientRect();
-      if (rect && rect.width > 0) {
-        setSelectionToolbar({
-          x: Math.max(80, rect.left + rect.width / 2),
-          y: Math.max(70, rect.top - 46)
-        });
+    const handleDocClick = (e) => {
+      if (dustbinPopover && !e.target.closest('.sat-dustbin-popover')) {
+        setDustbinPopover(null);
       }
     };
+    document.addEventListener('mousedown', handleDocClick);
+    return () => document.removeEventListener('mousedown', handleDocClick);
+  }, [dustbinPopover]);
 
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, []);
-
-  const handlePassageMouseUp = () => {
-    setTimeout(() => {
-      const selection = window.getSelection();
-      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-        setSelectionToolbar(null);
-        currentRangeRef.current = null;
-        return;
-      }
-      const text = selection.toString().trim();
-      if (!text) {
-        setSelectionToolbar(null);
-        currentRangeRef.current = null;
-        return;
-      }
-
-      const range = selection.getRangeAt(0);
-      if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
-        setSelectionToolbar(null);
-        currentRangeRef.current = null;
-        return;
-      }
-
-      currentRangeRef.current = range.cloneRange();
-
-      const rect = range.getBoundingClientRect();
-      if (rect) {
-        setSelectionToolbar({
-          x: Math.max(80, rect.left + rect.width / 2),
-          y: Math.max(70, rect.top - 46)
-        });
-      }
-    }, 10);
-  };
-
-  const applyHighlight = (color) => {
-    let range = currentRangeRef.current;
+  const applyHighlight = (color, explicitRange) => {
     const sel = window.getSelection();
+    let range = explicitRange;
 
     if (!range && sel && sel.rangeCount > 0 && !sel.isCollapsed) {
       range = sel.getRangeAt(0);
     }
 
-    if (!range || !passageRef.current) {
-      setSelectionToolbar(null);
-      return;
-    }
+    if (!range || !passageRef.current) return;
+    if (!passageRef.current.contains(range.commonAncestorContainer)) return;
 
-    if (!passageRef.current.contains(range.commonAncestorContainer)) {
-      setSelectionToolbar(null);
-      return;
-    }
+    const text = range.toString().trim();
+    if (!text) return;
 
     const mark = document.createElement('mark');
     mark.className = `sat-hl sat-hl-${color}`;
-    mark.style.backgroundColor = color === 'yellow' ? '#fef08a' : '#fbcfe8';
-    mark.style.color = '#111827';
-    mark.style.padding = '1px 3px';
-    mark.style.borderRadius = '3px';
-    mark.style.cursor = 'pointer';
-    mark.title = 'Click to remove highlight';
+    mark.title = 'Click to delete';
 
     try {
       range.surroundContents(mark);
@@ -184,13 +124,49 @@ export default function BluebookTestView({
     if (sel) {
       try { sel.removeAllRanges(); } catch (e) {}
     }
-    currentRangeRef.current = null;
-    setSelectionToolbar(null);
+    setDustbinPopover(null);
+  };
+
+  const handlePassageMouseUp = () => {
+    if (!activePen) return;
+
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+      const text = selection.toString().trim();
+      if (!text) return;
+
+      const range = selection.getRangeAt(0);
+      if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) return;
+
+      // Automatically apply highlight with chosen pen without needing extra clicks!
+      applyHighlight(activePen, range);
+    }, 15);
   };
 
   const handlePassageClick = (e) => {
     const target = e.target;
     if (target && target.tagName === 'MARK' && target.classList.contains('sat-hl')) {
+      e.stopPropagation();
+      const rect = target.getBoundingClientRect();
+      setDustbinPopover({
+        element: target,
+        x: rect.left + rect.width / 2,
+        y: Math.max(65, rect.top - 38)
+      });
+    } else {
+      setDustbinPopover(null);
+    }
+  };
+
+  const handleDeleteHighlight = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!dustbinPopover || !dustbinPopover.element) return;
+    const target = dustbinPopover.element;
+    if (target && target.parentNode) {
       const parent = target.parentNode;
       while (target.firstChild) {
         parent.insertBefore(target.firstChild, target);
@@ -202,8 +178,8 @@ export default function BluebookTestView({
         setSavedHighlights(newMap);
         saveHighlights(newMap);
       }
-      setSelectionToolbar(null);
     }
+    setDustbinPopover(null);
   };
 
   const clearAllHighlightsForQuestion = () => {
@@ -214,6 +190,7 @@ export default function BluebookTestView({
       setSavedHighlights(newMap);
       saveHighlights(newMap);
     }
+    setDustbinPopover(null);
   };
 
   // Keyboard navigation
@@ -506,12 +483,114 @@ export default function BluebookTestView({
       {/* 3. Main Split Workspace */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         
-        {/* Left Pane: Passage Display with Text Highlighting */}
+        {/* Left Pane: Passage Display with Pen Toolbar and Text Highlighting */}
         <div 
-          style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
+          style={{ flex: 1, padding: '24px 44px 44px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
           onMouseUp={handlePassageMouseUp}
           onClick={handlePassageClick}
         >
+          {/* Highlighter Pen Toolbar */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            padding: '6px 12px',
+            marginBottom: '20px',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Highlighter Pen:
+              </span>
+              {/* Yellow Pen */}
+              <button
+                type="button"
+                onClick={() => setActivePen(activePen === 'yellow' ? null : 'yellow')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: activePen === 'yellow' ? '#fef08a' : '#ffffff',
+                  border: activePen === 'yellow' ? '2px solid #ca8a04' : '1px solid #cbd5e1',
+                  borderRadius: '16px',
+                  padding: '3px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: '#854d0e',
+                  cursor: 'pointer',
+                  boxShadow: activePen === 'yellow' ? '0 1px 4px rgba(202,138,4,0.25)' : 'none'
+                }}
+                title="Select text to highlight Yellow"
+              >
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
+                Yellow Pen {activePen === 'yellow' ? '✓' : ''}
+              </button>
+
+              {/* Pink Pen */}
+              <button
+                type="button"
+                onClick={() => setActivePen(activePen === 'pink' ? null : 'pink')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: activePen === 'pink' ? '#fbcfe8' : '#ffffff',
+                  border: activePen === 'pink' ? '2px solid #db2777' : '1px solid #cbd5e1',
+                  borderRadius: '16px',
+                  padding: '3px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: '#9d174d',
+                  cursor: 'pointer',
+                  boxShadow: activePen === 'pink' ? '0 1px 4px rgba(219,39,119,0.25)' : 'none'
+                }}
+                title="Select text to highlight Pink"
+              >
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
+                Pink Pen {activePen === 'pink' ? '✓' : ''}
+              </button>
+
+              {/* Cursor / None */}
+              <button
+                type="button"
+                onClick={() => setActivePen(null)}
+                style={{
+                  background: activePen === null ? '#e2e8f0' : '#ffffff',
+                  border: activePen === null ? '2px solid #64748b' : '1px solid #cbd5e1',
+                  borderRadius: '16px',
+                  padding: '3px 10px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer'
+                }}
+                title="Disable auto-highlighting"
+              >
+                Cursor {activePen === null ? '✓' : ''}
+              </button>
+            </div>
+
+            {/* Clear Highlights */}
+            <button
+              type="button"
+              onClick={clearAllHighlightsForQuestion}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '0.76rem',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+              title="Clear all highlights on this question"
+            >
+              Clear All
+            </button>
+          </div>
+
           <div 
             key={q.id}
             ref={passageRef}
@@ -984,114 +1063,52 @@ export default function BluebookTestView({
         </div>
       </footer>
 
-      {/* Floating Highlight Toolbar (Yellow & Pink) */}
-      {selectionToolbar && (
+      {/* Floating Dustbin Delete Popover */}
+      {dustbinPopover && (
         <div 
+          className="sat-dustbin-popover"
           style={{
             position: 'fixed',
-            top: `${selectionToolbar.y}px`,
-            left: `${selectionToolbar.x}px`,
+            top: `${dustbinPopover.y}px`,
+            left: `${dustbinPopover.x}px`,
             transform: 'translateX(-50%)',
-            background: '#1e293b',
+            background: '#0f172a',
             color: '#fff',
-            borderRadius: '24px',
-            padding: '5px 12px',
+            borderRadius: '6px',
+            padding: '3px 8px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+            gap: '6px',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
             zIndex: 1000,
             animation: 'fadeIn 0.12s ease-out'
           }}
           onMouseDown={e => e.stopPropagation()}
         >
-          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#cbd5e1', marginRight: '2px' }}>Highlight:</span>
-          {/* Yellow Highlight Button */}
           <button 
             type="button"
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              applyHighlight('yellow');
-            }}
+            onClick={handleDeleteHighlight}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: '#fef08a',
-              border: '1.5px solid #ca8a04',
-              borderRadius: '14px',
-              padding: '3px 10px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              color: '#854d0e',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-            }}
-            title="Highlight Yellow"
-          >
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
-            Yellow
-          </button>
-
-          {/* Pink Highlight Button */}
-          <button 
-            type="button"
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              applyHighlight('pink');
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: '#fbcfe8',
-              border: '1.5px solid #db2777',
-              borderRadius: '14px',
-              padding: '3px 10px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              color: '#9d174d',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-            }}
-            title="Highlight Pink"
-          >
-            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
-            Pink
-          </button>
-
-          {/* Dismiss button */}
-          <button 
-            type="button"
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setSelectionToolbar(null);
-            }}
-            style={{
-              background: 'none',
+              background: '#ef4444',
               border: 'none',
-              color: '#94a3b8',
+              borderRadius: '4px',
+              color: '#ffffff',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              padding: '3px 8px',
               cursor: 'pointer',
-              fontSize: '0.8rem',
-              padding: '2px 4px',
-              marginLeft: '2px'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
             }}
-            title="Dismiss"
+            title="Delete this highlight"
+          >
+            🗑️ Delete
+          </button>
+          <button 
+            type="button"
+            onClick={() => setDustbinPopover(null)}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', padding: '2px' }}
           >
             ✕
           </button>
@@ -1120,22 +1137,18 @@ export default function BluebookTestView({
           {/* Highlighting Tools in Drawer */}
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', marginBottom: '14px' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-              PASSAGE HIGHLIGHTER (YELLOW & PINK)
+              HIGHLIGHTER PEN SELECTION
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <button 
                 type="button"
-                onMouseDown={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onClick={() => applyHighlight('yellow')}
+                onClick={() => setActivePen(activePen === 'yellow' ? null : 'yellow')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: '#fef08a',
-                  border: '1px solid #eab308',
+                  background: activePen === 'yellow' ? '#fef08a' : '#ffffff',
+                  border: activePen === 'yellow' ? '2px solid #ca8a04' : '1px solid #cbd5e1',
                   borderRadius: '4px',
                   padding: '4px 10px',
                   fontSize: '0.82rem',
@@ -1143,25 +1156,20 @@ export default function BluebookTestView({
                   color: '#854d0e',
                   cursor: 'pointer'
                 }}
-                title="Select text in passage and click to highlight Yellow"
               >
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
-                Yellow
+                Yellow Pen {activePen === 'yellow' ? '✓' : ''}
               </button>
 
               <button 
                 type="button"
-                onMouseDown={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onClick={() => applyHighlight('pink')}
+                onClick={() => setActivePen(activePen === 'pink' ? null : 'pink')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: '#fbcfe8',
-                  border: '1px solid #ec4899',
+                  background: activePen === 'pink' ? '#fbcfe8' : '#ffffff',
+                  border: activePen === 'pink' ? '2px solid #db2777' : '1px solid #cbd5e1',
                   borderRadius: '4px',
                   padding: '4px 10px',
                   fontSize: '0.82rem',
@@ -1169,18 +1177,13 @@ export default function BluebookTestView({
                   color: '#9d174d',
                   cursor: 'pointer'
                 }}
-                title="Select text in passage and click to highlight Pink"
               >
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
-                Pink
+                Pink Pen {activePen === 'pink' ? '✓' : ''}
               </button>
 
               <button 
                 type="button"
-                onMouseDown={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
                 onClick={clearAllHighlightsForQuestion}
                 style={{
                   background: '#ffffff',
@@ -1193,11 +1196,11 @@ export default function BluebookTestView({
                 }}
                 title="Clear all highlights on this question"
               >
-                Clear Highlights
+                Clear All
               </button>
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '6px' }}>
-              💡 Select any text in the passage to highlight in Yellow or Pink. Click any highlight to remove it.
+            <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '8px' }}>
+              💡 Select a pen, then drag over any text in the passage to highlight it. Click on any highlight to reveal the 🗑️ dustbin and delete it.
             </div>
           </div>
 
