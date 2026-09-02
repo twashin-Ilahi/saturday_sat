@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatTime } from '../utils/storage';
+import { explainSingleQuestionWithGemini } from '../utils/gemini';
 
 export default function BluebookTestView({
   questions,
@@ -20,6 +21,8 @@ export default function BluebookTestView({
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const q = questions[currentIndex] || questions[0];
@@ -40,12 +43,30 @@ export default function BluebookTestView({
   // When question changes, reset timer and auto-start if configured
   useEffect(() => {
     setTimerSeconds(0);
+    setAiExplanation("");
+    setAiLoading(false);
     if (autoStartEnabled && !checkedStatus[currentIndex]) {
       setIsRunning(true);
     } else {
       setIsRunning(false);
     }
   }, [currentIndex, autoStartEnabled]);
+
+  const handleAskAi = async () => {
+    setAiLoading(true);
+    setAiExplanation("");
+    const res = await explainSingleQuestionWithGemini({
+      question: q,
+      studentChoice: currentSelection,
+      isCorrect
+    });
+    setAiLoading(false);
+    if (res.success) {
+      setAiExplanation(res.text);
+    } else {
+      setAiExplanation("AI Error: " + (res.error || "Failed to load Gemini breakdown."));
+    }
+  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -273,7 +294,34 @@ export default function BluebookTestView({
               >
                 {isCorrect ? "✓ Correct" : "✕ Incorrect"}
               </div>
-              <div style={{ color: '#222' }}>{q.rationale}</div>
+              <div style={{ color: '#222', marginBottom: '10px' }}>{q.rationale}</div>
+
+              {/* Gemini Question Breakdown */}
+              <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', marginTop: '10px' }}>
+                {!aiExplanation && !aiLoading && (
+                  <button 
+                    className="btn" 
+                    style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
+                    onClick={handleAskAi}
+                  >
+                    ✨ Ask Gemini: Why is this transition used?
+                  </button>
+                )}
+                {aiLoading && (
+                  <div style={{ fontSize: '0.85rem', color: '#6d28d9', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>✦ Gemini is analyzing this question...</span>
+                  </div>
+                )}
+                {aiExplanation && (
+                  <div style={{ background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '10px 14px', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.5, color: '#333', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ fontWeight: 700, color: '#6d28d9', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>✦ Gemini AI Coach Breakdown</span>
+                      <button style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#888', fontSize: '0.78rem' }} onClick={() => setAiExplanation("")}>✕</button>
+                    </div>
+                    {aiExplanation}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

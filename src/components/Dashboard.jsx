@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { SYLLABUS } from '../data/questions';
+import AiAnalysisModal from './AiAnalysisModal';
 
 export default function Dashboard({
   questions,
@@ -18,6 +19,7 @@ export default function Dashboard({
   const [difficultyFilter, setDifficultyFilter] = useState("All"); // All | Easy | Medium | Hard
   const [statusFilter, setStatusFilter] = useState("All"); // All | Unanswered | Missed | Correct
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const fileInputRef = useRef(null);
 
   // Compute metrics
@@ -45,6 +47,48 @@ export default function Dashboard({
   const easyCount = questions.filter(q => q.difficulty === 'Easy').length;
   const medCount = questions.filter(q => q.difficulty === 'Medium').length;
   const hardCount = questions.filter(q => q.difficulty === 'Hard').length;
+
+  const difficultyBreakdown = {
+    easy: {
+      total: easyCount,
+      answered: questions.filter((q, i) => q.difficulty === 'Easy' && checkedStatus[i]).length,
+      correct: questions.filter((q, i) => q.difficulty === 'Easy' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+    },
+    medium: {
+      total: medCount,
+      answered: questions.filter((q, i) => q.difficulty === 'Medium' && checkedStatus[i]).length,
+      correct: questions.filter((q, i) => q.difficulty === 'Medium' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+    },
+    hard: {
+      total: hardCount,
+      answered: questions.filter((q, i) => q.difficulty === 'Hard' && checkedStatus[i]).length,
+      correct: questions.filter((q, i) => q.difficulty === 'Hard' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+    }
+  };
+
+  difficultyBreakdown.easy.accuracy = difficultyBreakdown.easy.answered > 0 
+    ? Math.round((difficultyBreakdown.easy.correct / difficultyBreakdown.easy.answered) * 100) 
+    : 0;
+  difficultyBreakdown.medium.accuracy = difficultyBreakdown.medium.answered > 0 
+    ? Math.round((difficultyBreakdown.medium.correct / difficultyBreakdown.medium.answered) * 100) 
+    : 0;
+  difficultyBreakdown.hard.accuracy = difficultyBreakdown.hard.answered > 0 
+    ? Math.round((difficultyBreakdown.hard.correct / difficultyBreakdown.hard.answered) * 100) 
+    : 0;
+
+  const handleStartDrill = (drillType) => {
+    if (drillType === 'errors') {
+      if (errorLog.length > 0) {
+        onJumpToQuestion(errorLog[0].qIndex - 1);
+      }
+    } else if (drillType === 'hard') {
+      const firstHard = questions.findIndex((q, i) => q.difficulty === 'Hard' && !checkedStatus[i]);
+      onJumpToQuestion(firstHard !== -1 ? firstHard : questions.findIndex(q => q.difficulty === 'Hard'));
+    } else {
+      const nextUnanswered = checkedStatus.findIndex(s => !s);
+      onJumpToQuestion(nextUnanswered !== -1 ? nextUnanswered : 0);
+    }
+  };
 
   // Filter questions for the grid
   const filteredQuestions = questions.map((q, idx) => ({ ...q, originalIndex: idx })).filter(q => {
@@ -121,6 +165,13 @@ export default function Dashboard({
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
             Developed by Twashin Ilahi
           </div>
+          <button 
+            className="btn" 
+            style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontWeight: 600 }}
+            onClick={() => setShowAiModal(true)}
+          >
+            ✨ AI Analysis & Drills
+          </button>
           <button className="btn btn-danger" onClick={() => setShowErrorModal(true)}>
             Error Log ({errorLog.length})
           </button>
@@ -312,6 +363,13 @@ export default function Dashboard({
             </div>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button 
+                className="btn" 
+                style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', padding: '9px 16px', fontSize: '0.92rem', fontWeight: 600 }}
+                onClick={() => setShowAiModal(true)}
+              >
+                ✨ AI Recommendations & Drills
+              </button>
               {errorLog.length > 0 && (
                 <button 
                   className="btn btn-danger" 
@@ -535,6 +593,21 @@ export default function Dashboard({
           </div>
         </div>
       )}
+
+      {/* Gemini AI Performance Analysis & Recommendations Modal */}
+      <AiAnalysisModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        totalCount={totalCount}
+        completedCount={answeredIndices.length}
+        correctCount={correctCount}
+        incorrectCount={incorrectCount}
+        accuracy={accuracy}
+        errorLog={errorLog}
+        difficultyBreakdown={difficultyBreakdown}
+        onJumpToQuestion={onJumpToQuestion}
+        onStartDrill={handleStartDrill}
+      />
     </div>
   );
 }
