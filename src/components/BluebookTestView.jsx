@@ -11,6 +11,9 @@ export default function BluebookTestView({
   eliminatedStatus = [],
   errorLog,
   autoStartEnabled,
+  practiceMode = 'normal',
+  onOpenErrorLog,
+  onReturnFromErrorDrill,
   onSelectChoice,
   onCheckAnswer,
   onToggleFlag,
@@ -318,15 +321,30 @@ export default function BluebookTestView({
         
         {/* Left: Section and Directions */}
         <div>
-          <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', letterSpacing: '-0.2px' }}>
-            Section 1, Module 1: Reading and Writing
+          <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', letterSpacing: '-0.2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Section 1, Module 1: Reading and Writing</span>
+            {practiceMode === 'serial-error' && (
+              <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '1px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                Serial Error Drill
+              </span>
+            )}
           </div>
-          <button 
-            onClick={() => setShowDirections(!showDirections)}
-            style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
-          >
-            Directions {showDirections ? '▴' : '▾'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button 
+              onClick={() => setShowDirections(!showDirections)}
+              style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
+            >
+              Directions {showDirections ? '▴' : '▾'}
+            </button>
+            {practiceMode === 'serial-error' && (
+              <button 
+                onClick={onReturnFromErrorDrill || onReturnToDashboard}
+                style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#005a9c', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}
+              >
+                ← Return to Error Directory
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Center: Timer + Controls (Pause, Run, Restart, Hide) */}
@@ -518,11 +536,19 @@ export default function BluebookTestView({
                 >
                   {isFullscreen ? "⤓ Exit Fullscreen" : "⛶ Enter Fullscreen"}
                 </button>
+                {practiceMode === 'serial-error' && (
+                  <button 
+                    onClick={() => { setShowMoreMenu(false); onReturnFromErrorDrill ? onReturnFromErrorDrill() : onReturnToDashboard(); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#005a9c' }}
+                  >
+                    ← Return to Error Directory
+                  </button>
+                )}
                 <button 
-                  onClick={() => { setShowMoreMenu(false); setShowErrorModal(true); }}
+                  onClick={() => { setShowMoreMenu(false); onOpenErrorLog ? onOpenErrorLog() : setShowErrorModal(true); }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 }}
                 >
-                  Error Log ({errorLog.length})
+                  📁 Error Directory ({errorLog.length})
                 </button>
                 <button 
                   onClick={() => { setShowMoreMenu(false); onExport(); }}
@@ -567,14 +593,14 @@ export default function BluebookTestView({
         </div>
       )}
 
-      {/* 2. Sub-Header: Dashed line and Centered Dark Blue Banner ("THIS IS A PRACTICE TEST") */}
+      {/* 2. Sub-Header: Dashed line and Centered Dark Blue Banner ("THIS IS A PRACTICE TEST" / "SERIAL ERROR RECOVERY DRILL") */}
       <div 
         onDoubleClick={handleToggleFullscreen}
         title="Double-click to toggle Fullscreen"
         style={{ position: 'relative', borderTop: '1.5px dashed #cbd5e1', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
       >
         <div style={{
-          background: '#23325c',
+          background: practiceMode === 'serial-error' ? '#991b1b' : '#23325c',
           color: '#ffffff',
           fontSize: '0.74rem',
           fontWeight: 800,
@@ -584,7 +610,7 @@ export default function BluebookTestView({
           textTransform: 'uppercase',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          THIS IS A PRACTICE TEST
+          {practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : "THIS IS A PRACTICE TEST"}
         </div>
       </div>
 

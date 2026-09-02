@@ -2,6 +2,51 @@ import rawQuestions from './questions.json';
 
 const LETTER_INDEX = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
 
+export function getTransitionCategory(transitionWord = "") {
+  const word = transitionWord.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  
+  // Contrast / Disagreement / Concession
+  const contrastWords = [
+    'however', 'nevertheless', 'nonetheless', 'conversely', 'by contrast', 
+    'in contrast', 'on the other hand', 'on the contrary', 'yet', 'still', 
+    'regardless', 'despite this', 'even so', 'granted', 'admittedly', 
+    'alternatively', 'instead', 'whereas'
+  ];
+  if (contrastWords.some(w => word === w || word.includes(w) || w.includes(word))) {
+    return 'Contrast';
+  }
+
+  // Cause & Effect / Consequence
+  const causeWords = [
+    'therefore', 'consequently', 'as a result', 'thus', 'hence', 
+    'accordingly', 'for this reason', 'because of this'
+  ];
+  if (causeWords.some(w => word === w || word.includes(w) || w.includes(word))) {
+    return 'Cause & Effect';
+  }
+
+  // Restatement / Exemplification / Clarification
+  const exemplificationWords = [
+    'specifically', 'for example', 'for instance', 'in particular', 
+    'that is', 'in other words', 'namely', 'to illustrate', 'put another way'
+  ];
+  if (exemplificationWords.some(w => word === w || word.includes(w) || w.includes(word))) {
+    return 'Exemplification / Restatement';
+  }
+
+  // Sequence / Chronology
+  const sequenceWords = [
+    'subsequently', 'previously', 'meanwhile', 'afterward', 'finally', 
+    'next', 'then', 'initially', 'simultaneously', 'earlier', 'later'
+  ];
+  if (sequenceWords.some(w => word === w || word.includes(w) || w.includes(word))) {
+    return 'Sequence / Chronology';
+  }
+
+  // Continuation / Addition / Similarity
+  return 'Continuation / Addition';
+}
+
 export const ALL_QUESTIONS = rawQuestions.map(q => {
   const choices = Array.isArray(q.options) 
     ? q.options.map(opt => typeof opt === 'string' ? opt : opt.text) 
@@ -10,6 +55,8 @@ export const ALL_QUESTIONS = rawQuestions.map(q => {
   const answerIndex = typeof q.answer === 'number' 
     ? q.answer 
     : (LETTER_INDEX[q.correctAnswer] ?? 0);
+
+  const correctWord = choices[answerIndex] || "";
 
   return {
     id: q.id,
@@ -24,7 +71,7 @@ export const ALL_QUESTIONS = rawQuestions.map(q => {
     answer: answerIndex,
     correctAnswerLetter: ['A', 'B', 'C', 'D'][answerIndex],
     rationale: q.rationale,
-    category: q.category || ""
+    category: q.category || getTransitionCategory(correctWord)
   };
 });
 

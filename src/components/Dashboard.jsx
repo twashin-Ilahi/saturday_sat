@@ -10,6 +10,8 @@ export default function Dashboard({
   errorLog,
   onStartPractice,
   onJumpToQuestion,
+  onOpenErrorLog,
+  onStartSerialErrorDrill,
   onReset,
   onExport,
   onImport,
@@ -172,8 +174,12 @@ export default function Dashboard({
           >
             ✨ AI Analysis & Drills
           </button>
-          <button className="btn btn-danger" onClick={() => setShowErrorModal(true)}>
-            Error Log ({errorLog.length})
+          <button 
+            className="btn btn-danger" 
+            onClick={onOpenErrorLog || (() => setShowErrorModal(true))}
+            title="Open comprehensive Error Log Directory"
+          >
+            Error Directory ({errorLog.length})
           </button>
           <button className="btn btn-backup" onClick={onExport}>
             Backup Data
@@ -239,7 +245,44 @@ export default function Dashboard({
               {errorLog.length}
             </div>
             <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>
-              {errorLog.length > 0 ? "Saved in Error Log for review" : "Clean sheet!"}
+              {errorLog.length > 0 ? "Saved in Error Directory for review" : "Clean sheet!"}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <button 
+                onClick={onOpenErrorLog}
+                style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: '#b91c1c',
+                  cursor: 'pointer'
+                }}
+              >
+                Open Directory
+              </button>
+              {errorLog.length > 0 && (
+                <button 
+                  onClick={() => onStartSerialErrorDrill(errorLog)}
+                  style={{
+                    background: '#2563eb',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '4px 10px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <span>▶</span> Serial Drill
+                </button>
+              )}
             </div>
           </div>
         </div>
