@@ -381,14 +381,38 @@ export default function BluebookTestView({
           {/* Highlights & Notes */}
           <button 
             onClick={() => setShowNotesDrawer(!showNotesDrawer)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: showNotesDrawer ? '#005a9c' : '#334155' }}
-            title="Open Scratchpad / Notes"
+            style={{ 
+              background: showNotesDrawer ? '#f1f5f9' : 'none', 
+              border: showNotesDrawer ? '1px solid #cbd5e1' : '1px solid transparent', 
+              borderRadius: '6px',
+              padding: '4px 8px',
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              fontSize: '0.82rem', 
+              fontWeight: 600, 
+              color: showNotesDrawer ? '#005a9c' : '#334155' 
+            }}
+            title="Open Highlights & Notes"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 20h9" />
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
             </svg>
             <span>Highlights & Notes</span>
+            {activePen && (
+              <span 
+                style={{ 
+                  width: '8px', 
+                  height: '8px', 
+                  borderRadius: '50%', 
+                  background: activePen === 'yellow' ? '#eab308' : '#ec4899',
+                  display: 'inline-block' 
+                }} 
+                title={`Active Pen: ${activePen}`}
+              />
+            )}
           </button>
 
           {/* More Menu (3 vertical dots) */}
@@ -483,114 +507,12 @@ export default function BluebookTestView({
       {/* 3. Main Split Workspace */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         
-        {/* Left Pane: Passage Display with Pen Toolbar and Text Highlighting */}
+        {/* Left Pane: Passage Display */}
         <div 
-          style={{ flex: 1, padding: '24px 44px 44px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
+          style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
           onMouseUp={handlePassageMouseUp}
           onClick={handlePassageClick}
         >
-          {/* Highlighter Pen Toolbar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            padding: '6px 12px',
-            marginBottom: '20px',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Highlighter Pen:
-              </span>
-              {/* Yellow Pen */}
-              <button
-                type="button"
-                onClick={() => setActivePen(activePen === 'yellow' ? null : 'yellow')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: activePen === 'yellow' ? '#fef08a' : '#ffffff',
-                  border: activePen === 'yellow' ? '2px solid #ca8a04' : '1px solid #cbd5e1',
-                  borderRadius: '16px',
-                  padding: '3px 12px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  color: '#854d0e',
-                  cursor: 'pointer',
-                  boxShadow: activePen === 'yellow' ? '0 1px 4px rgba(202,138,4,0.25)' : 'none'
-                }}
-                title="Select text to highlight Yellow"
-              >
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
-                Yellow Pen {activePen === 'yellow' ? '✓' : ''}
-              </button>
-
-              {/* Pink Pen */}
-              <button
-                type="button"
-                onClick={() => setActivePen(activePen === 'pink' ? null : 'pink')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: activePen === 'pink' ? '#fbcfe8' : '#ffffff',
-                  border: activePen === 'pink' ? '2px solid #db2777' : '1px solid #cbd5e1',
-                  borderRadius: '16px',
-                  padding: '3px 12px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  color: '#9d174d',
-                  cursor: 'pointer',
-                  boxShadow: activePen === 'pink' ? '0 1px 4px rgba(219,39,119,0.25)' : 'none'
-                }}
-                title="Select text to highlight Pink"
-              >
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
-                Pink Pen {activePen === 'pink' ? '✓' : ''}
-              </button>
-
-              {/* Cursor / None */}
-              <button
-                type="button"
-                onClick={() => setActivePen(null)}
-                style={{
-                  background: activePen === null ? '#e2e8f0' : '#ffffff',
-                  border: activePen === null ? '2px solid #64748b' : '1px solid #cbd5e1',
-                  borderRadius: '16px',
-                  padding: '3px 10px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: '#475569',
-                  cursor: 'pointer'
-                }}
-                title="Disable auto-highlighting"
-              >
-                Cursor {activePen === null ? '✓' : ''}
-              </button>
-            </div>
-
-            {/* Clear Highlights */}
-            <button
-              type="button"
-              onClick={clearAllHighlightsForQuestion}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#64748b',
-                fontSize: '0.76rem',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-              title="Clear all highlights on this question"
-            >
-              Clear All
-            </button>
-          </div>
-
           <div 
             key={q.id}
             ref={passageRef}
@@ -1149,12 +1071,13 @@ export default function BluebookTestView({
                   gap: '6px',
                   background: activePen === 'yellow' ? '#fef08a' : '#ffffff',
                   border: activePen === 'yellow' ? '2px solid #ca8a04' : '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  padding: '4px 12px',
                   fontSize: '0.82rem',
                   fontWeight: 700,
                   color: '#854d0e',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: activePen === 'yellow' ? '0 1px 4px rgba(202,138,4,0.25)' : 'none'
                 }}
               >
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
@@ -1170,12 +1093,13 @@ export default function BluebookTestView({
                   gap: '6px',
                   background: activePen === 'pink' ? '#fbcfe8' : '#ffffff',
                   border: activePen === 'pink' ? '2px solid #db2777' : '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  padding: '4px 12px',
                   fontSize: '0.82rem',
                   fontWeight: 700,
                   color: '#9d174d',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: activePen === 'pink' ? '0 1px 4px rgba(219,39,119,0.25)' : 'none'
                 }}
               >
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
@@ -1184,12 +1108,29 @@ export default function BluebookTestView({
 
               <button 
                 type="button"
+                onClick={() => setActivePen(null)}
+                style={{
+                  background: activePen === null ? '#e2e8f0' : '#ffffff',
+                  border: activePen === null ? '2px solid #64748b' : '1px solid #cbd5e1',
+                  borderRadius: '16px',
+                  padding: '4px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                Cursor {activePen === null ? '✓' : ''}
+              </button>
+
+              <button 
+                type="button"
                 onClick={clearAllHighlightsForQuestion}
                 style={{
                   background: '#ffffff',
                   border: '1px solid #cbd5e1',
-                  borderRadius: '4px',
-                  padding: '4px 10px',
+                  borderRadius: '16px',
+                  padding: '4px 12px',
                   fontSize: '0.8rem',
                   color: '#64748b',
                   cursor: 'pointer'
@@ -1199,8 +1140,8 @@ export default function BluebookTestView({
                 Clear All
               </button>
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '8px' }}>
-              💡 Select a pen, then drag over any text in the passage to highlight it. Click on any highlight to reveal the 🗑️ dustbin and delete it.
+            <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '8px', lineHeight: 1.4 }}>
+              💡 Select a pen, then drag over any text in the passage to highlight it immediately. Click any highlight to reveal the 🗑️ dustbin and delete it.
             </div>
           </div>
 
