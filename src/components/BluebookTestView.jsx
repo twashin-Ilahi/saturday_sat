@@ -7,10 +7,14 @@ export default function BluebookTestView({
   currentIndex,
   selectedAnswers,
   checkedStatus,
+  flaggedStatus = [],
+  eliminatedStatus = [],
   errorLog,
   autoStartEnabled,
   onSelectChoice,
   onCheckAnswer,
+  onToggleFlag,
+  onToggleEliminate,
   onNavigate,
   onToggleAutoStart,
   onReset,
@@ -19,8 +23,15 @@ export default function BluebookTestView({
   onReturnToDashboard,
 }) {
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [isTimerHidden, setIsTimerHidden] = useState(false);
+  const [showDirections, setShowDirections] = useState(false);
+  const [showNavPopover, setShowNavPopover] = useState(false);
+  const [showNotesDrawer, setShowNotesDrawer] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [eliminatorMode, setEliminatorMode] = useState(false);
   const [aiExplanation, setAiExplanation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -28,51 +39,38 @@ export default function BluebookTestView({
   const q = questions[currentIndex] || questions[0];
   const isCurrentChecked = checkedStatus[currentIndex];
   const currentSelection = selectedAnswers[currentIndex];
+  const isFlagged = flaggedStatus[currentIndex] || false;
+  const eliminatedChoices = eliminatedStatus[currentIndex] || [];
 
-  // Timer logic
+  // Stopwatch timer
   useEffect(() => {
     let interval = null;
-    if (isRunning) {
+    if (isTimerRunning) {
       interval = setInterval(() => {
         setTimerSeconds(s => s + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isTimerRunning]);
 
-  // When question changes, reset timer and auto-start if configured
+  // Reset per question
   useEffect(() => {
     setTimerSeconds(0);
     setAiExplanation("");
     setAiLoading(false);
+    setShowNavPopover(false);
+    setShowMoreMenu(false);
     if (autoStartEnabled && !checkedStatus[currentIndex]) {
-      setIsRunning(true);
+      setIsTimerRunning(true);
     } else {
-      setIsRunning(false);
+      setIsTimerRunning(false);
     }
   }, [currentIndex, autoStartEnabled]);
-
-  const handleAskAi = async () => {
-    setAiLoading(true);
-    setAiExplanation("");
-    const res = await explainSingleQuestionWithGemini({
-      question: q,
-      studentChoice: currentSelection,
-      isCorrect
-    });
-    setAiLoading(false);
-    if (res.success) {
-      setAiExplanation(res.text);
-    } else {
-      setAiExplanation("AI Error: " + (res.error || "Failed to load Gemini breakdown."));
-    }
-  };
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if modal is open or target is an input
-      if (showErrorModal || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (showErrorModal || showNotesDrawer || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
       if (e.key === 'ArrowLeft') {
         if (currentIndex > 0) onNavigate(currentIndex - 1);
@@ -84,7 +82,7 @@ export default function BluebookTestView({
         else if (e.key === '3' || e.key.toLowerCase() === 'c') onSelectChoice(currentIndex, 2);
         else if (e.key === '4' || e.key.toLowerCase() === 'd') onSelectChoice(currentIndex, 3);
         else if (e.key === 'Enter' && currentSelection !== null) {
-          setIsRunning(false);
+          setIsTimerRunning(false);
           onCheckAnswer(currentIndex, timerSeconds);
         }
       }
@@ -92,15 +90,31 @@ export default function BluebookTestView({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, isCurrentChecked, currentSelection, questions.length, showErrorModal, timerSeconds]);
+  }, [currentIndex, isCurrentChecked, currentSelection, questions.length, showErrorModal, showNotesDrawer, timerSeconds]);
 
   const handleCheck = () => {
     if (currentSelection === null) {
       alert("Please select an answer before checking.");
       return;
     }
-    setIsRunning(false);
+    setIsTimerRunning(false);
     onCheckAnswer(currentIndex, timerSeconds);
+  };
+
+  const handleAskAi = async () => {
+    setAiLoading(true);
+    setAiExplanation("");
+    const res = await explainSingleQuestionWithGemini({
+      question: q,
+      studentChoice: currentSelection,
+      isCorrect: currentSelection === q.answer
+    });
+    setAiLoading(false);
+    if (res.success) {
+      setAiExplanation(res.text);
+    } else {
+      setAiExplanation("AI Error: " + (res.error || "Failed to load Gemini breakdown."));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -119,188 +133,427 @@ export default function BluebookTestView({
     e.target.value = "";
   };
 
-  // Difficulty bars active count: Easy = 1, Medium = 2, Hard = 3
   const activeBars = q.difficulty === "Easy" ? 1 : q.difficulty === "Medium" ? 2 : 3;
+  const isCorrect = currentSelection === q.answer;
+  const letters = ["A", "B", "C", "D"];
 
-  // Render passage with blank styled
+  // Replace [BLANK] with authentic line
   const renderedPassage = q.passage.replace(
     "[BLANK]",
-    '<span class="blank-space">______</span>'
+    '<span style="display:inline-block; min-width:60px; border-bottom:2px solid #000; margin:0 4px; vertical-align:bottom;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'
   );
 
-  const letters = ["A", "B", "C", "D"];
-  const isCorrect = currentSelection === q.answer;
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#fff' }}>
-      {/* Top Utilities */}
-      <div className="top-utility-bar">
-        <div className="utility-group">
-          <button className="btn" onClick={onReturnToDashboard} title="Return to Dashboard">
-            ← Dashboard
-          </button>
-          <div className="timer-display">{formatTime(timerSeconds)}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#ffffff', color: '#111827', overflow: 'hidden', userSelect: 'text' }}>
+      
+      {/* 1. Official Bluebook Top Bar */}
+      <header style={{ height: '62px', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'relative', zIndex: 30 }}>
+        
+        {/* Left: Section and Directions */}
+        <div>
+          <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', letterSpacing: '-0.2px' }}>
+            Section 1, Module 1: Reading and Writing
+          </div>
           <button 
-            className={`btn ${isRunning ? 'btn-danger' : ''}`}
-            onClick={() => setIsRunning(!isRunning)}
+            onClick={() => setShowDirections(!showDirections)}
+            style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}
           >
-            {isRunning ? "Pause Clock" : "Start Clock"}
+            Directions {showDirections ? '▴' : '▾'}
           </button>
-          <button className="btn" onClick={() => { setIsRunning(false); setTimerSeconds(0); }}>
-            Reset Clock
-          </button>
-          <label style={{ fontSize: '0.85rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-            <input 
-              type="checkbox" 
-              checked={autoStartEnabled} 
-              onChange={(e) => onToggleAutoStart(e.target.checked)} 
-            /> 
-            Auto-start
-          </label>
         </div>
 
-        <div className="utility-group">
-          <span style={{ fontSize: '0.92rem', fontWeight: 600, color: '#444' }}>
-            Question {currentIndex + 1} of {questions.length}
-          </span>
-          <select 
-            className="btn" 
-            value={currentIndex} 
-            onChange={(e) => onNavigate(parseInt(e.target.value, 10))}
-          >
-            {questions.map((item, idx) => (
-              <option key={item.id || idx} value={idx}>
-                Q{idx + 1} ({item.difficulty}){checkedStatus[idx] ? " ✓" : ""}
-              </option>
-            ))}
-          </select>
-          <button className="btn btn-danger" onClick={() => setShowErrorModal(true)}>
-            Error Log ({errorLog.length})
-          </button>
-          <button className="btn btn-backup" onClick={onExport}>
-            Backup Data
-          </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            style={{ display: 'none' }} 
-            accept=".json" 
-            onChange={handleFileChange} 
-          />
-          <button className="btn btn-backup" onClick={() => fileInputRef.current?.click()}>
-            Load Backup
-          </button>
-          <button 
-            className="btn" 
-            style={{ color: '#666', fontSize: '0.8rem' }} 
-            onClick={() => {
-              if (confirm("Are you sure you want to reset all progress and the error log?")) {
-                onReset();
-                setTimerSeconds(0);
-                setIsRunning(false);
-              }
+        {/* Center: Timer + Hide button */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: 700, fontFamily: 'monospace', color: '#111827', letterSpacing: '0.5px' }}>
+            {isTimerHidden ? "--:--" : formatTime(timerSeconds)}
+          </div>
+          <button
+            onClick={() => setIsTimerHidden(!isTimerHidden)}
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              padding: '1px 12px',
+              borderRadius: '12px',
+              border: '1px solid #94a3b8',
+              background: '#ffffff',
+              color: '#334155',
+              cursor: 'pointer',
+              marginTop: '1px'
             }}
           >
-            Reset All
+            {isTimerHidden ? "Show" : "Hide"}
           </button>
+        </div>
+
+        {/* Right: Battery, Highlights & Notes, More Menu */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          {/* Battery Status Indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>
+            <span>55%</span>
+            <svg width="22" height="12" viewBox="0 0 24 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="1" y="1" width="19" height="10" rx="2" />
+              <rect x="3" y="3" width="10" height="6" fill="#10b981" />
+              <path d="M21 4.5V7.5" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Highlights & Notes */}
+          <button 
+            onClick={() => setShowNotesDrawer(!showNotesDrawer)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: showNotesDrawer ? '#005a9c' : '#334155' }}
+            title="Open Scratchpad / Notes"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+            <span>Highlights & Notes</span>
+          </button>
+
+          {/* More Menu (3 vertical dots) */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.82rem', fontWeight: 600, color: showMoreMenu ? '#005a9c' : '#334155' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="5" r="1" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="12" cy="19" r="1" />
+              </svg>
+              <span>More</span>
+            </button>
+
+            {/* More Menu Dropdown */}
+            {showMoreMenu && (
+              <div style={{ position: 'absolute', right: 0, top: '32px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', width: '220px', zIndex: 100, overflow: 'hidden' }}>
+                <button 
+                  onClick={() => { setShowMoreMenu(false); onReturnToDashboard(); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#005a9c' }}
+                >
+                  ← Return to Dashboard
+                </button>
+                <button 
+                  onClick={() => { setShowMoreMenu(false); setShowErrorModal(true); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 }}
+                >
+                  Error Log ({errorLog.length})
+                </button>
+                <button 
+                  onClick={() => { setShowMoreMenu(false); onExport(); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}
+                >
+                  Backup Data (JSON)
+                </button>
+                <button 
+                  onClick={() => { setShowMoreMenu(false); fileInputRef.current?.click(); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}
+                >
+                  Load Backup (JSON)
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    if (confirm("Reset all progress and error log?")) onReset();
+                  }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#64748b' }}
+                >
+                  Reset Progress
+                </button>
+              </div>
+            )}
+          </div>
+          <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".json" onChange={handleFileChange} />
+        </div>
+      </header>
+
+      {/* Directions Accordion Drawer */}
+      {showDirections && (
+        <div style={{ background: '#f8fafc', borderBottom: '2px solid #005a9c', padding: '16px 24px', fontSize: '0.88rem', lineHeight: 1.6, color: '#334155', animation: 'fadeIn 0.2s' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <h4 style={{ fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Module 1 Directions</h4>
+            <p style={{ marginBottom: '6px' }}>
+              The questions in this section address a number of important reading and writing skills. Each question includes one or more passages, which may include a table or graph. Read each passage and question carefully, and then choose the best answer to the question based on the passage(s).
+            </p>
+            <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '8px' }}>
+              All questions in this module are multiple-choice with four answer choices. Each question has a single best answer.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Sub-Header: Dashed line and Centered Dark Blue Banner ("THIS IS A PRACTICE TEST") */}
+      <div style={{ position: 'relative', borderTop: '1.5px dashed #cbd5e1', display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          background: '#23325c',
+          color: '#ffffff',
+          fontSize: '0.74rem',
+          fontWeight: 800,
+          letterSpacing: '1px',
+          padding: '4px 34px',
+          borderRadius: '0 0 10px 10px',
+          textTransform: 'uppercase',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          THIS IS A PRACTICE TEST
         </div>
       </div>
 
-      {/* College Board Header Table */}
-      <table className="cb-meta-table">
-        <thead>
-          <tr>
-            <th style={{ width: '18%' }}>Assessment</th>
-            <th style={{ width: '26%' }}>Section</th>
-            <th style={{ width: '24%' }}>Domain</th>
-            <th style={{ width: '18%' }}>Skill</th>
-            <th style={{ width: '14%' }}>Difficulty</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{q.assessment || "SAT"}</td>
-            <td>{q.section || "Reading and Writing"}</td>
-            <td>{q.domain || "Expression of Ideas"}</td>
-            <td>{q.skill || "Transitions"}</td>
-            <td>
-              <div className="diff-bars">
-                <div className={`diff-bar ${activeBars >= 1 ? 'active' : ''}`} />
-                <div className={`diff-bar ${activeBars >= 2 ? 'active' : ''}`} />
-                <div className={`diff-bar ${activeBars >= 3 ? 'active' : ''}`} />
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {/* 3. Main Split Workspace */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        
+        {/* Left Pane: Passage Display */}
+        <div style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff' }}>
+          <div style={{
+            fontFamily: 'Merriweather, Georgia, Cambria, serif',
+            fontSize: '1.08rem',
+            lineHeight: 1.85,
+            color: '#1f2937',
+            maxWidth: '680px'
+          }} dangerouslySetInnerHTML={{ __html: renderedPassage }} />
+        </div>
 
-      {/* Main Question Split Workspace */}
-      <div className="workspace">
-        {/* Left Pane: Passage */}
-        <div className="left-pane">
-          <div className="section-header">{q.section || "Reading and Writing"}</div>
-          <div className="diff-text">Difficulty: {q.difficulty}</div>
-          <div 
-            className="passage-body" 
-            dangerouslySetInnerHTML={{ __html: renderedPassage }} 
-          />
-          <div className="prompt-text">
-            {q.prompt || "Which choice completes the text with the most logical transition?"}
+        {/* Center Vertical Divider with Resize Handle Pill */}
+        <div style={{ width: '0px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+          <div style={{
+            position: 'absolute',
+            width: '18px',
+            height: '38px',
+            background: '#334155',
+            borderRadius: '9px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: '0.65rem',
+            cursor: 'col-resize',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+          }}>
+            ◂▸
           </div>
         </div>
 
-        {/* Right Pane: Answer Choices */}
-        <div className="right-pane">
-          <div className="answer-title">Answer</div>
-          <div className="choices-container">
+        {/* Right Pane: Question, Header & Choices */}
+        <div style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Question Top Header with Black Square Badge, Bookmark Flag, and Blue ABC Option Eliminator */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Black Square Question Badge */}
+              <div style={{
+                background: '#111827',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: '1rem',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '3px'
+              }}>
+                {currentIndex + 1}
+              </div>
+
+              {/* Mark for Review Button */}
+              <button 
+                onClick={() => onToggleFlag(currentIndex)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  color: isFlagged ? '#d97706' : '#334155'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={isFlagged ? "#d97706" : "none"} stroke="currentColor" strokeWidth="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>{isFlagged ? "Marked for Review" : "Mark for Review"}</span>
+              </button>
+            </div>
+
+            {/* Option Eliminator Mode Button (ABC with strikethrough) */}
+            <button
+              onClick={() => setEliminatorMode(!eliminatorMode)}
+              style={{
+                background: eliminatorMode ? '#1e40af' : '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
+              }}
+              title="Option Eliminator (cross out wrong choices)"
+            >
+              <span style={{ fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px', textDecoration: 'line-through' }}>
+                ABC
+              </span>
+            </button>
+          </div>
+
+          {/* Dashed line under question header */}
+          <div style={{ borderBottom: '1.5px dashed #cbd5e1', marginBottom: '14px' }} />
+
+          {/* Metadata pill tags (Skill, Difficulty, Question ID) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '4px' }}>
+              Skill: {q.skill || "Transitions"}
+            </span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: q.difficulty === 'Easy' ? '#dcfce7' : q.difficulty === 'Medium' ? '#ffedd5' : '#fee2e2', color: q.difficulty === 'Easy' ? '#15803d' : q.difficulty === 'Medium' ? '#c2410c' : '#b91c1c', padding: '2px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Difficulty: {q.difficulty}
+              <span style={{ letterSpacing: '1px' }}>
+                {activeBars === 1 ? "▰▱▱" : activeBars === 2 ? "▰▰▱" : "▰▰▰"}
+              </span>
+            </span>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              ID: {q.id}
+            </span>
+          </div>
+
+          {/* Prompt text */}
+          <div style={{ fontSize: '1rem', color: '#111827', fontWeight: 500, lineHeight: 1.5, marginBottom: '20px' }}>
+            {q.prompt || "Which choice completes the text with the most logical transition?"}
+          </div>
+
+          {/* Choices List (Rounded Cards with circle letters and strikethrough eliminators) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
             {q.choices.map((choice, idx) => {
-              let choiceClass = "choice-item";
-              if (currentSelection === idx) choiceClass += " selected";
+              const isSelected = currentSelection === idx;
+              const isEliminated = eliminatedChoices.includes(idx);
+
+              let cardBorder = '#64748b';
+              let cardBg = '#ffffff';
+              let textColor = '#111827';
+
+              if (isSelected) {
+                cardBorder = '#005a9c';
+                cardBg = '#edf4fc';
+              }
+
+              if (isEliminated) {
+                cardBg = '#f8fafc';
+                cardBorder = '#cbd5e1';
+                textColor = '#94a3b8';
+              }
+
               if (isCurrentChecked) {
-                if (idx === q.answer) choiceClass += " correct-revealed";
-                if (currentSelection === idx && idx !== q.answer) choiceClass += " incorrect-revealed";
+                if (idx === q.answer) {
+                  cardBorder = '#16a34a';
+                  cardBg = '#dcfce7';
+                  textColor = '#14532d';
+                } else if (isSelected && idx !== q.answer) {
+                  cardBorder = '#dc2626';
+                  cardBg = '#fee2e2';
+                  textColor = '#7f1d1d';
+                }
               }
 
               return (
-                <label 
-                  key={idx} 
-                  className={choiceClass} 
+                <div
+                  key={idx}
                   onClick={() => {
                     if (!isCurrentChecked) onSelectChoice(currentIndex, idx);
                   }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    border: `1.5px solid ${cardBorder}`,
+                    borderRadius: '8px',
+                    padding: '12px 18px',
+                    background: cardBg,
+                    cursor: isCurrentChecked ? 'default' : 'pointer',
+                    transition: 'all 0.12s ease-in-out',
+                    boxShadow: isSelected ? '0 0 0 1px #005a9c' : 'none'
+                  }}
                 >
-                  <input 
-                    type="radio" 
-                    name={`choice_${q.id}`} 
-                    value={idx} 
-                    checked={currentSelection === idx} 
-                    disabled={isCurrentChecked} 
-                    onChange={() => {
-                      if (!isCurrentChecked) onSelectChoice(currentIndex, idx);
-                    }} 
-                  />
-                  <span><strong>{letters[idx]}.</strong> {choice}</span>
-                </label>
+                  {/* Left: Circle with letter (A), (B), (C), (D) + Option text */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      border: `1.5px solid ${isSelected ? '#005a9c' : isEliminated ? '#cbd5e1' : '#475569'}`,
+                      background: isSelected ? '#005a9c' : '#ffffff',
+                      color: isSelected ? '#ffffff' : isEliminated ? '#94a3b8' : '#111827',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {letters[idx]}
+                    </div>
+                    <span style={{
+                      fontSize: '0.98rem',
+                      lineHeight: 1.4,
+                      color: textColor,
+                      fontWeight: isSelected || (isCurrentChecked && idx === q.answer) ? 600 : 400,
+                      textDecoration: isEliminated ? 'line-through' : 'none'
+                    }}>
+                      {choice}
+                    </span>
+                  </div>
+
+                  {/* Right: Eliminator Strike Button (A̶) */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleEliminate(currentIndex, idx);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      color: isEliminated ? '#dc2626' : '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={isEliminated ? "Restore Choice" : "Cross out choice"}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" stroke="#dc2626" strokeWidth="2" opacity={isEliminated ? "1" : "0.35"} />
+                      <text x="12" y="15.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" stroke="none">
+                        {letters[idx]}
+                      </text>
+                    </svg>
+                  </button>
+                </div>
               );
             })}
           </div>
 
-          {/* Rationale Container */}
+          {/* Rationale & Gemini Breakdown Box (When checked) */}
           {isCurrentChecked && (
-            <div className="rationale-container">
-              <div 
-                className="rationale-title" 
-                style={{ color: isCorrect ? 'var(--correct)' : 'var(--incorrect)' }}
-              >
-                {isCorrect ? "✓ Correct" : "✕ Incorrect"}
+            <div style={{ background: '#f8fafc', borderLeft: '4px solid var(--cb-blue)', borderRadius: '4px', padding: '16px 20px', marginTop: '10px', fontSize: '0.95rem', lineHeight: 1.6 }}>
+              <div style={{ fontWeight: 700, marginBottom: '6px', color: isCorrect ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>{isCorrect ? "✓ Correct" : "✕ Incorrect"}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#64748b' }}>
+                  — Correct Choice is {q.correctAnswerLetter}
+                </span>
               </div>
-              <div style={{ color: '#222', marginBottom: '10px' }}>{q.rationale}</div>
+              <div style={{ color: '#1e293b', marginBottom: '12px' }}>
+                {q.rationale}
+              </div>
 
-              {/* Gemini Question Breakdown */}
-              <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '10px', marginTop: '10px' }}>
+              {/* Gemini AI On-Demand Breakdown */}
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px' }}>
                 {!aiExplanation && !aiLoading && (
                   <button 
-                    className="btn" 
+                    className="btn"
                     style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
                     onClick={handleAskAi}
                   >
@@ -309,11 +562,11 @@ export default function BluebookTestView({
                 )}
                 {aiLoading && (
                   <div style={{ fontSize: '0.85rem', color: '#6d28d9', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>✦ Gemini is analyzing this question...</span>
+                    <span>✦ Gemini is breaking down this question...</span>
                   </div>
                 )}
                 {aiExplanation && (
-                  <div style={{ background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '10px 14px', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.5, color: '#333', whiteSpace: 'pre-wrap' }}>
+                  <div style={{ background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '12px 16px', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.55, color: '#334155', whiteSpace: 'pre-wrap' }}>
                     <div style={{ fontWeight: 700, color: '#6d28d9', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>✦ Gemini AI Coach Breakdown</span>
                       <button style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#888', fontSize: '0.78rem' }} onClick={() => setAiExplanation("")}>✕</button>
@@ -324,36 +577,225 @@ export default function BluebookTestView({
               </div>
             </div>
           )}
+
         </div>
       </div>
 
-      {/* Bottom Navigation Bar */}
-      <div className="footer-bar">
-        <div className="qid-indicator">Question ID: {q.id} • Developed by Twashin Ilahi</div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+      {/* 4. Official Bluebook Bottom Bar */}
+      <footer style={{
+        height: '64px',
+        padding: '0 24px',
+        borderTop: '1.5px dashed #cbd5e1',
+        background: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'relative',
+        zIndex: 20
+      }}>
+        {/* Left: Student Name and Return to Dashboard */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>
+            Md Twashin Ilahi
+          </div>
           <button 
-            className="btn" 
-            disabled={currentIndex === 0} 
-            onClick={() => onNavigate(currentIndex - 1)}
+            onClick={onReturnToDashboard}
+            style={{
+              background: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              borderRadius: '4px',
+              padding: '4px 10px',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              color: '#334155',
+              cursor: 'pointer'
+            }}
           >
-            Previous
+            ← Dashboard
           </button>
-          <button 
-            className="btn btn-primary" 
-            disabled={isCurrentChecked} 
+        </div>
+
+        {/* Center: Black Pill Question Navigator */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowNavPopover(!showNavPopover)}
+            style={{
+              background: '#111827',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '8px 22px',
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
+            }}
+          >
+            <span>Question {currentIndex + 1} of {questions.length}</span>
+            <span style={{ fontSize: '0.75rem' }}>{showNavPopover ? '▾' : '▴'}</span>
+          </button>
+
+          {/* Bluebook Question Grid Popover */}
+          {showNavPopover && (
+            <div style={{
+              position: 'absolute',
+              bottom: '52px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '380px',
+              maxHeight: '360px',
+              background: '#ffffff',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+              padding: '16px',
+              zIndex: 100,
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>Review Questions</span>
+                <span style={{ fontSize: '0.78rem', color: '#666' }}>{questions.length} Questions</span>
+              </div>
+
+              {/* Grid of question buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                {questions.map((qItem, idx) => {
+                  const isCurrent = idx === currentIndex;
+                  const isChecked = checkedStatus[idx];
+                  const flagged = flaggedStatus[idx];
+
+                  let btnBg = '#f8fafc';
+                  let btnColor = '#334155';
+                  let border = '1px solid #cbd5e1';
+
+                  if (isChecked) {
+                    btnBg = selectedAnswers[idx] === qItem.answer ? '#dcfce7' : '#fee2e2';
+                    btnColor = selectedAnswers[idx] === qItem.answer ? '#15803d' : '#b91c1c';
+                    border = `1px solid ${selectedAnswers[idx] === qItem.answer ? '#86efac' : '#fca5a5'}`;
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        onNavigate(idx);
+                        setShowNavPopover(false);
+                      }}
+                      style={{
+                        height: '36px',
+                        border: isCurrent ? '2px solid #005a9c' : border,
+                        background: btnBg,
+                        color: btnColor,
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                    >
+                      {idx + 1}
+                      {flagged && (
+                        <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.7rem' }}>
+                          🔖
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Navigation Buttons (Back, Check Answer, Next) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {currentIndex > 0 && (
+            <button
+              onClick={() => onNavigate(currentIndex - 1)}
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '20px',
+                padding: '8px 20px',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                color: '#334155',
+                cursor: 'pointer'
+              }}
+            >
+              Back
+            </button>
+          )}
+
+          <button
             onClick={handleCheck}
+            disabled={isCurrentChecked}
+            style={{
+              background: isCurrentChecked ? '#f1f5f9' : '#ffffff',
+              border: '1.5px solid #005a9c',
+              borderRadius: '20px',
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: isCurrentChecked ? '#94a3b8' : '#005a9c',
+              cursor: isCurrentChecked ? 'not-allowed' : 'pointer'
+            }}
           >
             {isCurrentChecked ? "Checked" : "Check Answer"}
           </button>
-          <button 
-            className="btn" 
-            disabled={currentIndex === questions.length - 1} 
-            onClick={() => onNavigate(currentIndex + 1)}
+
+          <button
+            onClick={() => {
+              if (currentIndex < questions.length - 1) onNavigate(currentIndex + 1);
+            }}
+            disabled={currentIndex === questions.length - 1}
+            style={{
+              background: '#2563eb',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '8px 26px',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              cursor: currentIndex === questions.length - 1 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex === questions.length - 1 ? 0.6 : 1,
+              boxShadow: '0 2px 4px rgba(37,99,235,0.25)'
+            }}
           >
             Next
           </button>
         </div>
-      </div>
+      </footer>
+
+      {/* Highlights & Notes Scratchpad Drawer */}
+      {showNotesDrawer && (
+        <div style={{
+          position: 'fixed',
+          right: '20px',
+          top: '74px',
+          width: '320px',
+          background: '#fff',
+          border: '1px solid #cbd5e1',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          zIndex: 90,
+          padding: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>Notes & Scratchpad</span>
+            <button style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setShowNotesDrawer(false)}>✕</button>
+          </div>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Type your notes or scratchwork here..."
+            style={{ width: '100%', height: '180px', padding: '10px', fontSize: '0.85rem', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'none' }}
+          />
+        </div>
+      )}
 
       {/* Error Log Modal */}
       {showErrorModal && (
@@ -371,7 +813,7 @@ export default function BluebookTestView({
                   <div key={err.id || i} className="error-card">
                     <div className="error-card-header">
                       <span>#{err.qIndex} (ID: {err.id}) — Difficulty: {err.difficulty}</span>
-                      <span>Time Spent: {err.timeSpent}</span>
+                      <span>Time: {err.timeSpent}</span>
                     </div>
                     <p style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
                       <strong>Context:</strong> {err.passage}
@@ -392,6 +834,7 @@ export default function BluebookTestView({
           </div>
         </div>
       )}
+
     </div>
   );
 }

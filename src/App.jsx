@@ -101,6 +101,30 @@ export default function App() {
     setCurrentView('practice');
   };
 
+  const handleToggleFlag = (questionIndex) => {
+    setState(prev => {
+      const newFlagged = [...(prev.flaggedStatus || new Array(ALL_QUESTIONS.length).fill(false))];
+      newFlagged[questionIndex] = !newFlagged[questionIndex];
+      return { ...prev, flaggedStatus: newFlagged };
+    });
+  };
+
+  const handleToggleEliminate = (questionIndex, choiceIndex) => {
+    setState(prev => {
+      const currentElim = prev.eliminatedStatus || Array.from({ length: ALL_QUESTIONS.length }, () => []);
+      const qElim = [...(currentElim[questionIndex] || [])];
+      const foundIdx = qElim.indexOf(choiceIndex);
+      if (foundIdx > -1) {
+        qElim.splice(foundIdx, 1);
+      } else {
+        qElim.push(choiceIndex);
+      }
+      const newAllElim = [...currentElim];
+      newAllElim[questionIndex] = qElim;
+      return { ...prev, eliminatedStatus: newAllElim };
+    });
+  };
+
   const handleReturnToDashboard = () => {
     setCurrentView('dashboard');
   };
@@ -112,10 +136,14 @@ export default function App() {
         currentIndex={state.currentIndex}
         selectedAnswers={state.selectedAnswers}
         checkedStatus={state.checkedStatus}
+        flaggedStatus={state.flaggedStatus || []}
+        eliminatedStatus={state.eliminatedStatus || []}
         errorLog={state.errorLog}
         autoStartEnabled={state.autoStartEnabled}
         onSelectChoice={handleSelectChoice}
         onCheckAnswer={handleCheckAnswer}
+        onToggleFlag={handleToggleFlag}
+        onToggleEliminate={handleToggleEliminate}
         onNavigate={handleNavigate}
         onToggleAutoStart={handleToggleAutoStart}
         onReset={handleReset}

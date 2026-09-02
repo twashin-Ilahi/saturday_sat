@@ -1,6 +1,8 @@
 const STORAGE_KEY_INDEX = "sat_practice_current_idx";
 const STORAGE_KEY_SELECTIONS = "sat_practice_selections";
 const STORAGE_KEY_CHECKED = "sat_practice_checked";
+const STORAGE_KEY_FLAGGED = "sat_practice_flagged";
+const STORAGE_KEY_ELIMINATED = "sat_practice_eliminated";
 const STORAGE_KEY_ERRORS = "sat_practice_error_log";
 const STORAGE_KEY_AUTOSTART = "sat_practice_autostart";
 
@@ -8,6 +10,8 @@ export function loadProgress(totalQuestions) {
   let currentIndex = 0;
   let selectedAnswers = new Array(totalQuestions).fill(null);
   let checkedStatus = new Array(totalQuestions).fill(false);
+  let flaggedStatus = new Array(totalQuestions).fill(false);
+  let eliminatedStatus = Array.from({ length: totalQuestions }, () => []);
   let errorLog = [];
   let autoStartEnabled = true;
 
@@ -20,7 +24,6 @@ export function loadProgress(totalQuestions) {
       const parsed = JSON.parse(savedSelections);
       if (Array.isArray(parsed)) {
         selectedAnswers = parsed;
-        // ensure length
         while (selectedAnswers.length < totalQuestions) selectedAnswers.push(null);
       }
     }
@@ -31,6 +34,24 @@ export function loadProgress(totalQuestions) {
       if (Array.isArray(parsed)) {
         checkedStatus = parsed;
         while (checkedStatus.length < totalQuestions) checkedStatus.push(false);
+      }
+    }
+
+    const savedFlagged = localStorage.getItem(STORAGE_KEY_FLAGGED);
+    if (savedFlagged) {
+      const parsed = JSON.parse(savedFlagged);
+      if (Array.isArray(parsed)) {
+        flaggedStatus = parsed;
+        while (flaggedStatus.length < totalQuestions) flaggedStatus.push(false);
+      }
+    }
+
+    const savedEliminated = localStorage.getItem(STORAGE_KEY_ELIMINATED);
+    if (savedEliminated) {
+      const parsed = JSON.parse(savedEliminated);
+      if (Array.isArray(parsed)) {
+        eliminatedStatus = parsed;
+        while (eliminatedStatus.length < totalQuestions) eliminatedStatus.push([]);
       }
     }
 
@@ -55,16 +76,20 @@ export function loadProgress(totalQuestions) {
     currentIndex,
     selectedAnswers,
     checkedStatus,
+    flaggedStatus,
+    eliminatedStatus,
     errorLog,
     autoStartEnabled,
   };
 }
 
-export function saveProgress({ currentIndex, selectedAnswers, checkedStatus, errorLog, autoStartEnabled }) {
+export function saveProgress({ currentIndex, selectedAnswers, checkedStatus, flaggedStatus, eliminatedStatus, errorLog, autoStartEnabled }) {
   try {
     if (currentIndex !== undefined) localStorage.setItem(STORAGE_KEY_INDEX, currentIndex);
     if (selectedAnswers !== undefined) localStorage.setItem(STORAGE_KEY_SELECTIONS, JSON.stringify(selectedAnswers));
     if (checkedStatus !== undefined) localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(checkedStatus));
+    if (flaggedStatus !== undefined) localStorage.setItem(STORAGE_KEY_FLAGGED, JSON.stringify(flaggedStatus));
+    if (eliminatedStatus !== undefined) localStorage.setItem(STORAGE_KEY_ELIMINATED, JSON.stringify(eliminatedStatus));
     if (errorLog !== undefined) localStorage.setItem(STORAGE_KEY_ERRORS, JSON.stringify(errorLog));
     if (autoStartEnabled !== undefined) localStorage.setItem(STORAGE_KEY_AUTOSTART, String(autoStartEnabled));
   } catch (e) {
@@ -77,6 +102,8 @@ export function resetAllProgress(totalQuestions) {
     localStorage.removeItem(STORAGE_KEY_INDEX);
     localStorage.removeItem(STORAGE_KEY_SELECTIONS);
     localStorage.removeItem(STORAGE_KEY_CHECKED);
+    localStorage.removeItem(STORAGE_KEY_FLAGGED);
+    localStorage.removeItem(STORAGE_KEY_ELIMINATED);
     localStorage.removeItem(STORAGE_KEY_ERRORS);
   } catch (e) {
     console.warn("Could not clear localStorage:", e);
@@ -86,6 +113,8 @@ export function resetAllProgress(totalQuestions) {
     currentIndex: 0,
     selectedAnswers: new Array(totalQuestions).fill(null),
     checkedStatus: new Array(totalQuestions).fill(false),
+    flaggedStatus: new Array(totalQuestions).fill(false),
+    eliminatedStatus: Array.from({ length: totalQuestions }, () => []),
     errorLog: [],
     autoStartEnabled: true,
   };
@@ -97,11 +126,12 @@ export function formatTime(totalSec) {
   return `${mins}:${secs}`;
 }
 
-export function exportProgressAsJson({ currentIndex, selectedAnswers, checkedStatus, errorLog }) {
+export function exportProgressAsJson({ currentIndex, selectedAnswers, checkedStatus, flaggedStatus, errorLog }) {
   const backupData = {
     currentIndex,
     selectedAnswers,
     checkedStatus,
+    flaggedStatus,
     errorLog,
     exportedAt: new Date().toISOString()
   };
@@ -124,7 +154,10 @@ export function parseImportJson(jsonString, totalQuestions) {
   while (selectedAnswers.length < totalQuestions) selectedAnswers.push(null);
   const checkedStatus = parsed.checkedStatus;
   while (checkedStatus.length < totalQuestions) checkedStatus.push(false);
+  const flaggedStatus = Array.isArray(parsed.flaggedStatus) ? parsed.flaggedStatus : new Array(totalQuestions).fill(false);
+  while (flaggedStatus.length < totalQuestions) flaggedStatus.push(false);
+  const eliminatedStatus = Array.from({ length: totalQuestions }, () => []);
   const errorLog = Array.isArray(parsed.errorLog) ? parsed.errorLog : [];
 
-  return { currentIndex, selectedAnswers, checkedStatus, errorLog };
+  return { currentIndex, selectedAnswers, checkedStatus, flaggedStatus, eliminatedStatus, errorLog };
 }
