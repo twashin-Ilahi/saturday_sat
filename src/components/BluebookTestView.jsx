@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { formatTime } from '../utils/storage';
+import { formatTime, loadHighlights, saveHighlights } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
 
 export default function BluebookTestView({
@@ -34,7 +34,10 @@ export default function BluebookTestView({
   const [eliminatorMode, setEliminatorMode] = useState(false);
   const [aiExplanation, setAiExplanation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [savedHighlights, setSavedHighlights] = useState(() => loadHighlights());
+  const [selectionToolbar, setSelectionToolbar] = useState(null);
   const fileInputRef = useRef(null);
+  const passageRef = useRef(null);
 
   const q = questions[currentIndex] || questions[0];
   const isCurrentChecked = checkedStatus[currentIndex];
@@ -60,12 +63,98 @@ export default function BluebookTestView({
     setAiLoading(false);
     setShowNavPopover(false);
     setShowMoreMenu(false);
+    setSelectionToolbar(null);
     if (autoStartEnabled && !checkedStatus[currentIndex]) {
       setIsTimerRunning(true);
     } else {
       setIsTimerRunning(false);
     }
   }, [currentIndex, autoStartEnabled]);
+
+  const handlePassageMouseUp = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+      setSelectionToolbar(null);
+      return;
+    }
+    const text = selection.toString().trim();
+    if (!text) {
+      setSelectionToolbar(null);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) {
+      setSelectionToolbar(null);
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+    if (rect) {
+      setSelectionToolbar({
+        x: Math.max(80, rect.left + rect.width / 2),
+        y: Math.max(70, rect.top - 46)
+      });
+    }
+  };
+
+  const applyHighlight = (color) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+
+    if (!passageRef.current || !passageRef.current.contains(range.commonAncestorContainer)) return;
+
+    const mark = document.createElement('mark');
+    mark.className = `sat-hl sat-hl-${color}`;
+    mark.title = 'Click to remove highlight';
+
+    try {
+      range.surroundContents(mark);
+    } catch (e) {
+      const fragment = range.extractContents();
+      mark.appendChild(fragment);
+      range.insertNode(mark);
+    }
+
+    if (passageRef.current) {
+      const updatedHtml = passageRef.current.innerHTML;
+      const newMap = { ...savedHighlights, [q.id]: updatedHtml };
+      setSavedHighlights(newMap);
+      saveHighlights(newMap);
+    }
+
+    selection.removeAllRanges();
+    setSelectionToolbar(null);
+  };
+
+  const handlePassageClick = (e) => {
+    const target = e.target;
+    if (target && target.tagName === 'MARK' && target.classList.contains('sat-hl')) {
+      const parent = target.parentNode;
+      while (target.firstChild) {
+        parent.insertBefore(target.firstChild, target);
+      }
+      parent.removeChild(target);
+      if (passageRef.current) {
+        const updatedHtml = passageRef.current.innerHTML;
+        const newMap = { ...savedHighlights, [q.id]: updatedHtml };
+        setSavedHighlights(newMap);
+        saveHighlights(newMap);
+      }
+      setSelectionToolbar(null);
+    }
+  };
+
+  const clearAllHighlightsForQuestion = () => {
+    if (passageRef.current) {
+      passageRef.current.innerHTML = renderedPassage;
+      const newMap = { ...savedHighlights };
+      delete newMap[q.id];
+      setSavedHighlights(newMap);
+      saveHighlights(newMap);
+    }
+  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -302,15 +391,25 @@ export default function BluebookTestView({
       {/* 3. Main Split Workspace */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         
-        {/* Left Pane: Passage Display */}
-        <div style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff' }}>
-          <div style={{
-            fontFamily: 'Merriweather, Georgia, Cambria, serif',
-            fontSize: '1.08rem',
-            lineHeight: 1.85,
-            color: '#1f2937',
-            maxWidth: '680px'
-          }} dangerouslySetInnerHTML={{ __html: renderedPassage }} />
+        {/* Left Pane: Passage Display with Text Highlighting */}
+        <div 
+          style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
+          onMouseUp={handlePassageMouseUp}
+          onClick={handlePassageClick}
+        >
+          <div 
+            key={q.id}
+            ref={passageRef}
+            style={{
+              fontFamily: 'Merriweather, Georgia, Cambria, serif',
+              fontSize: '1.08rem',
+              lineHeight: 1.85,
+              color: '#1f2937',
+              maxWidth: '680px',
+              userSelect: 'text'
+            }} 
+            dangerouslySetInnerHTML={{ __html: savedHighlights[q.id] || renderedPassage }} 
+          />
         </div>
 
         {/* Center Vertical Divider with Resize Handle Pill */}
@@ -770,13 +869,100 @@ export default function BluebookTestView({
         </div>
       </footer>
 
+      {/* Floating Highlight Toolbar (Yellow & Pink) */}
+      {selectionToolbar && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: `${selectionToolbar.y}px`,
+            left: `${selectionToolbar.x}px`,
+            transform: 'translateX(-50%)',
+            background: '#1e293b',
+            color: '#fff',
+            borderRadius: '24px',
+            padding: '5px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+            zIndex: 1000,
+            animation: 'fadeIn 0.12s ease-out'
+          }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#cbd5e1', marginRight: '2px' }}>Highlight:</span>
+          {/* Yellow Highlight Button */}
+          <button 
+            onClick={() => applyHighlight('yellow')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: '#fef08a',
+              border: '1.5px solid #ca8a04',
+              borderRadius: '14px',
+              padding: '3px 10px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: '#854d0e',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+            }}
+            title="Highlight Yellow"
+          >
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
+            Yellow
+          </button>
+
+          {/* Pink Highlight Button */}
+          <button 
+            onClick={() => applyHighlight('pink')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: '#fbcfe8',
+              border: '1.5px solid #db2777',
+              borderRadius: '14px',
+              padding: '3px 10px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: '#9d174d',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+            }}
+            title="Highlight Pink"
+          >
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
+            Pink
+          </button>
+
+          {/* Dismiss button */}
+          <button 
+            onClick={() => setSelectionToolbar(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              padding: '2px 4px',
+              marginLeft: '2px'
+            }}
+            title="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Highlights & Notes Scratchpad Drawer */}
       {showNotesDrawer && (
         <div style={{
           position: 'fixed',
           right: '20px',
           top: '74px',
-          width: '320px',
+          width: '340px',
           background: '#fff',
           border: '1px solid #cbd5e1',
           borderRadius: '8px',
@@ -784,15 +970,88 @@ export default function BluebookTestView({
           zIndex: 90,
           padding: '16px'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>Notes & Scratchpad</span>
-            <button style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setShowNotesDrawer(false)}>✕</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#111' }}>Highlights & Notes</span>
+            <button style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#64748b' }} onClick={() => setShowNotesDrawer(false)}>✕</button>
+          </div>
+
+          {/* Highlighting Tools in Drawer */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', marginBottom: '14px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+              PASSAGE HIGHLIGHTER (YELLOW & PINK)
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => applyHighlight('yellow')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#fef08a',
+                  border: '1px solid #eab308',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: '#854d0e',
+                  cursor: 'pointer'
+                }}
+                title="Select text in passage and click to highlight Yellow"
+              >
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }} />
+                Yellow
+              </button>
+
+              <button 
+                onClick={() => applyHighlight('pink')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#fbcfe8',
+                  border: '1px solid #ec4899',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: '#9d174d',
+                  cursor: 'pointer'
+                }}
+                title="Select text in passage and click to highlight Pink"
+              >
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899' }} />
+                Pink
+              </button>
+
+              <button 
+                onClick={clearAllHighlightsForQuestion}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  padding: '4px 10px',
+                  fontSize: '0.8rem',
+                  color: '#64748b',
+                  cursor: 'pointer'
+                }}
+                title="Clear all highlights on this question"
+              >
+                Clear Highlights
+              </button>
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '6px' }}>
+              💡 Select any text in the passage to highlight in Yellow or Pink. Click any highlight to remove it.
+            </div>
+          </div>
+
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+            PERSONAL NOTES
           </div>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="Type your notes or scratchwork here..."
-            style={{ width: '100%', height: '180px', padding: '10px', fontSize: '0.85rem', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'none' }}
+            placeholder="Jot down transition notes, scratchwork, or keywords..."
+            style={{ width: '100%', height: '140px', padding: '10px', fontSize: '0.85rem', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'none' }}
           />
         </div>
       )}

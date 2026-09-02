@@ -328,3 +328,27 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* SAT Highlights (Yellow & Pink) */
+mark.sat-hl {
+  border-radius: 3px;
+  padding: 1px 3px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+mark.sat-hl-yellow {
+  background-color: #fef08a !important;
+  color: #111827 !important;
+}
+mark.sat-hl-yellow:hover {
+  background-color: #fde047 !important;
+}
+
+mark.sat-hl-pink {
+  background-color: #fbcfe8 !important;
+  color: #111827 !important;
+}
+mark.sat-hl-pink:hover {
+  background-color: #f472b6 !important;
+}

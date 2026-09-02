@@ -3,8 +3,24 @@ const STORAGE_KEY_SELECTIONS = "sat_practice_selections";
 const STORAGE_KEY_CHECKED = "sat_practice_checked";
 const STORAGE_KEY_FLAGGED = "sat_practice_flagged";
 const STORAGE_KEY_ELIMINATED = "sat_practice_eliminated";
+const STORAGE_KEY_HIGHLIGHTS = "sat_practice_highlights";
 const STORAGE_KEY_ERRORS = "sat_practice_error_log";
 const STORAGE_KEY_AUTOSTART = "sat_practice_autostart";
+
+export function loadHighlights() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_HIGHLIGHTS);
+    return saved ? JSON.parse(saved) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+export function saveHighlights(highlights) {
+  try {
+    localStorage.setItem(STORAGE_KEY_HIGHLIGHTS, JSON.stringify(highlights));
+  } catch (e) {}
+}
 
 export function loadProgress(totalQuestions) {
   let currentIndex = 0;
@@ -104,6 +120,7 @@ export function resetAllProgress(totalQuestions) {
     localStorage.removeItem(STORAGE_KEY_CHECKED);
     localStorage.removeItem(STORAGE_KEY_FLAGGED);
     localStorage.removeItem(STORAGE_KEY_ELIMINATED);
+    localStorage.removeItem(STORAGE_KEY_HIGHLIGHTS);
     localStorage.removeItem(STORAGE_KEY_ERRORS);
   } catch (e) {
     console.warn("Could not clear localStorage:", e);
