@@ -37,9 +37,43 @@ export default function BluebookTestView({
   const [savedHighlights, setSavedHighlights] = useState(() => loadHighlights());
   const [activePen, setActivePen] = useState('yellow'); // 'yellow' | 'pink' | null
   const [dustbinPopover, setDustbinPopover] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(() => !!(typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)));
   const fileInputRef = useRef(null);
   const passageRef = useRef(null);
   const currentRangeRef = useRef(null);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen().catch(err => console.warn("Fullscreen request error:", err));
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => console.warn("Exit fullscreen error:", err));
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen toggle error:", e);
+    }
+  };
 
   const q = questions[currentIndex] || questions[0];
   const isCurrentChecked = checkedStatus[currentIndex];
@@ -272,8 +306,15 @@ export default function BluebookTestView({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#ffffff', color: '#111827', overflow: 'hidden', userSelect: 'text' }}>
       
-      {/* 1. Official Bluebook Top Bar */}
-      <header style={{ height: '62px', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'relative', zIndex: 30 }}>
+      {/* 1. Official Bluebook Top Bar (Double-click to toggle Fullscreen) */}
+      <header 
+        onDoubleClick={(e) => {
+          if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea')) return;
+          handleToggleFullscreen();
+        }}
+        title="Double-click header to toggle Fullscreen"
+        style={{ height: '62px', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'relative', zIndex: 30, cursor: 'default' }}
+      >
         
         {/* Left: Section and Directions */}
         <div>
@@ -366,8 +407,8 @@ export default function BluebookTestView({
           </div>
         </div>
 
-        {/* Right: Battery, Highlights & Notes, More Menu */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+        {/* Right: Battery, Fullscreen, Highlights & Notes, More Menu */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {/* Battery Status Indicator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>
             <span>55%</span>
@@ -377,6 +418,39 @@ export default function BluebookTestView({
               <path d="M21 4.5V7.5" strokeLinecap="round" />
             </svg>
           </div>
+
+          {/* Fullscreen Toggle Button */}
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            style={{
+              background: isFullscreen ? '#eff6ff' : 'none',
+              border: isFullscreen ? '1px solid #bfdbfe' : '1px solid transparent',
+              borderRadius: '6px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              color: isFullscreen ? '#005a9c' : '#475569'
+            }}
+            title={isFullscreen ? "Exit Fullscreen (or double-click top bar)" : "Enter Fullscreen (or double-click top bar)"}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {isFullscreen ? (
+                <>
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </>
+              ) : (
+                <>
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </>
+              )}
+            </svg>
+            <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+          </button>
 
           {/* Highlights & Notes */}
           <button 
@@ -439,6 +513,12 @@ export default function BluebookTestView({
                   ← Return to Dashboard
                 </button>
                 <button 
+                  onClick={() => { setShowMoreMenu(false); handleToggleFullscreen(); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}
+                >
+                  {isFullscreen ? "⤓ Exit Fullscreen" : "⛶ Enter Fullscreen"}
+                </button>
+                <button 
                   onClick={() => { setShowMoreMenu(false); setShowErrorModal(true); }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 }}
                 >
@@ -488,7 +568,11 @@ export default function BluebookTestView({
       )}
 
       {/* 2. Sub-Header: Dashed line and Centered Dark Blue Banner ("THIS IS A PRACTICE TEST") */}
-      <div style={{ position: 'relative', borderTop: '1.5px dashed #cbd5e1', display: 'flex', justifyContent: 'center' }}>
+      <div 
+        onDoubleClick={handleToggleFullscreen}
+        title="Double-click to toggle Fullscreen"
+        style={{ position: 'relative', borderTop: '1.5px dashed #cbd5e1', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
+      >
         <div style={{
           background: '#23325c',
           color: '#ffffff',
