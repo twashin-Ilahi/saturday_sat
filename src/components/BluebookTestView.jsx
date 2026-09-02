@@ -593,23 +593,35 @@ export default function BluebookTestView({
         
         {/* Left Pane: Passage Display */}
         <div 
-          style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
+          style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', borderRight: '1.5px solid #cbd5e1', background: '#fff', position: 'relative' }}
           onMouseUp={handlePassageMouseUp}
           onClick={handlePassageClick}
         >
-          <div 
-            key={q.id}
-            ref={passageRef}
-            style={{
-              fontFamily: 'Merriweather, Georgia, Cambria, serif',
-              fontSize: '1.08rem',
-              lineHeight: 1.85,
-              color: '#1f2937',
-              maxWidth: '680px',
-              userSelect: 'text'
-            }} 
-            dangerouslySetInnerHTML={{ __html: savedHighlights[q.id] || renderedPassage }} 
-          />
+          <div style={{ maxWidth: '640px' }}>
+            {/* Left Header matching the right side header height */}
+            <div style={{ height: '32px', marginBottom: '14px', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                Reading and Writing
+              </span>
+            </div>
+
+            {/* Dashed line matching the right side dashed line */}
+            <div style={{ borderBottom: '1.5px dashed #cbd5e1', marginBottom: '20px' }} />
+
+            {/* Passage text */}
+            <div 
+              key={q.id}
+              ref={passageRef}
+              style={{
+                fontFamily: 'Merriweather, Georgia, Cambria, serif',
+                fontSize: '1.08rem',
+                lineHeight: 1.85,
+                color: '#1f2937',
+                userSelect: 'text'
+              }} 
+              dangerouslySetInnerHTML={{ __html: savedHighlights[q.id] || renderedPassage }} 
+            />
+          </div>
         </div>
 
         {/* Center Vertical Divider with Resize Handle Pill */}
@@ -633,95 +645,90 @@ export default function BluebookTestView({
         </div>
 
         {/* Right Pane: Question, Header & Choices */}
-        <div style={{ flex: 1, padding: '36px 48px', overflowY: 'auto', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
-          
-          {/* Question Top Header with Black Square Badge, Bookmark Flag, and Blue ABC Option Eliminator */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* Black Square Question Badge */}
-              <div style={{
-                background: '#111827',
-                color: '#ffffff',
-                fontWeight: 800,
-                fontSize: '1rem',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '3px'
-              }}>
-                {currentIndex + 1}
-              </div>
-
-              {/* Mark for Review Button */}
-              <button 
-                onClick={() => onToggleFlag(currentIndex)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
+        <div style={{ flex: 1, padding: '32px 48px', overflowY: 'auto', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ maxWidth: '640px', width: '100%' }}>
+            
+            {/* Question Top Header with Black Square Badge, Bookmark Flag, Inline Metadata, and Blue ABC Option Eliminator */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '32px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {/* Black Square Question Badge */}
+                <div style={{
+                  background: '#111827',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  width: '28px',
+                  height: '28px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  color: isFlagged ? '#d97706' : '#334155'
+                  justifyContent: 'center',
+                  borderRadius: '3px',
+                  flexShrink: 0
+                }}>
+                  {currentIndex + 1}
+                </div>
+
+                {/* Mark for Review Button */}
+                <button 
+                  onClick={() => onToggleFlag(currentIndex)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontSize: '0.86rem',
+                    fontWeight: 600,
+                    color: isFlagged ? '#d97706' : '#334155'
+                  }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill={isFlagged ? "#d97706" : "none"} stroke="currentColor" strokeWidth="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>{isFlagged ? "Marked for Review" : "Mark for Review"}</span>
+                </button>
+
+                {/* Inline Subtle Metadata Badges */}
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, background: '#f1f5f9', color: '#475569', padding: '2px 7px', borderRadius: '4px' }}>
+                  {q.skill || "Transitions"}
+                </span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, background: q.difficulty === 'Easy' ? '#dcfce7' : q.difficulty === 'Medium' ? '#ffedd5' : '#fee2e2', color: q.difficulty === 'Easy' ? '#15803d' : q.difficulty === 'Medium' ? '#c2410c' : '#b91c1c', padding: '2px 7px', borderRadius: '4px' }}>
+                  {q.difficulty} {activeBars === 1 ? "▰▱▱" : activeBars === 2 ? "▰▰▱" : "▰▰▰"}
+                </span>
+              </div>
+
+              {/* Option Eliminator Mode Button (ABC with strikethrough) */}
+              <button
+                onClick={() => setEliminatorMode(!eliminatorMode)}
+                style={{
+                  background: eliminatorMode ? '#1e40af' : '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '3px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                  flexShrink: 0
                 }}
+                title="Option Eliminator (cross out wrong choices)"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={isFlagged ? "#d97706" : "none"} stroke="currentColor" strokeWidth="2">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>{isFlagged ? "Marked for Review" : "Mark for Review"}</span>
+                <span style={{ fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px', textDecoration: 'line-through' }}>
+                  ABC
+                </span>
               </button>
             </div>
 
-            {/* Option Eliminator Mode Button (ABC with strikethrough) */}
-            <button
-              onClick={() => setEliminatorMode(!eliminatorMode)}
-              style={{
-                background: eliminatorMode ? '#1e40af' : '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '4px 8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.15)'
-              }}
-              title="Option Eliminator (cross out wrong choices)"
-            >
-              <span style={{ fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px', textDecoration: 'line-through' }}>
-                ABC
-              </span>
-            </button>
-          </div>
+            {/* Dashed line under question header */}
+            <div style={{ borderBottom: '1.5px dashed #cbd5e1', marginBottom: '20px' }} />
 
-          {/* Dashed line under question header */}
-          <div style={{ borderBottom: '1.5px dashed #cbd5e1', marginBottom: '14px' }} />
-
-          {/* Metadata pill tags (Skill, Difficulty, Question ID) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '4px' }}>
-              Skill: {q.skill || "Transitions"}
-            </span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: q.difficulty === 'Easy' ? '#dcfce7' : q.difficulty === 'Medium' ? '#ffedd5' : '#fee2e2', color: q.difficulty === 'Easy' ? '#15803d' : q.difficulty === 'Medium' ? '#c2410c' : '#b91c1c', padding: '2px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Difficulty: {q.difficulty}
-              <span style={{ letterSpacing: '1px' }}>
-                {activeBars === 1 ? "▰▱▱" : activeBars === 2 ? "▰▰▱" : "▰▰▰"}
-              </span>
-            </span>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              ID: {q.id}
-            </span>
-          </div>
-
-          {/* Prompt text */}
-          <div style={{ fontSize: '1rem', color: '#111827', fontWeight: 500, lineHeight: 1.5, marginBottom: '20px' }}>
-            {q.prompt || "Which choice completes the text with the most logical transition?"}
-          </div>
+            {/* Prompt text */}
+            <div style={{ fontSize: '1rem', color: '#111827', fontWeight: 500, lineHeight: 1.5, marginBottom: '20px' }}>
+              {q.prompt || "Which choice completes the text with the most logical transition?"}
+            </div>
 
           {/* Choices List (Rounded Cards with circle letters and strikethrough eliminators) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
@@ -877,6 +884,7 @@ export default function BluebookTestView({
             </div>
           )}
 
+          </div>
         </div>
       </div>
 
