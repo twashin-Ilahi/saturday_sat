@@ -82,9 +82,23 @@ export default function Dashboard({
             CB
           </div>
           <div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111', lineHeight: 1.2 }}>
-              Digital SAT Practice Platform
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111', lineHeight: 1.2 }}>
+                Digital SAT Practice Platform
+              </h1>
+              <span style={{ 
+                fontSize: '0.76rem', 
+                fontWeight: 600, 
+                color: 'var(--cb-blue)', 
+                background: '#edf4fc', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                border: '1px solid #c9dff7',
+                letterSpacing: '0.2px'
+              }}>
+                Developed by Twashin Ilahi
+              </span>
+            </div>
             <p style={{ fontSize: '0.82rem', color: '#666' }}>
               Official College Board Question Bank & Practice System
             </p>
@@ -92,6 +106,21 @@ export default function Dashboard({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ 
+            fontSize: '0.82rem', 
+            fontWeight: 600, 
+            color: '#334155', 
+            background: '#f8fafc', 
+            padding: '5px 12px', 
+            borderRadius: '4px', 
+            border: '1px solid #cbd5e1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            Developed by Twashin Ilahi
+          </div>
           <button className="btn btn-danger" onClick={() => setShowErrorModal(true)}>
             Error Log ({errorLog.length})
           </button>
@@ -457,7 +486,7 @@ export default function Dashboard({
 
       {/* Footer */}
       <footer style={{ background: '#fff', borderTop: '1px solid var(--cb-border)', padding: '14px 28px', textAlign: 'center', fontSize: '0.85rem', color: '#666' }}>
-        Digital SAT® Suite of Assessments • Transitions Practice Platform • Built to Bluebook Specifications
+        Digital SAT® Suite of Assessments • Transitions Practice Platform • Developed by Twashin Ilahi
       </footer>
 
       {/* Error Log Modal */}

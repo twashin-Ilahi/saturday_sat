@@ -281,7 +281,7 @@ export default function BluebookTestView({
 
       {/* Bottom Navigation Bar */}
       <div className="footer-bar">
-        <div className="qid-indicator">Question ID: {q.id}</div>
+        <div className="qid-indicator">Question ID: {q.id} • Developed by Twashin Ilahi</div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
             className="btn" 
