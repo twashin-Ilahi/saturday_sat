@@ -5,6 +5,7 @@ export default function SettingsModal({
   isOpen,
   onClose,
   user,
+  cloudSyncStatus = 'idle',
   currentState,
   totalQuestions,
   onApplyCloudProgress,
@@ -254,20 +255,34 @@ export default function SettingsModal({
                 </span>
               </div>
               <span style={{
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                color: user?.isGuest ? '#b45309' : '#15803d',
-                background: user?.isGuest ? '#fef3c7' : '#dcfce7',
-                padding: '2px 8px',
-                borderRadius: '10px'
+                fontSize: '0.75rem',
+                color: user?.isGuest ? '#64748b' : (cloudSyncStatus === 'syncing' ? '#0284c7' : '#15803d'),
+                fontWeight: 600
               }}>
-                {user?.isGuest ? 'Cloud Sync Inactive' : 'Connected'}
+                {user?.isGuest ? 'Disabled in Guest Mode' : (cloudSyncStatus === 'syncing' ? '☁️ Backing up now...' : '✓ Auto-Sync Active')}
               </span>
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-              Sync your local practice answers, accuracy metrics, and error log with your remote Supabase cloud profile.
-            </p>
+            {!user?.isGuest && (
+              <div style={{
+                marginBottom: '14px',
+                padding: '9px 12px',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                color: '#15803d',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                lineHeight: 1.4
+              }}>
+                <span style={{ fontSize: '1.1rem' }}>⚡</span>
+                <div>
+                  <strong>Automatic Cloud Backup:</strong> Every question you answer, check, flag, or eliminate is automatically backed up to your account. No manual backup needed!
+                </div>
+              </div>
+            )}
 
             <div style={{
               background: '#f8fafc',

@@ -13,6 +13,7 @@ export default function BluebookTestView({
   autoStartEnabled,
   practiceMode = 'normal',
   user,
+  cloudSyncStatus = 'idle',
   onSignOut,
   onOpenSettings,
   onOpenErrorLog,
@@ -541,6 +542,23 @@ export default function BluebookTestView({
                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email}>
                       {user.isGuest ? '👤 Guest (Local Storage)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
                     </div>
+                    {user && !user.isGuest && (
+                      <div style={{ marginTop: '4px' }}>
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          color: cloudSyncStatus === 'syncing' ? '#0284c7' : (cloudSyncStatus === 'synced' ? '#15803d' : '#64748b'),
+                          background: cloudSyncStatus === 'syncing' ? '#e0f2fe' : (cloudSyncStatus === 'synced' ? '#dcfce7' : '#f1f5f9'),
+                          padding: '2px 6px',
+                          borderRadius: '3px',
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px'
+                        }}>
+                          {cloudSyncStatus === 'syncing' ? '☁️ Backing up...' : '☁️ Auto-synced'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
                 <button 

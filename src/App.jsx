@@ -14,17 +14,53 @@ import {
   formatTime
 } from './utils/storage';
 import { supabase, signOut } from './utils/supabase';
+import { syncLocalToCloud, fetchCloudProgress } from './utils/cloudSync';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'practice' | 'error-log'
   const [practiceMode, setPracticeMode] = useState('normal'); // 'normal' | 'serial-error'
   const [serialErrorSubset, setSerialErrorSubset] = useState([]); // array of original question indices
   const [serialCurrentIndex, setSerialCurrentIndex] = useState(0); // 0 to serialErrorSubset.length - 1
   const [state, setState] = useState(() => loadProgress(ALL_QUESTIONS.length));
+
+  const handleApplyCloudProgress = (cloudData) => {
+    if (!cloudData) return;
+    setState(prev => {
+      const qLen = ALL_QUESTIONS.length;
+      let newSelections = Array.isArray(cloudData.selectedAnswers) ? [...cloudData.selectedAnswers] : [...prev.selectedAnswers];
+      while (newSelections.length < qLen) newSelections.push(null);
+
+      let newChecked = Array.isArray(cloudData.checkedStatus) ? [...cloudData.checkedStatus] : [...prev.checkedStatus];
+      while (newChecked.length < qLen) newChecked.push(false);
+
+      let newFlagged = Array.isArray(cloudData.flaggedStatus) ? [...cloudData.flaggedStatus] : (prev.flaggedStatus || new Array(qLen).fill(false));
+      while (newFlagged.length < qLen) newFlagged.push(false);
+
+      let newEliminated = Array.isArray(cloudData.eliminatedStatus) ? [...cloudData.eliminatedStatus] : (prev.eliminatedStatus || Array.from({ length: qLen }, () => []));
+      while (newEliminated.length < qLen) newEliminated.push([]);
+
+      let newErrors = Array.isArray(cloudData.errorLog) ? [...cloudData.errorLog] : prev.errorLog;
+      let newIdx = typeof cloudData.currentIndex === 'number' && cloudData.currentIndex >= 0 && cloudData.currentIndex < qLen 
+        ? cloudData.currentIndex 
+        : prev.currentIndex;
+
+      return {
+        ...prev,
+        currentIndex: newIdx,
+        selectedAnswers: newSelections,
+        checkedStatus: newChecked,
+        flaggedStatus: newFlagged,
+        eliminatedStatus: newEliminated,
+        errorLog: newErrors,
+        autoStartEnabled: typeof cloudData.autoStartEnabled === 'boolean' ? cloudData.autoStartEnabled : prev.autoStartEnabled,
+      };
+    });
+  };
 
   // Initialize Supabase Auth & Session listener
   useEffect(() => {
@@ -33,11 +69,42 @@ export default function App() {
       setIsPasswordReset(true);
     }
 
+    const initUserSession = async (sessionUser) => {
+      setUser(sessionUser);
+      try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+
+      // 1. Load local progress
+      const localData = loadProgress(ALL_QUESTIONS.length, sessionUser.id);
+      setState(localData);
+
+      // 2. Automatically restore from cloud if cloud has data
+      try {
+        const cloudData = await fetchCloudProgress(sessionUser);
+        if (cloudData) {
+          const localAnswered = localData.checkedStatus?.filter(Boolean).length || 0;
+          const cloudAnswered = Array.isArray(cloudData.checkedStatus) 
+            ? cloudData.checkedStatus.filter(Boolean).length 
+            : 0;
+
+          if (cloudAnswered >= localAnswered && cloudAnswered > 0) {
+            handleApplyCloudProgress(cloudData);
+            setCloudSyncStatus('synced');
+          } else if (localAnswered > cloudAnswered) {
+            // Local data is newer, auto-upload to cloud
+            setCloudSyncStatus('syncing');
+            syncLocalToCloud(localData, sessionUser)
+              .then(() => setCloudSyncStatus('synced'))
+              .catch(() => setCloudSyncStatus('error'));
+          }
+        }
+      } catch (err) {
+        console.warn("Could not check initial cloud backup:", err);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (session?.user) {
-        setUser(session.user);
-        try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-        setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
+        initUserSession(session.user);
       } else {
         const isGuestSaved = localStorage.getItem('sat_guest_mode') === 'true';
         if (isGuestSaved) {
@@ -61,14 +128,13 @@ export default function App() {
         setIsPasswordReset(true);
         setUser(session?.user || null);
       } else if (event === 'SIGNED_IN') {
-        setUser(session?.user || null);
-        try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         if (session?.user) {
-          setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
+          initUserSession(session.user);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsPasswordReset(false);
+        setCloudSyncStatus('idle');
         try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         setState(loadProgress(ALL_QUESTIONS.length, null));
       } else if (event === 'USER_UPDATED') {
@@ -81,11 +147,32 @@ export default function App() {
     };
   }, []);
 
-  // Sync state to localStorage scoped by user id (or unscoped for guest)
+  // Sync state to localStorage and automatically back up to Supabase cloud
   useEffect(() => {
     if (!authLoading && user) {
       const scopeId = user.isGuest ? null : user.id;
       saveProgress(state, scopeId);
+
+      // Automatic background backup for email-authenticated accounts
+      if (!user.isGuest && user.id) {
+        setCloudSyncStatus('syncing');
+
+        const timer = setTimeout(async () => {
+          try {
+            const res = await syncLocalToCloud(state, user);
+            if (res?.success) {
+              setCloudSyncStatus('synced');
+            }
+          } catch (err) {
+            console.warn("Auto-backup to cloud failed:", err);
+            setCloudSyncStatus('error');
+          }
+        }, 1500); // 1.5s debounce to batch rapid interactions
+
+        return () => clearTimeout(timer);
+      } else {
+        setCloudSyncStatus('idle');
+      }
     }
   }, [state, user, authLoading]);
 
@@ -265,40 +352,6 @@ export default function App() {
 
   const handleOpenSettings = () => setShowSettingsModal(true);
   const handleCloseSettings = () => setShowSettingsModal(false);
-
-  const handleApplyCloudProgress = (cloudData) => {
-    if (!cloudData) return;
-    setState(prev => {
-      const qLen = ALL_QUESTIONS.length;
-      let newSelections = Array.isArray(cloudData.selectedAnswers) ? [...cloudData.selectedAnswers] : [...prev.selectedAnswers];
-      while (newSelections.length < qLen) newSelections.push(null);
-
-      let newChecked = Array.isArray(cloudData.checkedStatus) ? [...cloudData.checkedStatus] : [...prev.checkedStatus];
-      while (newChecked.length < qLen) newChecked.push(false);
-
-      let newFlagged = Array.isArray(cloudData.flaggedStatus) ? [...cloudData.flaggedStatus] : (prev.flaggedStatus || new Array(qLen).fill(false));
-      while (newFlagged.length < qLen) newFlagged.push(false);
-
-      let newEliminated = Array.isArray(cloudData.eliminatedStatus) ? [...cloudData.eliminatedStatus] : (prev.eliminatedStatus || Array.from({ length: qLen }, () => []));
-      while (newEliminated.length < qLen) newEliminated.push([]);
-
-      let newErrors = Array.isArray(cloudData.errorLog) ? [...cloudData.errorLog] : prev.errorLog;
-      let newIdx = typeof cloudData.currentIndex === 'number' && cloudData.currentIndex >= 0 && cloudData.currentIndex < qLen 
-        ? cloudData.currentIndex 
-        : prev.currentIndex;
-
-      return {
-        ...prev,
-        currentIndex: newIdx,
-        selectedAnswers: newSelections,
-        checkedStatus: newChecked,
-        flaggedStatus: newFlagged,
-        eliminatedStatus: newEliminated,
-        errorLog: newErrors,
-        autoStartEnabled: typeof cloudData.autoStartEnabled === 'boolean' ? cloudData.autoStartEnabled : prev.autoStartEnabled,
-      };
-    });
-  };
 
   const handleSelectChoice = (questionIndex, choiceIndex) => {
     setState(prev => {
@@ -569,6 +622,7 @@ export default function App() {
             autoStartEnabled={state.autoStartEnabled}
             practiceMode="serial-error"
             user={user}
+            cloudSyncStatus={cloudSyncStatus}
             onSignOut={handleSignOut}
             onOpenSettings={handleOpenSettings}
             onOpenErrorLog={handleOpenErrorLog}
@@ -605,6 +659,7 @@ export default function App() {
             isOpen={showSettingsModal}
             onClose={handleCloseSettings}
             user={user}
+            cloudSyncStatus={cloudSyncStatus}
             currentState={state}
             totalQuestions={ALL_QUESTIONS.length}
             onApplyCloudProgress={handleApplyCloudProgress}
@@ -634,6 +689,7 @@ export default function App() {
           autoStartEnabled={state.autoStartEnabled}
           practiceMode="normal"
           user={user}
+          cloudSyncStatus={cloudSyncStatus}
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
           onOpenErrorLog={handleOpenErrorLog}
@@ -652,6 +708,7 @@ export default function App() {
           isOpen={showSettingsModal}
           onClose={handleCloseSettings}
           user={user}
+          cloudSyncStatus={cloudSyncStatus}
           currentState={state}
           totalQuestions={ALL_QUESTIONS.length}
           onApplyCloudProgress={handleApplyCloudProgress}
@@ -675,6 +732,7 @@ export default function App() {
           errorLog={state.errorLog}
           allQuestions={ALL_QUESTIONS}
           user={user}
+          cloudSyncStatus={cloudSyncStatus}
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
           onReturnToDashboard={handleReturnToDashboard}
@@ -687,6 +745,7 @@ export default function App() {
           isOpen={showSettingsModal}
           onClose={handleCloseSettings}
           user={user}
+          cloudSyncStatus={cloudSyncStatus}
           currentState={state}
           totalQuestions={ALL_QUESTIONS.length}
           onApplyCloudProgress={handleApplyCloudProgress}
@@ -712,6 +771,7 @@ export default function App() {
         checkedStatus={state.checkedStatus}
         errorLog={state.errorLog}
         user={user}
+        cloudSyncStatus={cloudSyncStatus}
         onSignOut={handleSignOut}
         onOpenSettings={handleOpenSettings}
         onStartPractice={handleStartPractice}
@@ -726,6 +786,7 @@ export default function App() {
         isOpen={showSettingsModal}
         onClose={handleCloseSettings}
         user={user}
+        cloudSyncStatus={cloudSyncStatus}
         currentState={state}
         totalQuestions={ALL_QUESTIONS.length}
         onApplyCloudProgress={handleApplyCloudProgress}

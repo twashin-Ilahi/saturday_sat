@@ -9,6 +9,7 @@ export default function Dashboard({
   checkedStatus,
   errorLog,
   user,
+  cloudSyncStatus = 'idle',
   onSignOut,
   onOpenSettings,
   onStartPractice,
@@ -246,6 +247,27 @@ export default function Dashboard({
               >
                 👤 {user.isGuest ? 'Guest (Offline)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
               </div>
+              {user && !user.isGuest && (
+                <span 
+                  onClick={onOpenSettings}
+                  style={{ 
+                    fontSize: '0.72rem', 
+                    color: cloudSyncStatus === 'syncing' ? '#0284c7' : (cloudSyncStatus === 'synced' ? '#15803d' : '#64748b'),
+                    background: cloudSyncStatus === 'syncing' ? '#f0f9ff' : (cloudSyncStatus === 'synced' ? '#f0fdf4' : '#f8fafc'),
+                    border: `1px solid ${cloudSyncStatus === 'syncing' ? '#bae6fd' : (cloudSyncStatus === 'synced' ? '#bbf7d0' : '#e2e8f0')}`,
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  title={cloudSyncStatus === 'syncing' ? "Backing up progress to cloud..." : "Automatic cloud backup is active"}
+                >
+                  {cloudSyncStatus === 'syncing' ? '☁️ Backing up...' : '☁️ Auto-synced'}
+                </span>
+              )}
               <button 
                 className="btn" 
                 onClick={onSignOut}
