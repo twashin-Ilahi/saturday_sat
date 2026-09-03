@@ -1060,9 +1060,39 @@ export default function BluebookTestView({
               zIndex: 100,
               overflowY: 'auto'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>Review Questions</span>
                 <span style={{ fontSize: '0.78rem', color: '#666' }}>{questions.length} Questions</span>
+              </div>
+
+              {/* Difficulty Dot Color Code Legend */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '4px 8px',
+                marginBottom: '10px',
+                background: '#f8fafc',
+                borderRadius: '4px',
+                border: '1px solid #f1f5f9',
+                fontSize: '0.72rem',
+                color: '#64748b'
+              }}>
+                <span style={{ fontWeight: 600, color: '#475569' }}>Difficulty:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }}></span>
+                    <span>Easy</span>
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ea580c' }}></span>
+                    <span>Medium</span>
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626' }}></span>
+                    <span>Hard</span>
+                  </span>
+                </div>
               </div>
 
               {/* Grid of question buttons */}
@@ -1082,6 +1112,9 @@ export default function BluebookTestView({
                     border = `1px solid ${selectedAnswers[idx] === qItem.answer ? '#86efac' : '#fca5a5'}`;
                   }
 
+                  const diff = qItem.difficulty;
+                  const dotColor = diff === 'Easy' ? '#16a34a' : (diff === 'Medium' ? '#ea580c' : '#dc2626');
+
                   return (
                     <button
                       key={idx}
@@ -1089,8 +1122,9 @@ export default function BluebookTestView({
                         onNavigate(idx);
                         setShowNavPopover(false);
                       }}
+                      title={`Q${idx + 1} (${diff || 'Normal'}) ${isChecked ? (selectedAnswers[idx] === qItem.answer ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
                       style={{
-                        height: '36px',
+                        height: '38px',
                         border: isCurrent ? '2px solid #005a9c' : border,
                         background: btnBg,
                         color: btnColor,
@@ -1098,12 +1132,28 @@ export default function BluebookTestView({
                         fontSize: '0.82rem',
                         borderRadius: '4px',
                         cursor: 'pointer',
-                        position: 'relative'
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px',
+                        padding: '2px 0'
                       }}
                     >
-                      {idx + 1}
+                      <span style={{ lineHeight: 1 }}>{idx + 1}</span>
+                      <span
+                        style={{
+                          width: '4.5px',
+                          height: '4.5px',
+                          borderRadius: '50%',
+                          background: dotColor,
+                          display: 'inline-block'
+                        }}
+                        title={`${diff || 'Normal'} difficulty`}
+                      />
                       {flagged && (
-                        <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.7rem' }}>
+                        <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.68rem', lineHeight: 1 }}>
                           🔖
                         </span>
                       )}
