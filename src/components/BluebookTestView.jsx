@@ -527,9 +527,13 @@ export default function BluebookTestView({
             {showMoreMenu && (
               <div style={{ position: 'absolute', right: 0, top: '32px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', width: '220px', zIndex: 100, overflow: 'hidden' }}>
                 {user && (
-                  <div style={{ padding: '8px 14px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#475569' }}>
-                    <div style={{ fontWeight: 600, color: '#1e293b' }}>Logged in as:</div>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>{user.email}</div>
+                  <div style={{ padding: '8px 14px', background: user.isGuest ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#475569' }}>
+                    <div style={{ fontWeight: 600, color: user.isGuest ? '#15803d' : '#1e293b' }}>
+                      {user.isGuest ? 'Mode:' : 'Logged in as:'}
+                    </div>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>
+                      {user.isGuest ? '👤 Guest (Local Storage)' : user.email}
+                    </div>
                   </div>
                 )}
                 <button 
@@ -585,11 +589,22 @@ export default function BluebookTestView({
                       setShowMoreMenu(false);
                       onSignOut();
                     }}
-                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#b91c1c', fontWeight: 600 }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 14px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      color: user?.isGuest ? '#005a9c' : '#b91c1c',
+                      fontWeight: 600
+                    }}
                   >
-                    Sign Out
+                    {user?.isGuest ? '→ Sign In / Register' : 'Sign Out'}
                   </button>
                 )}
+
               </div>
             )}
 

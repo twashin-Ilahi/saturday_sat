@@ -209,33 +209,37 @@ export default function ErrorLogView({
               <span 
                 style={{ 
                   fontSize: '0.8rem', 
-                  color: '#334155', 
+                  color: user.isGuest ? '#15803d' : '#334155', 
+                  background: user.isGuest ? '#f0fdf4' : 'transparent',
+                  border: user.isGuest ? '1px solid #bbf7d0' : 'none',
+                  padding: user.isGuest ? '4px 9px' : '0',
+                  borderRadius: '4px',
                   fontWeight: 600, 
-                  maxWidth: '160px', 
+                  maxWidth: '200px', 
                   overflow: 'hidden', 
                   textOverflow: 'ellipsis', 
                   whiteSpace: 'nowrap' 
                 }} 
-                title={user.email}
+                title={user.isGuest ? "Guest Mode: All progress saved in this browser" : user.email}
               >
-                👤 {user.email}
+                👤 {user.isGuest ? 'Guest (Offline)' : user.email}
               </span>
               {onSignOut && (
                 <button
                   onClick={onSignOut}
                   style={{
                     fontSize: '0.78rem',
-                    color: '#b91c1c',
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    color: user.isGuest ? '#005a9c' : '#b91c1c',
+                    background: user.isGuest ? '#eff6ff' : '#fef2f2',
+                    border: user.isGuest ? '1px solid #bfdbfe' : '1px solid #fecaca',
                     padding: '4px 10px',
                     borderRadius: '6px',
                     cursor: 'pointer',
                     fontWeight: 600
                   }}
-                  title="Sign out of your account"
+                  title={user.isGuest ? "Sign in or register an account" : "Sign out of your account"}
                 >
-                  Sign Out
+                  {user.isGuest ? "Sign In / Register" : "Sign Out"}
                 </button>
               )}
             </div>

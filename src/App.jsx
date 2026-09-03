@@ -34,11 +34,23 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (session?.user) {
         setUser(session.user);
+        try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
+      } else {
+        const isGuestSaved = localStorage.getItem('sat_guest_mode') === 'true';
+        if (isGuestSaved) {
+          setUser({ isGuest: true, email: 'Guest User' });
+          setState(loadProgress(ALL_QUESTIONS.length, null));
+        }
       }
       setAuthLoading(false);
     }).catch(err => {
       console.warn("Session check error:", err);
+      const isGuestSaved = localStorage.getItem('sat_guest_mode') === 'true';
+      if (isGuestSaved) {
+        setUser({ isGuest: true, email: 'Guest User' });
+        setState(loadProgress(ALL_QUESTIONS.length, null));
+      }
       setAuthLoading(false);
     });
 
@@ -48,12 +60,14 @@ export default function App() {
         setUser(session?.user || null);
       } else if (event === 'SIGNED_IN') {
         setUser(session?.user || null);
+        try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         if (session?.user) {
           setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsPasswordReset(false);
+        try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         setState(loadProgress(ALL_QUESTIONS.length, null));
       } else if (event === 'USER_UPDATED') {
         setUser(session?.user || null);
@@ -65,19 +79,35 @@ export default function App() {
     };
   }, []);
 
-  // Sync state to localStorage scoped by user id
+  // Sync state to localStorage scoped by user id (or unscoped for guest)
   useEffect(() => {
-    if (!authLoading) {
-      saveProgress(state, user?.id || null);
+    if (!authLoading && user) {
+      const scopeId = user.isGuest ? null : user.id;
+      saveProgress(state, scopeId);
     }
   }, [state, user, authLoading]);
 
+  const handleContinueAsGuest = () => {
+    try {
+      localStorage.setItem('sat_guest_mode', 'true');
+    } catch (e) {}
+    setUser({ isGuest: true, email: 'Guest User' });
+    setState(loadProgress(ALL_QUESTIONS.length, null));
+  };
+
   const handleSignOut = async () => {
+    if (user?.isGuest) {
+      try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+      setUser(null);
+      setCurrentView('dashboard');
+      return;
+    }
     try {
       await signOut();
     } catch (err) {
       console.error('Sign out error:', err);
     }
+    try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
     setUser(null);
     setIsPasswordReset(false);
     setCurrentView('dashboard');
@@ -306,12 +336,14 @@ export default function App() {
     );
   }
 
-  // Authentication gate: User must be signed in
+  // Authentication gate: User must be signed in or enter as guest
   if (!user) {
     return (
       <AuthView
         initialMode="login"
+        onContinueAsGuest={handleContinueAsGuest}
         onAuthSuccess={(authenticatedUser) => {
+          try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
           setUser(authenticatedUser);
           if (authenticatedUser) {
             setState(loadProgress(ALL_QUESTIONS.length, authenticatedUser.id));

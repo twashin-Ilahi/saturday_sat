@@ -213,24 +213,34 @@ export default function Dashboard({
               <div 
                 style={{ 
                   fontSize: '0.8rem', 
-                  color: '#334155', 
+                  color: user.isGuest ? '#15803d' : '#334155', 
+                  background: user.isGuest ? '#f0fdf4' : 'transparent',
+                  border: user.isGuest ? '1px solid #bbf7d0' : 'none',
+                  padding: user.isGuest ? '4px 9px' : '0',
+                  borderRadius: '4px',
                   fontWeight: 600,
-                  maxWidth: '180px',
+                  maxWidth: '200px',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
                 }} 
-                title={user.email}
+                title={user.isGuest ? "Guest Mode: All progress is saved in this local browser" : user.email}
               >
-                👤 {user.email}
+                👤 {user.isGuest ? 'Guest (Offline)' : user.email}
               </div>
               <button 
                 className="btn" 
                 onClick={onSignOut}
-                style={{ fontSize: '0.78rem', color: '#b91c1c', borderColor: '#fca5a5', background: '#fef2f2', padding: '5px 10px' }}
-                title="Sign out of your account"
+                style={{
+                  fontSize: '0.78rem',
+                  color: user.isGuest ? '#005a9c' : '#b91c1c',
+                  borderColor: user.isGuest ? '#bfdbfe' : '#fca5a5',
+                  background: user.isGuest ? '#eff6ff' : '#fef2f2',
+                  padding: '5px 10px'
+                }}
+                title={user.isGuest ? "Sign in or register an account" : "Sign out of your account"}
               >
-                Sign Out
+                {user.isGuest ? "Sign In / Register" : "Sign Out"}
               </button>
             </div>
           )}

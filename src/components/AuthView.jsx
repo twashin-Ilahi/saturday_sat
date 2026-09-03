@@ -6,7 +6,7 @@ import {
   updatePassword 
 } from '../utils/supabase';
 
-export default function AuthView({ initialMode = 'login', onAuthSuccess }) {
+export default function AuthView({ initialMode = 'login', onAuthSuccess, onContinueAsGuest }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot' | 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -465,6 +465,65 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess }) {
               </div>
             )}
           </div>
+
+          {/* Guest Mode Option */}
+          {onContinueAsGuest && (mode === 'login' || mode === 'signup') && (
+            <div style={{ marginTop: '18px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                margin: '0 0 14px 0',
+                gap: '12px'
+              }}>
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                <span style={{ fontSize: '0.74rem', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                  or continue offline
+                </span>
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+              </div>
+
+              <button
+                type="button"
+                onClick={onContinueAsGuest}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  fontSize: '0.86rem',
+                  fontWeight: '600',
+                  color: '#334155',
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f1f5f9';
+                  e.currentTarget.style.borderColor = '#94a3b8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                }}
+              >
+                <span>👤</span>
+                <span>Continue as Guest (Local Browser Storage)</span>
+              </button>
+              <p style={{
+                margin: '8px 0 0 0',
+                fontSize: '0.74rem',
+                color: '#64748b',
+                textAlign: 'center',
+                lineHeight: 1.3
+              }}>
+                No login required. All test answers, timer stats, and error logs are saved directly in your browser.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
