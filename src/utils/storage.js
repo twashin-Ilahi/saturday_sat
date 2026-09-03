@@ -1,28 +1,27 @@
-const STORAGE_KEY_INDEX = "sat_practice_current_idx";
-const STORAGE_KEY_SELECTIONS = "sat_practice_selections";
-const STORAGE_KEY_CHECKED = "sat_practice_checked";
-const STORAGE_KEY_FLAGGED = "sat_practice_flagged";
-const STORAGE_KEY_ELIMINATED = "sat_practice_eliminated";
-const STORAGE_KEY_HIGHLIGHTS = "sat_practice_highlights";
-const STORAGE_KEY_ERRORS = "sat_practice_error_log";
-const STORAGE_KEY_AUTOSTART = "sat_practice_autostart";
+const getPrefix = (userId) => (userId ? `sat_practice_${userId}_` : `sat_practice_`);
 
-export function loadHighlights() {
+const getKey = (key, userId) => `${getPrefix(userId)}${key}`;
+
+export function loadHighlights(userId = null) {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY_HIGHLIGHTS);
+    let saved = localStorage.getItem(getKey("highlights", userId));
+    if (!saved && userId) {
+      // Fallback to non-scoped highlights if exists
+      saved = localStorage.getItem("sat_practice_highlights");
+    }
     return saved ? JSON.parse(saved) : {};
   } catch (e) {
     return {};
   }
 }
 
-export function saveHighlights(highlights) {
+export function saveHighlights(highlights, userId = null) {
   try {
-    localStorage.setItem(STORAGE_KEY_HIGHLIGHTS, JSON.stringify(highlights));
+    localStorage.setItem(getKey("highlights", userId), JSON.stringify(highlights));
   } catch (e) {}
 }
 
-export function loadProgress(totalQuestions) {
+export function loadProgress(totalQuestions, userId = null) {
   let currentIndex = 0;
   let selectedAnswers = new Array(totalQuestions).fill(null);
   let checkedStatus = new Array(totalQuestions).fill(false);
@@ -32,10 +31,19 @@ export function loadProgress(totalQuestions) {
   let autoStartEnabled = true;
 
   try {
-    const savedIndex = localStorage.getItem(STORAGE_KEY_INDEX);
+    const getItem = (subKey) => {
+      let val = localStorage.getItem(getKey(subKey, userId));
+      if (val === null && userId) {
+        // Fallback to generic key
+        val = localStorage.getItem(`sat_practice_${subKey}`);
+      }
+      return val;
+    };
+
+    const savedIndex = getItem("current_idx");
     if (savedIndex !== null) currentIndex = parseInt(savedIndex, 10);
 
-    const savedSelections = localStorage.getItem(STORAGE_KEY_SELECTIONS);
+    const savedSelections = getItem("selections");
     if (savedSelections) {
       const parsed = JSON.parse(savedSelections);
       if (Array.isArray(parsed)) {
@@ -44,7 +52,7 @@ export function loadProgress(totalQuestions) {
       }
     }
 
-    const savedChecked = localStorage.getItem(STORAGE_KEY_CHECKED);
+    const savedChecked = getItem("checked");
     if (savedChecked) {
       const parsed = JSON.parse(savedChecked);
       if (Array.isArray(parsed)) {
@@ -53,7 +61,7 @@ export function loadProgress(totalQuestions) {
       }
     }
 
-    const savedFlagged = localStorage.getItem(STORAGE_KEY_FLAGGED);
+    const savedFlagged = getItem("flagged");
     if (savedFlagged) {
       const parsed = JSON.parse(savedFlagged);
       if (Array.isArray(parsed)) {
@@ -62,7 +70,7 @@ export function loadProgress(totalQuestions) {
       }
     }
 
-    const savedEliminated = localStorage.getItem(STORAGE_KEY_ELIMINATED);
+    const savedEliminated = getItem("eliminated");
     if (savedEliminated) {
       const parsed = JSON.parse(savedEliminated);
       if (Array.isArray(parsed)) {
@@ -71,13 +79,13 @@ export function loadProgress(totalQuestions) {
       }
     }
 
-    const savedErrors = localStorage.getItem(STORAGE_KEY_ERRORS);
+    const savedErrors = getItem("error_log");
     if (savedErrors) {
       const parsed = JSON.parse(savedErrors);
       if (Array.isArray(parsed)) errorLog = parsed;
     }
 
-    const savedAutoStart = localStorage.getItem(STORAGE_KEY_AUTOSTART);
+    const savedAutoStart = getItem("autostart");
     if (savedAutoStart !== null) {
       autoStartEnabled = savedAutoStart === "true";
     }
@@ -99,29 +107,30 @@ export function loadProgress(totalQuestions) {
   };
 }
 
-export function saveProgress({ currentIndex, selectedAnswers, checkedStatus, flaggedStatus, eliminatedStatus, errorLog, autoStartEnabled }) {
+export function saveProgress({ currentIndex, selectedAnswers, checkedStatus, flaggedStatus, eliminatedStatus, errorLog, autoStartEnabled }, userId = null) {
   try {
-    if (currentIndex !== undefined) localStorage.setItem(STORAGE_KEY_INDEX, currentIndex);
-    if (selectedAnswers !== undefined) localStorage.setItem(STORAGE_KEY_SELECTIONS, JSON.stringify(selectedAnswers));
-    if (checkedStatus !== undefined) localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(checkedStatus));
-    if (flaggedStatus !== undefined) localStorage.setItem(STORAGE_KEY_FLAGGED, JSON.stringify(flaggedStatus));
-    if (eliminatedStatus !== undefined) localStorage.setItem(STORAGE_KEY_ELIMINATED, JSON.stringify(eliminatedStatus));
-    if (errorLog !== undefined) localStorage.setItem(STORAGE_KEY_ERRORS, JSON.stringify(errorLog));
-    if (autoStartEnabled !== undefined) localStorage.setItem(STORAGE_KEY_AUTOSTART, String(autoStartEnabled));
+    if (currentIndex !== undefined) localStorage.setItem(getKey("current_idx", userId), currentIndex);
+    if (selectedAnswers !== undefined) localStorage.setItem(getKey("selections", userId), JSON.stringify(selectedAnswers));
+    if (checkedStatus !== undefined) localStorage.setItem(getKey("checked", userId), JSON.stringify(checkedStatus));
+    if (flaggedStatus !== undefined) localStorage.setItem(getKey("flagged", userId), JSON.stringify(flaggedStatus));
+    if (eliminatedStatus !== undefined) localStorage.setItem(getKey("eliminated", userId), JSON.stringify(eliminatedStatus));
+    if (errorLog !== undefined) localStorage.setItem(getKey("error_log", userId), JSON.stringify(errorLog));
+    if (autoStartEnabled !== undefined) localStorage.setItem(getKey("autostart", userId), String(autoStartEnabled));
   } catch (e) {
     console.warn("Could not save to localStorage:", e);
   }
 }
 
-export function resetAllProgress(totalQuestions) {
+export function resetAllProgress(totalQuestions, userId = null) {
   try {
-    localStorage.removeItem(STORAGE_KEY_INDEX);
-    localStorage.removeItem(STORAGE_KEY_SELECTIONS);
-    localStorage.removeItem(STORAGE_KEY_CHECKED);
-    localStorage.removeItem(STORAGE_KEY_FLAGGED);
-    localStorage.removeItem(STORAGE_KEY_ELIMINATED);
-    localStorage.removeItem(STORAGE_KEY_HIGHLIGHTS);
-    localStorage.removeItem(STORAGE_KEY_ERRORS);
+    localStorage.removeItem(getKey("current_idx", userId));
+    localStorage.removeItem(getKey("selections", userId));
+    localStorage.removeItem(getKey("checked", userId));
+    localStorage.removeItem(getKey("flagged", userId));
+    localStorage.removeItem(getKey("eliminated", userId));
+    localStorage.removeItem(getKey("highlights", userId));
+    localStorage.removeItem(getKey("error_log", userId));
+    localStorage.removeItem(getKey("autostart", userId));
   } catch (e) {
     console.warn("Could not clear localStorage:", e);
   }
@@ -136,6 +145,7 @@ export function resetAllProgress(totalQuestions) {
     autoStartEnabled: true,
   };
 }
+
 
 export function formatTime(totalSec) {
   const mins = Math.floor(totalSec / 60).toString().padStart(2, '0');

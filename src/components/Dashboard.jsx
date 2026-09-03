@@ -8,6 +8,8 @@ export default function Dashboard({
   selectedAnswers,
   checkedStatus,
   errorLog,
+  user,
+  onSignOut,
   onStartPractice,
   onJumpToQuestion,
   onOpenErrorLog,
@@ -205,6 +207,33 @@ export default function Dashboard({
           >
             Reset All
           </button>
+
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
+              <div 
+                style={{ 
+                  fontSize: '0.8rem', 
+                  color: '#334155', 
+                  fontWeight: 600,
+                  maxWidth: '180px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }} 
+                title={user.email}
+              >
+                👤 {user.email}
+              </div>
+              <button 
+                className="btn" 
+                onClick={onSignOut}
+                style={{ fontSize: '0.78rem', color: '#b91c1c', borderColor: '#fca5a5', background: '#fef2f2', padding: '5px 10px' }}
+                title="Sign out of your account"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

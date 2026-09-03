@@ -12,6 +12,8 @@ export default function BluebookTestView({
   errorLog,
   autoStartEnabled,
   practiceMode = 'normal',
+  user,
+  onSignOut,
   onOpenErrorLog,
   onReturnFromErrorDrill,
   onSelectChoice,
@@ -524,6 +526,12 @@ export default function BluebookTestView({
             {/* More Menu Dropdown */}
             {showMoreMenu && (
               <div style={{ position: 'absolute', right: 0, top: '32px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', width: '220px', zIndex: 100, overflow: 'hidden' }}>
+                {user && (
+                  <div style={{ padding: '8px 14px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#475569' }}>
+                    <div style={{ fontWeight: 600, color: '#1e293b' }}>Logged in as:</div>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>{user.email}</div>
+                  </div>
+                )}
                 <button 
                   onClick={() => { setShowMoreMenu(false); onReturnToDashboard(); }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#005a9c' }}
@@ -567,12 +575,24 @@ export default function BluebookTestView({
                     setShowMoreMenu(false);
                     if (confirm("Reset all progress and error log?")) onReset();
                   }}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#64748b' }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: onSignOut ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#64748b' }}
                 >
                   Reset Progress
                 </button>
+                {onSignOut && (
+                  <button 
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      onSignOut();
+                    }}
+                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#b91c1c', fontWeight: 600 }}
+                  >
+                    Sign Out
+                  </button>
+                )}
               </div>
             )}
+
           </div>
           <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".json" onChange={handleFileChange} />
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import BluebookTestView from './components/BluebookTestView';
 import ErrorLogView from './components/ErrorLogView';
+import AuthView from './components/AuthView';
 import { ALL_QUESTIONS } from './data/questions';
 import { 
   loadProgress, 
@@ -11,18 +12,76 @@ import {
   parseImportJson,
   formatTime
 } from './utils/storage';
+import { supabase, signOut } from './utils/supabase';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'practice' | 'error-log'
   const [practiceMode, setPracticeMode] = useState('normal'); // 'normal' | 'serial-error'
   const [serialErrorSubset, setSerialErrorSubset] = useState([]); // array of original question indices
   const [serialCurrentIndex, setSerialCurrentIndex] = useState(0); // 0 to serialErrorSubset.length - 1
   const [state, setState] = useState(() => loadProgress(ALL_QUESTIONS.length));
 
-  // Sync state to localStorage
+  // Initialize Supabase Auth & Session listener
   useEffect(() => {
-    saveProgress(state);
-  }, [state]);
+    // Check if recovery link is in URL hash
+    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+      setIsPasswordReset(true);
+    }
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
+      }
+      setAuthLoading(false);
+    }).catch(err => {
+      console.warn("Session check error:", err);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordReset(true);
+        setUser(session?.user || null);
+      } else if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
+        if (session?.user) {
+          setState(loadProgress(ALL_QUESTIONS.length, session.user.id));
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsPasswordReset(false);
+        setState(loadProgress(ALL_QUESTIONS.length, null));
+      } else if (event === 'USER_UPDATED') {
+        setUser(session?.user || null);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Sync state to localStorage scoped by user id
+  useEffect(() => {
+    if (!authLoading) {
+      saveProgress(state, user?.id || null);
+    }
+  }, [state, user, authLoading]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+    setUser(null);
+    setIsPasswordReset(false);
+    setCurrentView('dashboard');
+  };
 
   const handleSelectChoice = (questionIndex, choiceIndex) => {
     setState(prev => {
@@ -199,6 +258,69 @@ export default function App() {
     setCurrentView('error-log');
   };
 
+  // Loading screen while verifying initial session
+  if (authLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#f8fafc',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#1e293b',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #005a9c',
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          animation: 'appSpin 0.8s linear infinite'
+        }} />
+        <p style={{ marginTop: '16px', fontSize: '0.92rem', fontWeight: 600, color: '#475569' }}>
+          Loading Digital SAT Practice Platform...
+        </p>
+        <style>{`
+          @keyframes appSpin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Password reset recovery mode
+  if (isPasswordReset) {
+    return (
+      <AuthView
+        initialMode="reset"
+        onAuthSuccess={() => {
+          setIsPasswordReset(false);
+          if (typeof window !== 'undefined' && window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.pathname);
+          }
+        }}
+      />
+    );
+  }
+
+  // Authentication gate: User must be signed in
+  if (!user) {
+    return (
+      <AuthView
+        initialMode="login"
+        onAuthSuccess={(authenticatedUser) => {
+          setUser(authenticatedUser);
+          if (authenticatedUser) {
+            setState(loadProgress(ALL_QUESTIONS.length, authenticatedUser.id));
+          }
+        }}
+      />
+    );
+  }
+
   // If in practice view:
   if (currentView === 'practice') {
     if (practiceMode === 'serial-error' && serialErrorSubset.length > 0) {
@@ -217,6 +339,8 @@ export default function App() {
           errorLog={state.errorLog}
           autoStartEnabled={state.autoStartEnabled}
           practiceMode="serial-error"
+          user={user}
+          onSignOut={handleSignOut}
           onOpenErrorLog={handleOpenErrorLog}
           onReturnFromErrorDrill={handleReturnFromErrorDrill}
           onSelectChoice={(subIdx, choiceIdx) => {
@@ -261,6 +385,8 @@ export default function App() {
         errorLog={state.errorLog}
         autoStartEnabled={state.autoStartEnabled}
         practiceMode="normal"
+        user={user}
+        onSignOut={handleSignOut}
         onOpenErrorLog={handleOpenErrorLog}
         onSelectChoice={handleSelectChoice}
         onCheckAnswer={handleCheckAnswer}
@@ -282,6 +408,8 @@ export default function App() {
       <ErrorLogView
         errorLog={state.errorLog}
         allQuestions={ALL_QUESTIONS}
+        user={user}
+        onSignOut={handleSignOut}
         onReturnToDashboard={handleReturnToDashboard}
         onStartSerialErrorDrill={handleStartSerialErrorDrill}
         onJumpToQuestion={handleJumpToQuestion}
@@ -299,6 +427,8 @@ export default function App() {
       selectedAnswers={state.selectedAnswers}
       checkedStatus={state.checkedStatus}
       errorLog={state.errorLog}
+      user={user}
+      onSignOut={handleSignOut}
       onStartPractice={handleStartPractice}
       onJumpToQuestion={handleJumpToQuestion}
       onOpenErrorLog={handleOpenErrorLog}
@@ -309,3 +439,4 @@ export default function App() {
     />
   );
 }
+

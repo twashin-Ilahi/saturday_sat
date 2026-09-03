@@ -5,6 +5,8 @@ import { explainSingleQuestionWithGemini } from '../utils/gemini';
 export default function ErrorLogView({
   errorLog = [],
   allQuestions = [],
+  user,
+  onSignOut,
   onReturnToDashboard,
   onStartSerialErrorDrill,
   onJumpToQuestion,
@@ -201,6 +203,43 @@ export default function ErrorLogView({
             <span>★</span>
             <span>Developed by Twashin Ilahi</span>
           </div>
+
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
+              <span 
+                style={{ 
+                  fontSize: '0.8rem', 
+                  color: '#334155', 
+                  fontWeight: 600, 
+                  maxWidth: '160px', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
+                }} 
+                title={user.email}
+              >
+                👤 {user.email}
+              </span>
+              {onSignOut && (
+                <button
+                  onClick={onSignOut}
+                  style={{
+                    fontSize: '0.78rem',
+                    color: '#b91c1c',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                  title="Sign out of your account"
+                >
+                  Sign Out
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Primary Action: Start Serial Error Drill */}
           {filteredErrors.length > 0 && (
