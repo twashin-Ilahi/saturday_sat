@@ -1085,7 +1085,7 @@ export default function BluebookTestView({
                     <span>Easy</span>
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ea580c' }}></span>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }}></span>
                     <span>Medium</span>
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -1113,7 +1113,7 @@ export default function BluebookTestView({
                   }
 
                   const diff = qItem.difficulty;
-                  const dotColor = diff === 'Easy' ? '#16a34a' : (diff === 'Medium' ? '#ea580c' : '#dc2626');
+                  const dotColor = diff === 'Easy' ? '#16a34a' : (diff === 'Medium' ? '#2563eb' : '#dc2626');
 
                   return (
                     <button

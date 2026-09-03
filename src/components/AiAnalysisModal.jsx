@@ -132,7 +132,7 @@ export default function AiAnalysisModal({
             <div>
               <div style={{ fontSize: '0.75rem', color: '#666', fontWeight: 600 }}>DIFFICULTY SPREAD</div>
               <div style={{ fontSize: '0.85rem', fontWeight: 600, marginTop: '3px' }}>
-                <span style={{ color: '#16a34a' }}>E: {difficultyBreakdown.easy.accuracy}%</span> • <span style={{ color: '#ea580c' }}>M: {difficultyBreakdown.medium.accuracy}%</span> • <span style={{ color: '#dc2626' }}>H: {difficultyBreakdown.hard.accuracy}%</span>
+                <span style={{ color: '#16a34a' }}>E: {difficultyBreakdown.easy.accuracy}%</span> • <span style={{ color: '#2563eb' }}>M: {difficultyBreakdown.medium.accuracy}%</span> • <span style={{ color: '#dc2626' }}>H: {difficultyBreakdown.hard.accuracy}%</span>
               </div>
             </div>
           </div>

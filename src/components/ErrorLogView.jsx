@@ -356,7 +356,7 @@ export default function ErrorLogView({
                 <span style={{ fontSize: '0.82rem', background: '#dcfce7', color: '#15803d', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
                   Easy: {difficultyCounts.Easy}
                 </span>
-                <span style={{ fontSize: '0.82rem', background: '#ffedd5', color: '#c2410c', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                <span style={{ fontSize: '0.82rem', background: '#dbeafe', color: '#1d4ed8', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
                   Medium: {difficultyCounts.Medium}
                 </span>
                 <span style={{ fontSize: '0.82rem', background: '#fee2e2', color: '#b91c1c', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -636,8 +636,8 @@ export default function ErrorLogView({
                       <span style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
-                        background: err.difficulty === 'Easy' ? '#dcfce7' : err.difficulty === 'Medium' ? '#ffedd5' : '#fee2e2',
-                        color: err.difficulty === 'Easy' ? '#15803d' : err.difficulty === 'Medium' ? '#c2410c' : '#b91c1c',
+                        background: err.difficulty === 'Easy' ? '#dcfce7' : err.difficulty === 'Medium' ? '#dbeafe' : '#fee2e2',
+                        color: err.difficulty === 'Easy' ? '#15803d' : err.difficulty === 'Medium' ? '#1d4ed8' : '#b91c1c',
                         padding: '2px 8px',
                         borderRadius: '4px'
                       }}>

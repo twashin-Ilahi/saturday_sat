@@ -600,7 +600,7 @@ export default function Dashboard({
                 }
 
                 // difficulty dot color
-                const dotColor = q.difficulty === "Easy" ? "#16a34a" : q.difficulty === "Medium" ? "#ea580c" : "#dc2626";
+                const dotColor = q.difficulty === "Easy" ? "#16a34a" : q.difficulty === "Medium" ? "#2563eb" : "#dc2626";
 
                 return (
                   <button
@@ -651,7 +651,7 @@ export default function Dashboard({
                 <span>Easy</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ea580c' }} />
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }} />
                 <span>Medium</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
