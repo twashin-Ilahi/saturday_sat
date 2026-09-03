@@ -532,8 +532,8 @@ export default function BluebookTestView({
                     <div style={{ fontWeight: 600, color: user.isGuest ? '#15803d' : '#1e293b' }}>
                       {user.isGuest ? 'Mode:' : 'Logged in as:'}
                     </div>
-                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>
-                      {user.isGuest ? '👤 Guest (Local Storage)' : user.email}
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email}>
+                      {user.isGuest ? '👤 Guest (Local Storage)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
                     </div>
                   </div>
                 )}

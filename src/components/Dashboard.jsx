@@ -242,9 +242,9 @@ export default function Dashboard({
                   textOverflow: 'ellipsis',
                   cursor: 'pointer'
                 }} 
-                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.email} (Click to open Settings & Sync)`}
+                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email} (Click to open Settings & Sync)`}
               >
-                👤 {user.isGuest ? 'Guest (Offline)' : user.email}
+                👤 {user.isGuest ? 'Guest (Offline)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
               </div>
               <button 
                 className="btn" 

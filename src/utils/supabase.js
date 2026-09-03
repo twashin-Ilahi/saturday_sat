@@ -26,10 +26,13 @@ export async function signInWithEmail(email, password) {
 /**
  * Sign up with email and password
  */
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email, password, metadata = {}) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: metadata,
+    },
   });
   if (error) throw error;
   return data;

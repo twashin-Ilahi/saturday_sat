@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { 
   signInWithEmail, 
   signUpWithEmail, 
@@ -8,10 +9,12 @@ import {
 
 export default function AuthView({ initialMode = 'login', onAuthSuccess, onContinueAsGuest }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot' | 'reset'
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -19,8 +22,11 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
   const resetFormState = () => {
     setErrorMsg('');
     setSuccessMsg('');
+    setFullName('');
     setPassword('');
     setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const switchMode = (newMode) => {
@@ -36,6 +42,13 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
     if (!email && mode !== 'reset') {
       setErrorMsg('Please enter your email address.');
       return;
+    }
+
+    if (mode === 'signup') {
+      if (!fullName.trim()) {
+        setErrorMsg('Please enter your full name.');
+        return;
+      }
     }
 
     if (mode === 'signup' || mode === 'reset') {
@@ -58,7 +71,10 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
           if (onAuthSuccess) onAuthSuccess(data.session.user);
         }
       } else if (mode === 'signup') {
-        const data = await signUpWithEmail(email.trim(), password);
+        const data = await signUpWithEmail(email.trim(), password, {
+          full_name: fullName.trim(),
+          name: fullName.trim(),
+        });
         if (data?.session) {
           if (onAuthSuccess) onAuthSuccess(data.session.user);
         } else {
@@ -223,6 +239,35 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Full Name Field (only for Registration) */}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  autoComplete="name"
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    fontSize: '0.92rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '4px',
+                    outline: 'none',
+                    transition: 'border-color 0.15s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#005a9c'}
+                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                />
+              </div>
+            )}
+
             {/* Email Field (hidden during password reset mode) */}
             {mode !== 'reset' && (
               <div>
@@ -302,6 +347,7 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
+                    title={showPassword ? "Hide password" : "Show password"}
                     style={{
                       position: 'absolute',
                       right: '8px',
@@ -310,12 +356,17 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      fontSize: '0.78rem',
                       color: '#64748b',
-                      padding: '4px 6px'
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px'
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#005a9c'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
                   >
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
@@ -327,26 +378,53 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                   Confirm {mode === 'reset' ? 'New Password' : 'Password'}
                 </label>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
-                  autoComplete="new-password"
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    fontSize: '0.92rem',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '4px',
-                    outline: 'none',
-                    transition: 'border-color 0.15s ease',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#005a9c'}
-                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    autoComplete="new-password"
+                    style={{
+                      width: '100%',
+                      padding: '9px 40px 9px 12px',
+                      fontSize: '0.92rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '4px',
+                      outline: 'none',
+                      transition: 'border-color 0.15s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#005a9c'}
+                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    tabIndex="-1"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#005a9c'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             )}
 

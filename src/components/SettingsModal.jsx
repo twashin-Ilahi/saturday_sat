@@ -213,13 +213,13 @@ export default function SettingsModal({
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                 <span style={{ fontSize: '0.95rem' }}>{user?.isGuest ? '👤' : '🛡️'}</span>
                 <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>
-                  {user?.isGuest ? 'Guest User (Local Session)' : user?.email}
+                  {user?.isGuest ? 'Guest User (Local Session)' : (user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email)}
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
                 {user?.isGuest 
                   ? 'Data is saved exclusively in this browser. Sign in to back up and sync across devices.'
-                  : `Authenticated via Supabase Auth • UID: ${user?.id?.slice(0, 8)}...`}
+                  : `${user?.email} • UID: ${user?.id?.slice(0, 8)}...`}
               </p>
             </div>
 
