@@ -7,6 +7,7 @@ export default function ErrorLogView({
   allQuestions = [],
   user,
   onSignOut,
+  onOpenSettings,
   onReturnToDashboard,
   onStartSerialErrorDrill,
   onJumpToQuestion,
@@ -207,6 +208,7 @@ export default function ErrorLogView({
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
               <span 
+                onClick={onOpenSettings}
                 style={{ 
                   fontSize: '0.8rem', 
                   color: user.isGuest ? '#15803d' : '#334155', 
@@ -218,12 +220,34 @@ export default function ErrorLogView({
                   maxWidth: '200px', 
                   overflow: 'hidden', 
                   textOverflow: 'ellipsis', 
-                  whiteSpace: 'nowrap' 
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
                 }} 
-                title={user.isGuest ? "Guest Mode: All progress saved in this browser" : user.email}
+                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.email} (Click to open Settings & Sync)`}
               >
                 👤 {user.isGuest ? 'Guest (Offline)' : user.email}
               </span>
+              {onOpenSettings && (
+                <button
+                  onClick={onOpenSettings}
+                  style={{
+                    fontSize: '0.78rem',
+                    color: '#334155',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    padding: '4px 9px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Settings & Cloud Sync"
+                >
+                  ⚙️ Settings
+                </button>
+              )}
               {onSignOut && (
                 <button
                   onClick={onSignOut}

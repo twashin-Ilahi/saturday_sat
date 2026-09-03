@@ -14,6 +14,7 @@ export default function BluebookTestView({
   practiceMode = 'normal',
   user,
   onSignOut,
+  onOpenSettings,
   onOpenErrorLog,
   onReturnFromErrorDrill,
   onSelectChoice,
@@ -541,6 +542,12 @@ export default function BluebookTestView({
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#005a9c' }}
                 >
                   ← Return to Dashboard
+                </button>
+                <button 
+                  onClick={() => { setShowMoreMenu(false); onOpenSettings && onOpenSettings(); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}
+                >
+                  ⚙️ Settings & Cloud Sync
                 </button>
                 <button 
                   onClick={() => { setShowMoreMenu(false); handleToggleFullscreen(); }}

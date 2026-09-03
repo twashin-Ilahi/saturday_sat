@@ -10,6 +10,7 @@ export default function Dashboard({
   errorLog,
   user,
   onSignOut,
+  onOpenSettings,
   onStartPractice,
   onJumpToQuestion,
   onOpenErrorLog,
@@ -208,9 +209,25 @@ export default function Dashboard({
             Reset All
           </button>
 
+          <button
+            className="btn"
+            onClick={onOpenSettings}
+            style={{
+              background: '#f8fafc',
+              color: '#1e293b',
+              borderColor: '#cbd5e1',
+              fontWeight: 600,
+              fontSize: '0.82rem'
+            }}
+            title="Settings & Cloud Sync"
+          >
+            ⚙️ Settings & Cloud Sync
+          </button>
+
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
               <div 
+                onClick={onOpenSettings}
                 style={{ 
                   fontSize: '0.8rem', 
                   color: user.isGuest ? '#15803d' : '#334155', 
@@ -222,9 +239,10 @@ export default function Dashboard({
                   maxWidth: '200px',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  textOverflow: 'ellipsis',
+                  cursor: 'pointer'
                 }} 
-                title={user.isGuest ? "Guest Mode: All progress is saved in this local browser" : user.email}
+                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.email} (Click to open Settings & Sync)`}
               >
                 👤 {user.isGuest ? 'Guest (Offline)' : user.email}
               </div>

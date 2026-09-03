@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard';
 import BluebookTestView from './components/BluebookTestView';
 import ErrorLogView from './components/ErrorLogView';
 import AuthView from './components/AuthView';
+import SettingsModal from './components/SettingsModal';
 import { ALL_QUESTIONS } from './data/questions';
 import { 
   loadProgress, 
@@ -18,6 +19,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'practice' | 'error-log'
   const [practiceMode, setPracticeMode] = useState('normal'); // 'normal' | 'serial-error'
   const [serialErrorSubset, setSerialErrorSubset] = useState([]); // array of original question indices
@@ -111,6 +113,43 @@ export default function App() {
     setUser(null);
     setIsPasswordReset(false);
     setCurrentView('dashboard');
+  };
+
+  const handleOpenSettings = () => setShowSettingsModal(true);
+  const handleCloseSettings = () => setShowSettingsModal(false);
+
+  const handleApplyCloudProgress = (cloudData) => {
+    if (!cloudData) return;
+    setState(prev => {
+      const qLen = ALL_QUESTIONS.length;
+      let newSelections = Array.isArray(cloudData.selectedAnswers) ? [...cloudData.selectedAnswers] : [...prev.selectedAnswers];
+      while (newSelections.length < qLen) newSelections.push(null);
+
+      let newChecked = Array.isArray(cloudData.checkedStatus) ? [...cloudData.checkedStatus] : [...prev.checkedStatus];
+      while (newChecked.length < qLen) newChecked.push(false);
+
+      let newFlagged = Array.isArray(cloudData.flaggedStatus) ? [...cloudData.flaggedStatus] : (prev.flaggedStatus || new Array(qLen).fill(false));
+      while (newFlagged.length < qLen) newFlagged.push(false);
+
+      let newEliminated = Array.isArray(cloudData.eliminatedStatus) ? [...cloudData.eliminatedStatus] : (prev.eliminatedStatus || Array.from({ length: qLen }, () => []));
+      while (newEliminated.length < qLen) newEliminated.push([]);
+
+      let newErrors = Array.isArray(cloudData.errorLog) ? [...cloudData.errorLog] : prev.errorLog;
+      let newIdx = typeof cloudData.currentIndex === 'number' && cloudData.currentIndex >= 0 && cloudData.currentIndex < qLen 
+        ? cloudData.currentIndex 
+        : prev.currentIndex;
+
+      return {
+        ...prev,
+        currentIndex: newIdx,
+        selectedAnswers: newSelections,
+        checkedStatus: newChecked,
+        flaggedStatus: newFlagged,
+        eliminatedStatus: newEliminated,
+        errorLog: newErrors,
+        autoStartEnabled: typeof cloudData.autoStartEnabled === 'boolean' ? cloudData.autoStartEnabled : prev.autoStartEnabled,
+      };
+    });
   };
 
   const handleSelectChoice = (questionIndex, choiceIndex) => {
@@ -361,114 +400,187 @@ export default function App() {
       const currentOrigIdx = serialErrorSubset[serialCurrentIndex] || 0;
 
       return (
+        <>
+          <BluebookTestView
+            questions={activeQuestions}
+            currentIndex={serialCurrentIndex}
+            selectedAnswers={serialErrorSubset.map(idx => state.selectedAnswers[idx])}
+            checkedStatus={serialErrorSubset.map(idx => state.checkedStatus[idx])}
+            flaggedStatus={serialErrorSubset.map(idx => (state.flaggedStatus || [])[idx])}
+            eliminatedStatus={serialErrorSubset.map(idx => (state.eliminatedStatus || [])[idx])}
+            errorLog={state.errorLog}
+            autoStartEnabled={state.autoStartEnabled}
+            practiceMode="serial-error"
+            user={user}
+            onSignOut={handleSignOut}
+            onOpenSettings={handleOpenSettings}
+            onOpenErrorLog={handleOpenErrorLog}
+            onReturnFromErrorDrill={handleReturnFromErrorDrill}
+            onSelectChoice={(subIdx, choiceIdx) => {
+              const origIdx = serialErrorSubset[subIdx];
+              handleSelectChoice(origIdx, choiceIdx);
+            }}
+            onCheckAnswer={(subIdx, timerSeconds) => {
+              const origIdx = serialErrorSubset[subIdx];
+              handleCheckAnswer(origIdx, timerSeconds);
+            }}
+            onToggleFlag={(subIdx) => {
+              const origIdx = serialErrorSubset[subIdx];
+              handleToggleFlag(origIdx);
+            }}
+            onToggleEliminate={(subIdx, choiceIdx) => {
+              const origIdx = serialErrorSubset[subIdx];
+              handleToggleEliminate(origIdx, choiceIdx);
+            }}
+            onNavigate={(newSubIndex) => {
+              if (newSubIndex >= 0 && newSubIndex < serialErrorSubset.length) {
+                setSerialCurrentIndex(newSubIndex);
+              }
+            }}
+            onToggleAutoStart={handleToggleAutoStart}
+            onReset={handleReset}
+            onExport={handleExport}
+            onImport={handleImport}
+            onReturnToDashboard={handleReturnToDashboard}
+          />
+          <SettingsModal
+            isOpen={showSettingsModal}
+            onClose={handleCloseSettings}
+            user={user}
+            currentState={state}
+            totalQuestions={ALL_QUESTIONS.length}
+            onApplyCloudProgress={handleApplyCloudProgress}
+            onResetProgress={handleReset}
+            onExportProgress={handleExport}
+            onImportProgress={handleImport}
+            onOpenAuth={() => {
+              setUser(null);
+              try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+            }}
+          />
+        </>
+      );
+    }
+
+    // Normal practice mode
+    return (
+      <>
         <BluebookTestView
-          questions={activeQuestions}
-          currentIndex={serialCurrentIndex}
-          selectedAnswers={serialErrorSubset.map(idx => state.selectedAnswers[idx])}
-          checkedStatus={serialErrorSubset.map(idx => state.checkedStatus[idx])}
-          flaggedStatus={serialErrorSubset.map(idx => (state.flaggedStatus || [])[idx])}
-          eliminatedStatus={serialErrorSubset.map(idx => (state.eliminatedStatus || [])[idx])}
+          questions={ALL_QUESTIONS}
+          currentIndex={state.currentIndex}
+          selectedAnswers={state.selectedAnswers}
+          checkedStatus={state.checkedStatus}
+          flaggedStatus={state.flaggedStatus || []}
+          eliminatedStatus={state.eliminatedStatus || []}
           errorLog={state.errorLog}
           autoStartEnabled={state.autoStartEnabled}
-          practiceMode="serial-error"
+          practiceMode="normal"
           user={user}
           onSignOut={handleSignOut}
+          onOpenSettings={handleOpenSettings}
           onOpenErrorLog={handleOpenErrorLog}
-          onReturnFromErrorDrill={handleReturnFromErrorDrill}
-          onSelectChoice={(subIdx, choiceIdx) => {
-            const origIdx = serialErrorSubset[subIdx];
-            handleSelectChoice(origIdx, choiceIdx);
-          }}
-          onCheckAnswer={(subIdx, timerSeconds) => {
-            const origIdx = serialErrorSubset[subIdx];
-            handleCheckAnswer(origIdx, timerSeconds);
-          }}
-          onToggleFlag={(subIdx) => {
-            const origIdx = serialErrorSubset[subIdx];
-            handleToggleFlag(origIdx);
-          }}
-          onToggleEliminate={(subIdx, choiceIdx) => {
-            const origIdx = serialErrorSubset[subIdx];
-            handleToggleEliminate(origIdx, choiceIdx);
-          }}
-          onNavigate={(newSubIndex) => {
-            if (newSubIndex >= 0 && newSubIndex < serialErrorSubset.length) {
-              setSerialCurrentIndex(newSubIndex);
-            }
-          }}
+          onSelectChoice={handleSelectChoice}
+          onCheckAnswer={handleCheckAnswer}
+          onToggleFlag={handleToggleFlag}
+          onToggleEliminate={handleToggleEliminate}
+          onNavigate={handleNavigate}
           onToggleAutoStart={handleToggleAutoStart}
           onReset={handleReset}
           onExport={handleExport}
           onImport={handleImport}
           onReturnToDashboard={handleReturnToDashboard}
         />
-      );
-    }
-
-    // Normal practice mode
-    return (
-      <BluebookTestView
-        questions={ALL_QUESTIONS}
-        currentIndex={state.currentIndex}
-        selectedAnswers={state.selectedAnswers}
-        checkedStatus={state.checkedStatus}
-        flaggedStatus={state.flaggedStatus || []}
-        eliminatedStatus={state.eliminatedStatus || []}
-        errorLog={state.errorLog}
-        autoStartEnabled={state.autoStartEnabled}
-        practiceMode="normal"
-        user={user}
-        onSignOut={handleSignOut}
-        onOpenErrorLog={handleOpenErrorLog}
-        onSelectChoice={handleSelectChoice}
-        onCheckAnswer={handleCheckAnswer}
-        onToggleFlag={handleToggleFlag}
-        onToggleEliminate={handleToggleEliminate}
-        onNavigate={handleNavigate}
-        onToggleAutoStart={handleToggleAutoStart}
-        onReset={handleReset}
-        onExport={handleExport}
-        onImport={handleImport}
-        onReturnToDashboard={handleReturnToDashboard}
-      />
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={handleCloseSettings}
+          user={user}
+          currentState={state}
+          totalQuestions={ALL_QUESTIONS.length}
+          onApplyCloudProgress={handleApplyCloudProgress}
+          onResetProgress={handleReset}
+          onExportProgress={handleExport}
+          onImportProgress={handleImport}
+          onOpenAuth={() => {
+            setUser(null);
+            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+          }}
+        />
+      </>
     );
   }
 
   // If in dedicated Error Log Directory view:
   if (currentView === 'error-log') {
     return (
-      <ErrorLogView
-        errorLog={state.errorLog}
-        allQuestions={ALL_QUESTIONS}
-        user={user}
-        onSignOut={handleSignOut}
-        onReturnToDashboard={handleReturnToDashboard}
-        onStartSerialErrorDrill={handleStartSerialErrorDrill}
-        onJumpToQuestion={handleJumpToQuestion}
-        onRemoveError={handleRemoveError}
-        onMarkMastered={handleMarkMastered}
-      />
+      <>
+        <ErrorLogView
+          errorLog={state.errorLog}
+          allQuestions={ALL_QUESTIONS}
+          user={user}
+          onSignOut={handleSignOut}
+          onOpenSettings={handleOpenSettings}
+          onReturnToDashboard={handleReturnToDashboard}
+          onStartSerialErrorDrill={handleStartSerialErrorDrill}
+          onJumpToQuestion={handleJumpToQuestion}
+          onRemoveError={handleRemoveError}
+          onMarkMastered={handleMarkMastered}
+        />
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={handleCloseSettings}
+          user={user}
+          currentState={state}
+          totalQuestions={ALL_QUESTIONS.length}
+          onApplyCloudProgress={handleApplyCloudProgress}
+          onResetProgress={handleReset}
+          onExportProgress={handleExport}
+          onImportProgress={handleImport}
+          onOpenAuth={() => {
+            setUser(null);
+            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+          }}
+        />
+      </>
     );
   }
 
   // Default: Dashboard
   return (
-    <Dashboard
-      questions={ALL_QUESTIONS}
-      currentIndex={state.currentIndex}
-      selectedAnswers={state.selectedAnswers}
-      checkedStatus={state.checkedStatus}
-      errorLog={state.errorLog}
-      user={user}
-      onSignOut={handleSignOut}
-      onStartPractice={handleStartPractice}
-      onJumpToQuestion={handleJumpToQuestion}
-      onOpenErrorLog={handleOpenErrorLog}
-      onStartSerialErrorDrill={handleStartSerialErrorDrill}
-      onReset={handleReset}
-      onExport={handleExport}
-      onImport={handleImport}
-    />
+    <>
+      <Dashboard
+        questions={ALL_QUESTIONS}
+        currentIndex={state.currentIndex}
+        selectedAnswers={state.selectedAnswers}
+        checkedStatus={state.checkedStatus}
+        errorLog={state.errorLog}
+        user={user}
+        onSignOut={handleSignOut}
+        onOpenSettings={handleOpenSettings}
+        onStartPractice={handleStartPractice}
+        onJumpToQuestion={handleJumpToQuestion}
+        onOpenErrorLog={handleOpenErrorLog}
+        onStartSerialErrorDrill={handleStartSerialErrorDrill}
+        onReset={handleReset}
+        onExport={handleExport}
+        onImport={handleImport}
+      />
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={handleCloseSettings}
+        user={user}
+        currentState={state}
+        totalQuestions={ALL_QUESTIONS.length}
+        onApplyCloudProgress={handleApplyCloudProgress}
+        onResetProgress={handleReset}
+        onExportProgress={handleExport}
+        onImportProgress={handleImport}
+        onOpenAuth={() => {
+          setUser(null);
+          try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+        }}
+      />
+    </>
   );
 }
+
 
