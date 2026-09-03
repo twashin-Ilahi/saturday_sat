@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatTime, loadHighlights, saveHighlights } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
+import VisualExplanation from './VisualExplanation';
 
 export default function BluebookTestView({
   questions,
@@ -943,8 +944,13 @@ export default function BluebookTestView({
                   — Correct Choice is {q.correctAnswerLetter}
                 </span>
               </div>
-              <div style={{ color: '#1e293b', marginBottom: '12px' }}>
-                {q.rationale}
+              <div style={{ marginBottom: '12px' }}>
+                <VisualExplanation
+                  rationale={q.rationale}
+                  correctAnswerLetter={q.correctAnswerLetter}
+                  userChoiceLetter={currentSelection !== null ? letters[currentSelection] : null}
+                  isCorrect={isCorrect}
+                />
               </div>
 
               {/* Gemini AI On-Demand Breakdown */}

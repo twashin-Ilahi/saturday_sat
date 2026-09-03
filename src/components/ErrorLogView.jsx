@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { formatTime } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
+import VisualExplanation from './VisualExplanation';
 
 export default function ErrorLogView({
   errorLog = [],
@@ -828,10 +829,13 @@ export default function ErrorLogView({
                         lineHeight: 1.6,
                         color: '#334155'
                       }}>
-                        <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
-                          Official Explanation:
-                        </div>
-                        {err.rationale}
+                        <VisualExplanation
+                          rationale={err.rationale}
+                          correctAnswerLetter={err.correctAnswerLetter}
+                          userChoiceLetter={err.yourAnswer !== undefined && err.yourAnswer !== null ? ['A', 'B', 'C', 'D'][err.yourAnswer] : null}
+                          isCorrect={false}
+                          showViewToggle={true}
+                        />
                       </div>
                     )}
                   </div>
