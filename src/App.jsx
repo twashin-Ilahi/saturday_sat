@@ -16,17 +16,80 @@ import {
 import { supabase, signOut } from './utils/supabase';
 import { syncLocalToCloud, fetchCloudProgress } from './utils/cloudSync';
 
+// Helper to determine the exact active view, question index, and mode across page refreshes
+const loadPersistedRoute = () => {
+  if (typeof window === 'undefined') {
+    return { view: 'dashboard', mode: 'normal', index: 0, serialSubset: [], serialIndex: 0 };
+  }
+
+  const hash = window.location.hash || '';
+  let fromHash = null;
+
+  if (hash.startsWith('#/practice') || hash.startsWith('#practice')) {
+    const query = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(query);
+    const q = parseInt(params.get('q'), 10);
+    fromHash = {
+      view: 'practice',
+      mode: 'normal',
+      index: !isNaN(q) && q > 0 ? q - 1 : undefined,
+    };
+  } else if (hash.startsWith('#/drill') || hash.startsWith('#drill')) {
+    const query = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(query);
+    const q = parseInt(params.get('q'), 10);
+    fromHash = {
+      view: 'practice',
+      mode: 'serial-error',
+      serialIndex: !isNaN(q) && q > 0 ? q - 1 : 0,
+    };
+  } else if (hash.startsWith('#/error-log') || hash.startsWith('#error-log')) {
+    fromHash = { view: 'error-log', mode: 'normal' };
+  } else if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
+    fromHash = { view: 'dashboard', mode: 'normal' };
+  }
+
+  let saved = null;
+  try {
+    const raw = localStorage.getItem('sat_persisted_route');
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {}
+
+  if (fromHash) {
+    return {
+      view: fromHash.view,
+      mode: fromHash.mode || saved?.mode || 'normal',
+      index: fromHash.index !== undefined ? fromHash.index : (saved?.index ?? 0),
+      serialSubset: saved?.serialSubset || [],
+      serialIndex: fromHash.serialIndex !== undefined ? fromHash.serialIndex : (saved?.serialIndex ?? 0),
+    };
+  }
+
+  if (saved && saved.view) {
+    return saved;
+  }
+
+  return { view: 'dashboard', mode: 'normal', index: 0, serialSubset: [], serialIndex: 0 };
+};
+
 export default function App() {
+  const [initialRoute] = useState(() => loadPersistedRoute());
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'practice' | 'error-log'
-  const [practiceMode, setPracticeMode] = useState('normal'); // 'normal' | 'serial-error'
-  const [serialErrorSubset, setSerialErrorSubset] = useState([]); // array of original question indices
-  const [serialCurrentIndex, setSerialCurrentIndex] = useState(0); // 0 to serialErrorSubset.length - 1
-  const [state, setState] = useState(() => loadProgress(ALL_QUESTIONS.length));
+  const [currentView, setCurrentView] = useState(() => initialRoute.view);
+  const [practiceMode, setPracticeMode] = useState(() => initialRoute.mode);
+  const [serialErrorSubset, setSerialErrorSubset] = useState(() => initialRoute.serialSubset || []);
+  const [serialCurrentIndex, setSerialCurrentIndex] = useState(() => initialRoute.serialIndex || 0);
+  const [state, setState] = useState(() => {
+    const loaded = loadProgress(ALL_QUESTIONS.length);
+    if (typeof initialRoute.index === 'number' && initialRoute.view === 'practice' && initialRoute.mode === 'normal') {
+      loaded.currentIndex = Math.max(0, Math.min(initialRoute.index, ALL_QUESTIONS.length - 1));
+    }
+    return loaded;
+  });
 
   const handleApplyCloudProgress = (cloudData) => {
     if (!cloudData) return;
@@ -73,8 +136,11 @@ export default function App() {
       setUser(sessionUser);
       try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
 
-      // 1. Load local progress
+      // 1. Load local progress while keeping refreshed question index if active
       const localData = loadProgress(ALL_QUESTIONS.length, sessionUser.id);
+      if (typeof initialRoute.index === 'number' && initialRoute.view === 'practice' && initialRoute.mode === 'normal') {
+        localData.currentIndex = Math.max(0, Math.min(initialRoute.index, ALL_QUESTIONS.length - 1));
+      }
       setState(localData);
 
       // 2. Automatically restore from cloud if cloud has data
@@ -224,6 +290,8 @@ export default function App() {
       view,
       mode,
       index: index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : state.currentIndex),
+      serialSubset: mode === 'serial-error' ? serialErrorSubset : [],
+      serialIndex: mode === 'serial-error' ? (index !== null ? index : serialCurrentIndex) : 0,
     };
 
     if (replace) {
@@ -231,37 +299,61 @@ export default function App() {
     } else {
       window.history.pushState(historyState, '', hash);
     }
+
+    try {
+      localStorage.setItem('sat_persisted_route', JSON.stringify(historyState));
+    } catch (e) {}
   };
+
+  // Persist current active view, mode, and index whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('sat_persisted_route', JSON.stringify({
+        view: currentView,
+        mode: practiceMode,
+        index: state.currentIndex,
+        serialSubset: serialErrorSubset,
+        serialIndex: serialCurrentIndex,
+      }));
+    } catch (e) {}
+  }, [currentView, practiceMode, state.currentIndex, serialErrorSubset, serialCurrentIndex]);
 
   // Synchronize browser history and handle Back / Forward buttons
   useEffect(() => {
     // Initial route sync
-    const route = parseRouteFromUrl();
+    const route = loadPersistedRoute();
     if (route) {
-      setCurrentView(route.view);
-      setPracticeMode(route.mode);
-      if (typeof route.index === 'number') {
-        if (route.mode === 'serial-error') {
-          setSerialCurrentIndex(route.index);
-        } else {
-          setState(prev => ({ ...prev, currentIndex: Math.max(0, Math.min(route.index, ALL_QUESTIONS.length - 1)) }));
-        }
+      let hash = '#/dashboard';
+      if (route.view === 'practice') {
+        const qNum = (route.mode === 'serial-error' ? (route.serialIndex || 0) : (route.index || 0)) + 1;
+        hash = route.mode === 'serial-error' ? `#/drill?q=${qNum}` : `#/practice?q=${qNum}`;
+      } else if (route.view === 'error-log') {
+        hash = '#/error-log';
       }
-      window.history.replaceState({ view: route.view, mode: route.mode, index: route.index }, '', window.location.hash);
-    } else {
-      window.history.replaceState({ view: 'dashboard', mode: 'normal' }, '', '#/dashboard');
+
+      window.history.replaceState({
+        view: route.view,
+        mode: route.mode,
+        index: route.index,
+        serialSubset: route.serialSubset,
+        serialIndex: route.serialIndex
+      }, '', hash);
     }
 
     const handlePopState = (event) => {
-      const currentRoute = event.state || parseRouteFromUrl();
+      const currentRoute = event.state || loadPersistedRoute();
       if (currentRoute && currentRoute.view) {
         setCurrentView(currentRoute.view);
         const mode = currentRoute.mode || 'normal';
         setPracticeMode(mode);
 
+        if (Array.isArray(currentRoute.serialSubset) && currentRoute.serialSubset.length > 0) {
+          setSerialErrorSubset(currentRoute.serialSubset);
+        }
+
         if (typeof currentRoute.index === 'number') {
           if (mode === 'serial-error') {
-            setSerialCurrentIndex(currentRoute.index);
+            setSerialCurrentIndex(currentRoute.serialIndex || 0);
           } else {
             setState(prev => ({
               ...prev,
