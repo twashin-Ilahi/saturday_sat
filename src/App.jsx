@@ -89,6 +89,154 @@ export default function App() {
     }
   }, [state, user, authLoading]);
 
+  // Helper to parse route from URL hash
+  const parseRouteFromUrl = () => {
+    if (typeof window === 'undefined') return null;
+    const hash = window.location.hash || '';
+    if (hash.startsWith('#/practice') || hash.startsWith('#practice')) {
+      const query = hash.includes('?') ? hash.split('?')[1] : '';
+      const params = new URLSearchParams(query);
+      const q = parseInt(params.get('q'), 10);
+      return {
+        view: 'practice',
+        mode: 'normal',
+        index: !isNaN(q) && q > 0 ? q - 1 : 0,
+      };
+    }
+    if (hash.startsWith('#/drill') || hash.startsWith('#drill')) {
+      const query = hash.includes('?') ? hash.split('?')[1] : '';
+      const params = new URLSearchParams(query);
+      const q = parseInt(params.get('q'), 10);
+      return {
+        view: 'practice',
+        mode: 'serial-error',
+        index: !isNaN(q) && q > 0 ? q - 1 : 0,
+      };
+    }
+    if (hash.startsWith('#/error-log') || hash.startsWith('#error-log')) {
+      return { view: 'error-log', mode: 'normal' };
+    }
+    if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
+      return { view: 'dashboard', mode: 'normal' };
+    }
+    return null;
+  };
+
+  const pushHistoryState = (view, mode = 'normal', index = null, replace = false) => {
+    if (typeof window === 'undefined') return;
+
+    let hash = '#/dashboard';
+    if (view === 'practice') {
+      const targetIdx = index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : state.currentIndex);
+      hash = mode === 'serial-error' ? `#/drill?q=${targetIdx + 1}` : `#/practice?q=${targetIdx + 1}`;
+    } else if (view === 'error-log') {
+      hash = '#/error-log';
+    }
+
+    const historyState = {
+      view,
+      mode,
+      index: index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : state.currentIndex),
+    };
+
+    if (replace) {
+      window.history.replaceState(historyState, '', hash);
+    } else {
+      window.history.pushState(historyState, '', hash);
+    }
+  };
+
+  // Synchronize browser history and handle Back / Forward buttons
+  useEffect(() => {
+    // Initial route sync
+    const route = parseRouteFromUrl();
+    if (route) {
+      setCurrentView(route.view);
+      setPracticeMode(route.mode);
+      if (typeof route.index === 'number') {
+        if (route.mode === 'serial-error') {
+          setSerialCurrentIndex(route.index);
+        } else {
+          setState(prev => ({ ...prev, currentIndex: Math.max(0, Math.min(route.index, ALL_QUESTIONS.length - 1)) }));
+        }
+      }
+      window.history.replaceState({ view: route.view, mode: route.mode, index: route.index }, '', window.location.hash);
+    } else {
+      window.history.replaceState({ view: 'dashboard', mode: 'normal' }, '', '#/dashboard');
+    }
+
+    const handlePopState = (event) => {
+      const currentRoute = event.state || parseRouteFromUrl();
+      if (currentRoute && currentRoute.view) {
+        setCurrentView(currentRoute.view);
+        const mode = currentRoute.mode || 'normal';
+        setPracticeMode(mode);
+
+        if (typeof currentRoute.index === 'number') {
+          if (mode === 'serial-error') {
+            setSerialCurrentIndex(currentRoute.index);
+          } else {
+            setState(prev => ({
+              ...prev,
+              currentIndex: Math.max(0, Math.min(currentRoute.index, ALL_QUESTIONS.length - 1))
+            }));
+          }
+        }
+      } else {
+        setCurrentView('dashboard');
+        setPracticeMode('normal');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Intercept Backspace when outside inputs so Chrome doesn't exit to Home page
+  useEffect(() => {
+    const handleGlobalBackspace = (e) => {
+      if (e.key === 'Backspace') {
+        const target = e.target;
+        const isEditable = target && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable
+        );
+
+        if (!isEditable) {
+          // Prevent browser from navigating away to Chrome home page
+          e.preventDefault();
+
+          if (currentView === 'practice') {
+            if (practiceMode === 'serial-error') {
+              if (serialCurrentIndex > 0) {
+                setSerialCurrentIndex(prev => {
+                  const nextIdx = prev - 1;
+                  pushHistoryState('practice', 'serial-error', nextIdx);
+                  return nextIdx;
+                });
+              } else {
+                handleReturnFromErrorDrill();
+              }
+            } else {
+              if (state.currentIndex > 0) {
+                handleNavigate(state.currentIndex - 1);
+              } else {
+                handleReturnToDashboard();
+              }
+            }
+          } else if (currentView === 'error-log') {
+            handleReturnToDashboard();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalBackspace);
+    return () => window.removeEventListener('keydown', handleGlobalBackspace);
+  }, [currentView, practiceMode, state.currentIndex, serialCurrentIndex]);
+
   const handleContinueAsGuest = () => {
     try {
       localStorage.setItem('sat_guest_mode', 'true');
@@ -215,9 +363,12 @@ export default function App() {
     });
   };
 
-  const handleNavigate = (newIndex) => {
+  const handleNavigate = (newIndex, shouldPush = true) => {
     if (newIndex >= 0 && newIndex < ALL_QUESTIONS.length) {
       setState(prev => ({ ...prev, currentIndex: newIndex }));
+      if (shouldPush) {
+        pushHistoryState('practice', 'normal', newIndex);
+      }
     }
   };
 
@@ -244,17 +395,20 @@ export default function App() {
 
   const handleStartPractice = (index = 0) => {
     setPracticeMode('normal');
-    handleNavigate(index);
+    setState(prev => ({ ...prev, currentIndex: index }));
+    pushHistoryState('practice', 'normal', index);
     setCurrentView('practice');
   };
 
   const handleJumpToQuestion = (targetIndex) => {
     setPracticeMode('normal');
-    handleNavigate(targetIndex);
+    setState(prev => ({ ...prev, currentIndex: targetIndex }));
+    pushHistoryState('practice', 'normal', targetIndex);
     setCurrentView('practice');
   };
 
   const handleOpenErrorLog = () => {
+    pushHistoryState('error-log');
     setCurrentView('error-log');
   };
 
@@ -268,6 +422,7 @@ export default function App() {
     setSerialErrorSubset(indices);
     setSerialCurrentIndex(0);
     setPracticeMode('serial-error');
+    pushHistoryState('practice', 'serial-error', 0);
     setCurrentView('practice');
   };
 
@@ -319,11 +474,13 @@ export default function App() {
 
   const handleReturnToDashboard = () => {
     setPracticeMode('normal');
+    pushHistoryState('dashboard');
     setCurrentView('dashboard');
   };
 
   const handleReturnFromErrorDrill = () => {
     setPracticeMode('normal');
+    pushHistoryState('error-log');
     setCurrentView('error-log');
   };
 
@@ -435,6 +592,7 @@ export default function App() {
             onNavigate={(newSubIndex) => {
               if (newSubIndex >= 0 && newSubIndex < serialErrorSubset.length) {
                 setSerialCurrentIndex(newSubIndex);
+                pushHistoryState('practice', 'serial-error', newSubIndex);
               }
             }}
             onToggleAutoStart={handleToggleAutoStart}

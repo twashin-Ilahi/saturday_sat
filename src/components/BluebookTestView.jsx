@@ -238,6 +238,12 @@ export default function BluebookTestView({
     const handleKeyDown = (e) => {
       if (showErrorModal || showNotesDrawer || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (currentIndex > 0) onNavigate(currentIndex - 1);
+        return;
+      }
+
       if (e.key === 'ArrowLeft') {
         if (currentIndex > 0) onNavigate(currentIndex - 1);
       } else if (e.key === 'ArrowRight') {
