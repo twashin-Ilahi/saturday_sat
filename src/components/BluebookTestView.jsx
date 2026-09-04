@@ -971,7 +971,12 @@ export default function BluebookTestView({
                     style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
                     onClick={handleAskAi}
                   >
-                    ✨ Ask Gemini: {q.skill === 'Rhetorical Synthesis' ? 'Why does this choice meet the goal?' : 'Why is this transition used?'}
+                    ✨ Ask Gemini: {
+                      q.skill === 'Rhetorical Synthesis' ? 'Why does this choice meet the goal?' :
+                      q.skill === 'Boundaries' ? 'Why is this punctuation correct?' :
+                      q.skill === 'Form, Structure, and Sense' ? 'Why is this grammatical form correct?' :
+                      'Why is this transition used?'
+                    }
                   </button>
                 )}
                 {aiLoading && (

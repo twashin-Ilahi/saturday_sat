@@ -37,8 +37,7 @@ export default function Dashboard({
   const activeSkillQuestions = questions
     .map((q, idx) => ({ ...q, originalIndex: idx }))
     .filter(q => {
-      if (selectedSkillId === 'transitions') return q.skill === 'Transitions';
-      if (selectedSkillId === 'rhetorical-synthesis') return q.skill === 'Rhetorical Synthesis';
+      if (activeSkill && activeSkill.name) return q.skill === activeSkill.name;
       return true;
     });
 
@@ -311,7 +310,7 @@ export default function Dashboard({
           <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
             <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Questions</div>
             <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#111', marginTop: '4px' }}>{totalCount}</div>
-            <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>Transitions Skill Set</div>
+            <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>{activeSkill.name} Skill Set</div>
           </div>
 
           <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>

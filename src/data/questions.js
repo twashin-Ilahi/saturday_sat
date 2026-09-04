@@ -1,7 +1,8 @@
 import rawTransitions from './questions.json';
 import rawRhetorical from './rhetorical_synthesis.json';
+import rawSEC from './standard_english_conventions.json';
 
-const rawQuestions = [...rawTransitions, ...rawRhetorical];
+const rawQuestions = [...rawTransitions, ...rawRhetorical, ...rawSEC];
 
 const LETTER_INDEX = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
 
@@ -80,6 +81,8 @@ export const ALL_QUESTIONS = rawQuestions.map(q => {
 
 const transitionCount = ALL_QUESTIONS.filter(q => q.skill === "Transitions").length;
 const rhetoricalCount = ALL_QUESTIONS.filter(q => q.skill === "Rhetorical Synthesis").length;
+const boundariesCount = ALL_QUESTIONS.filter(q => q.skill === "Boundaries").length;
+const formCount = ALL_QUESTIONS.filter(q => q.skill === "Form, Structure, and Sense").length;
 
 export const SYLLABUS = [
   {
@@ -166,15 +169,15 @@ export const SYLLABUS = [
           {
             id: "boundaries",
             name: "Boundaries",
-            questionCount: 0,
-            available: false,
+            questionCount: boundariesCount,
+            available: true,
             description: "Recognize and correctly punctuate sentence boundaries (clauses, run-ons, fragments)."
           },
           {
             id: "form-structure-sense",
             name: "Form, Structure, and Sense",
-            questionCount: 0,
-            available: false,
+            questionCount: formCount,
+            available: true,
             description: "Ensure grammatical agreement (subject-verb, pronoun-antecedent, verb tense)."
           }
         ]
