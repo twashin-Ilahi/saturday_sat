@@ -748,36 +748,58 @@ export default function Dashboard({
             </div>
 
             {/* Matrix Legend */}
-            <div style={{ display: 'flex', gap: '18px', marginTop: '16px', fontSize: '0.8rem', color: '#666', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#e8f5e9', border: '1px solid var(--correct)' }} />
-                <span>Correct</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#ffebee', border: '1px solid var(--incorrect)' }} />
-                <span>Incorrect</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#f8f9fa', border: '1px solid #dcdcdc' }} />
-                <span>Unanswered</span>
-              </div>
-              {user?.isGuest && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px',
+              marginTop: '18px',
+              padding: '10px 16px',
+              background: '#f8fafc',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              fontSize: '0.8rem',
+              color: '#475569',
+              flexWrap: 'wrap'
+            }}>
+              {/* Question Status Group */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '0.78rem' }}>🔒</span>
-                  <span>Locked (Guest)</span>
+                  <span style={{ width: '13px', height: '13px', borderRadius: '3px', background: '#dcfce7', border: '1.5px solid #16a34a' }} />
+                  <span style={{ fontWeight: 600, color: '#15803d' }}>Correct</span>
                 </div>
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
-                <span>Easy</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '13px', height: '13px', borderRadius: '3px', background: '#fee2e2', border: '1.5px solid #dc2626' }} />
+                  <span style={{ fontWeight: 600, color: '#b91c1c' }}>Incorrect</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '13px', height: '13px', borderRadius: '3px', background: '#f8fafc', border: '1.5px solid #cbd5e1' }} />
+                  <span>Unanswered</span>
+                </div>
+                {user?.isGuest && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ fontSize: '0.82rem' }}>🔒</span>
+                    <span style={{ color: '#0369a1', fontWeight: 600 }}>Locked (Guest)</span>
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }} />
-                <span>Medium</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626' }} />
-                <span>Hard</span>
+
+              {/* Difficulty Group */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Difficulty:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#16a34a' }} />
+                  <span style={{ color: '#15803d', fontWeight: 600 }}>Easy</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2563eb' }} />
+                  <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Medium</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#dc2626' }} />
+                  <span style={{ color: '#b91c1c', fontWeight: 600 }}>Hard</span>
+                </div>
               </div>
             </div>
           </div>

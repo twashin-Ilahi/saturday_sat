@@ -1,6 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0070ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-  <path d="M6 6h10"/>
-  <path d="M6 10h10"/>
-  <path d="M6 14h6"/>
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="satShieldGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="45%" stop-color="#005a9c" />
+      <stop offset="100%" stop-color="#0f2b48" />
+    </linearGradient>
+    <linearGradient id="satGoldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="56" height="56" rx="14" fill="url(#satShieldGrad)" />
+  <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="13.25" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none" />
+  <path d="M0 14C0 6.26801 6.26801 0 14 0H42C49.732 0 56 6.26801 56 14V16H0V14Z" fill="rgba(255,255,255,0.14)" />
+  <rect x="14" y="3" width="5" height="8" rx="2.5" fill="#ffffff" />
+  <rect x="37" y="3" width="5" height="8" rx="2.5" fill="#ffffff" />
+  <path d="M37 24.5C37 21.4624 34.5376 19 31.5 19H23.5C20.4624 19 18 21.4624 18 24.5C18 27.5376 20.4624 30 23.5 30H32.5C35.5376 30 38 32.4624 38 35.5C38 38.5376 35.5376 41 32.5 41H24.5C21.4624 41 19 38.5376 19 35.5" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M42 12L43.2 15.5L47 16.5L43.2 17.8L42 21.5L40.8 17.8L37 16.5L40.8 15.5L42 12Z" fill="url(#satGoldGrad)" />
 </svg>

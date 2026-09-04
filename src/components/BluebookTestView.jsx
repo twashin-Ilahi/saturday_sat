@@ -1261,33 +1261,58 @@ export default function BluebookTestView({
                 </button>
               </div>
 
-              {/* Difficulty Dot Color Code Legend */}
+              {/* Comprehensive Review Popover Legend */}
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '4px 8px',
-                marginBottom: '10px',
+                flexDirection: 'column',
+                gap: '6px',
+                padding: '8px 10px',
+                marginBottom: '12px',
                 background: '#f8fafc',
-                borderRadius: '4px',
-                border: '1px solid #f1f5f9',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
                 fontSize: '0.72rem',
-                color: '#64748b'
+                color: '#475569'
               }}>
-                <span style={{ fontWeight: 600, color: '#475569' }}>Difficulty:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }}></span>
-                    <span>Easy</span>
-                  </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }}></span>
-                    <span>Medium</span>
-                  </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626' }}></span>
-                    <span>Hard</span>
-                  </span>
+                {/* Status indicators */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: '#dcfce7', border: '1px solid #86efac' }} />
+                      <span style={{ color: '#15803d', fontWeight: 600 }}>Correct</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: '#fee2e2', border: '1px solid #fca5a5' }} />
+                      <span style={{ color: '#b91c1c', fontWeight: 600 }}>Incorrect</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: '#f8fafc', border: '1px solid #cbd5e1' }} />
+                      <span>Unanswered</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '0.75rem' }}>🔖</span>
+                      <span style={{ color: '#b45309', fontWeight: 600 }}>Flagged</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Difficulty tier dots */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '5px' }}>
+                  <span style={{ fontWeight: 600, color: '#334155' }}>Difficulty:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }}></span>
+                      <span style={{ color: '#15803d', fontWeight: 600 }}>Easy</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }}></span>
+                      <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Medium</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#dc2626' }}></span>
+                      <span style={{ color: '#b91c1c', fontWeight: 600 }}>Hard</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
