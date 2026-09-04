@@ -574,21 +574,21 @@ export default function Dashboard({
               background: '#f0f9ff',
               border: '1.5px solid #bae6fd',
               borderRadius: '8px',
-              padding: '14px 18px',
+              padding: '12px 18px',
               marginBottom: '18px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '14px',
+              gap: '16px',
               flexWrap: 'wrap'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.5rem' }}>🔒</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 320px' }}>
+                <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>🔒</span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0369a1' }}>
                     Guest Preview Mode: Free Access to First {GUEST_QUESTION_LIMIT_PER_SKILL} Questions per Module
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#0284c7', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#0284c7', marginTop: '2px', lineHeight: 1.4 }}>
                     You are exploring <strong>{activeSkill.name}</strong>. Sign in to unlock all 314 authentic questions. <em>All your guest answers and missed question logs will automatically sync and back up to your account with zero data loss!</em>
                   </div>
                 </div>
@@ -605,7 +605,8 @@ export default function Dashboard({
                   fontWeight: 700,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 4px rgba(0,90,156,0.2)'
+                  boxShadow: '0 2px 4px rgba(0,90,156,0.2)',
+                  flexShrink: 0
                 }}
               >
                 Sign In / Unlock All 314 →
