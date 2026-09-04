@@ -17,6 +17,7 @@ export default function BluebookTestView({
   cloudSyncStatus = 'idle',
   onSignOut,
   onOpenSettings,
+  onOpenProfile,
   onOpenErrorLog,
   onReturnFromErrorDrill,
   onSelectChoice,
@@ -30,6 +31,10 @@ export default function BluebookTestView({
   onImport,
   onReturnToDashboard,
 }) {
+  const studentDisplayName = user?.isGuest
+    ? (user?.user_metadata?.full_name || 'Guest Student')
+    : (user?.user_metadata?.full_name || user?.user_metadata?.name || (user?.email ? user.email.split('@')[0] : 'Student'));
+
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [isTimerHidden, setIsTimerHidden] = useState(false);
@@ -593,6 +598,15 @@ export default function BluebookTestView({
                 >
                   ← Return to Dashboard
                 </button>
+                {onOpenProfile && (
+                  <button 
+                    onClick={() => { setShowMoreMenu(false); onOpenProfile(); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <span>👤</span>
+                    <span>Student Profile</span>
+                  </button>
+                )}
                 <button 
                   onClick={() => { setShowMoreMenu(false); onOpenSettings && onOpenSettings(); }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}
@@ -1030,8 +1044,23 @@ export default function BluebookTestView({
       }}>
         {/* Left: Student Name and Return to Dashboard */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>
-            Md Twashin Ilahi
+          <div 
+            onClick={onOpenProfile}
+            style={{ 
+              fontWeight: 700, 
+              fontSize: '1rem', 
+              color: '#111827',
+              cursor: onOpenProfile ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title={onOpenProfile ? "Click to view or edit your student profile" : undefined}
+          >
+            <span>{studentDisplayName}</span>
+            {onOpenProfile && (
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', opacity: 0.8 }}>✏️</span>
+            )}
           </div>
           <button 
             onClick={onReturnToDashboard}

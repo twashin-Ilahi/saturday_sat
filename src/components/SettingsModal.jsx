@@ -13,6 +13,7 @@ export default function SettingsModal({
   onExportProgress,
   onImportProgress,
   onOpenAuth,
+  onOpenProfile,
 }) {
   const [syncing, setSyncing] = useState(false);
   const [pulling, setPulling] = useState(false);
@@ -224,19 +225,42 @@ export default function SettingsModal({
               </p>
             </div>
 
-            {user?.isGuest && onOpenAuth && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenAuth();
-                }}
-                className="btn btn-primary"
-                style={{ fontSize: '0.8rem', padding: '6px 14px' }}
-              >
-                Sign In / Register
-              </button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {onOpenProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenProfile();
+                  }}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: '#005a9c',
+                    cursor: 'pointer'
+                  }}
+                >
+                  👤 Edit Profile
+                </button>
+              )}
+              {user?.isGuest && onOpenAuth && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenAuth();
+                  }}
+                  className="btn btn-primary"
+                  style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+                >
+                  Sign In / Register
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 2. Cloud Sync Card */}

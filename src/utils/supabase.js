@@ -63,6 +63,22 @@ export async function updatePassword(newPassword) {
 }
 
 /**
+ * Update user metadata (full_name, target_score, high_school, etc.) and optionally password
+ */
+export async function updateUserProfile(metadata = {}, newPassword = null) {
+  const updatePayload = {};
+  if (metadata && Object.keys(metadata).length > 0) {
+    updatePayload.data = metadata;
+  }
+  if (newPassword) {
+    updatePayload.password = newPassword;
+  }
+  const { data, error } = await supabase.auth.updateUser(updatePayload);
+  if (error) throw error;
+  return data.user;
+}
+
+/**
  * Sign out current user
  */
 export async function signOut() {

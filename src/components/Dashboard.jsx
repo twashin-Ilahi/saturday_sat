@@ -12,6 +12,7 @@ export default function Dashboard({
   cloudSyncStatus = 'idle',
   onSignOut,
   onOpenSettings,
+  onOpenProfile,
   onStartPractice,
   onJumpToQuestion,
   onOpenErrorLog,
@@ -243,10 +244,28 @@ export default function Dashboard({
             ⚙️ Settings & Cloud Sync
           </button>
 
+          <button 
+            className="btn" 
+            onClick={onOpenProfile}
+            style={{ 
+              fontSize: '0.82rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#ffffff',
+              color: '#005a9c',
+              borderColor: '#cbd5e1',
+              fontWeight: 700
+            }}
+            title="Student Profile & Account Settings"
+          >
+            👤 Profile
+          </button>
+
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
               <div 
-                onClick={onOpenSettings}
+                onClick={onOpenProfile || onOpenSettings}
                 style={{ 
                   fontSize: '0.8rem', 
                   color: user.isGuest ? '#15803d' : '#334155', 
@@ -261,9 +280,9 @@ export default function Dashboard({
                   textOverflow: 'ellipsis',
                   cursor: 'pointer'
                 }} 
-                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email} (Click to open Settings & Sync)`}
+                title={user.isGuest ? "Guest Mode: Click to open Profile & Settings" : `${user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email} (Click to open Profile)`}
               >
-                👤 {user.isGuest ? 'Guest (Offline)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
+                👤 {user.isGuest ? (user.user_metadata?.full_name || 'Guest (Offline)') : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
               </div>
               {user && !user.isGuest && (
                 <span 

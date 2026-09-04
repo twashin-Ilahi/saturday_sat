@@ -4,6 +4,7 @@ import BluebookTestView from './components/BluebookTestView';
 import ErrorLogView from './components/ErrorLogView';
 import AuthView from './components/AuthView';
 import SettingsModal from './components/SettingsModal';
+import ProfileView from './components/ProfileView';
 import { ALL_QUESTIONS } from './data/questions';
 import { 
   loadProgress, 
@@ -15,6 +16,16 @@ import {
 } from './utils/storage';
 import { supabase, signOut } from './utils/supabase';
 import { syncLocalToCloud, fetchCloudProgress } from './utils/cloudSync';
+
+// Helper to get guest user profile from local storage
+const getInitialGuestUser = () => {
+  let meta = { full_name: 'Guest Student' };
+  try {
+    const raw = localStorage.getItem('sat_guest_profile');
+    if (raw) meta = { ...meta, ...JSON.parse(raw) };
+  } catch (e) {}
+  return { isGuest: true, email: 'Guest User', user_metadata: meta };
+};
 
 // Helper to determine the exact active view, question index, and mode across page refreshes
 const loadPersistedRoute = () => {
@@ -45,6 +56,8 @@ const loadPersistedRoute = () => {
     };
   } else if (hash.startsWith('#/error-log') || hash.startsWith('#error-log')) {
     fromHash = { view: 'error-log', mode: 'normal' };
+  } else if (hash.startsWith('#/profile') || hash.startsWith('#profile')) {
+    fromHash = { view: 'profile', mode: 'normal' };
   } else if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
     fromHash = { view: 'dashboard', mode: 'normal' };
   }
@@ -174,7 +187,7 @@ export default function App() {
       } else {
         const isGuestSaved = localStorage.getItem('sat_guest_mode') === 'true';
         if (isGuestSaved) {
-          setUser({ isGuest: true, email: 'Guest User' });
+          setUser(getInitialGuestUser());
           setState(loadProgress(ALL_QUESTIONS.length, null));
         }
       }
@@ -183,7 +196,7 @@ export default function App() {
       console.warn("Session check error:", err);
       const isGuestSaved = localStorage.getItem('sat_guest_mode') === 'true';
       if (isGuestSaved) {
-        setUser({ isGuest: true, email: 'Guest User' });
+        setUser(getInitialGuestUser());
         setState(loadProgress(ALL_QUESTIONS.length, null));
       }
       setAuthLoading(false);
@@ -269,6 +282,9 @@ export default function App() {
     if (hash.startsWith('#/error-log') || hash.startsWith('#error-log')) {
       return { view: 'error-log', mode: 'normal' };
     }
+    if (hash.startsWith('#/profile') || hash.startsWith('#profile')) {
+      return { view: 'profile', mode: 'normal' };
+    }
     if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
       return { view: 'dashboard', mode: 'normal' };
     }
@@ -284,6 +300,8 @@ export default function App() {
       hash = mode === 'serial-error' ? `#/drill?q=${targetIdx + 1}` : `#/practice?q=${targetIdx + 1}`;
     } else if (view === 'error-log') {
       hash = '#/error-log';
+    } else if (view === 'profile') {
+      hash = '#/profile';
     }
 
     const historyState = {
@@ -420,7 +438,7 @@ export default function App() {
     try {
       localStorage.setItem('sat_guest_mode', 'true');
     } catch (e) {}
-    setUser({ isGuest: true, email: 'Guest User' });
+    setUser(getInitialGuestUser());
     setState(loadProgress(ALL_QUESTIONS.length, null));
   };
 
@@ -632,6 +650,15 @@ export default function App() {
     setCurrentView('error-log');
   };
 
+  const handleOpenProfile = () => {
+    pushHistoryState('profile');
+    setCurrentView('profile');
+  };
+
+  const handleUpdateUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   // Loading screen while verifying initial session
   if (authLoading) {
     return (
@@ -665,35 +692,70 @@ export default function App() {
     );
   }
 
-  // Password reset recovery mode
-  if (isPasswordReset) {
+  // If user is not authenticated and not in guest mode:
+  if (!user && !isPasswordReset) {
     return (
       <AuthView
-        initialMode="reset"
-        onAuthSuccess={() => {
-          setIsPasswordReset(false);
-          if (typeof window !== 'undefined' && window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.pathname);
-          }
+        initialMode="login"
+        onAuthSuccess={(authenticatedUser) => {
+          setUser(authenticatedUser);
         }}
+        onContinueAsGuest={handleContinueAsGuest}
       />
     );
   }
 
-  // Authentication gate: User must be signed in or enter as guest
-  if (!user) {
+  // If password reset recovery flow:
+  if (isPasswordReset) {
     return (
       <AuthView
-        initialMode="login"
-        onContinueAsGuest={handleContinueAsGuest}
+        initialMode="reset"
         onAuthSuccess={(authenticatedUser) => {
-          try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+          setIsPasswordReset(false);
           setUser(authenticatedUser);
-          if (authenticatedUser) {
-            setState(loadProgress(ALL_QUESTIONS.length, authenticatedUser.id));
-          }
         }}
+        onContinueAsGuest={handleContinueAsGuest}
       />
+    );
+  }
+
+  // If in dedicated Student Profile view:
+  if (currentView === 'profile') {
+    return (
+      <>
+        <ProfileView
+          user={user}
+          cloudSyncStatus={cloudSyncStatus}
+          currentState={state}
+          totalQuestions={ALL_QUESTIONS.length}
+          onUpdateUser={handleUpdateUser}
+          onReturnToDashboard={handleReturnToDashboard}
+          onStartPractice={() => handleStartPractice(state.currentIndex || 0)}
+          onSignOut={handleSignOut}
+          onOpenSettings={handleOpenSettings}
+          onOpenAuth={() => {
+            setUser(null);
+            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+          }}
+        />
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={handleCloseSettings}
+          user={user}
+          cloudSyncStatus={cloudSyncStatus}
+          currentState={state}
+          totalQuestions={ALL_QUESTIONS.length}
+          onApplyCloudProgress={handleApplyCloudProgress}
+          onResetProgress={handleReset}
+          onExportProgress={handleExport}
+          onImportProgress={handleImport}
+          onOpenAuth={() => {
+            setUser(null);
+            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+          }}
+          onOpenProfile={handleOpenProfile}
+        />
+      </>
     );
   }
 
@@ -720,6 +782,7 @@ export default function App() {
             cloudSyncStatus={cloudSyncStatus}
             onSignOut={handleSignOut}
             onOpenSettings={handleOpenSettings}
+            onOpenProfile={handleOpenProfile}
             onOpenErrorLog={handleOpenErrorLog}
             onReturnFromErrorDrill={handleReturnFromErrorDrill}
             onSelectChoice={(subIdx, choiceIdx) => {
@@ -765,6 +828,7 @@ export default function App() {
               setUser(null);
               try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
             }}
+            onOpenProfile={handleOpenProfile}
           />
         </>
       );
@@ -787,6 +851,7 @@ export default function App() {
           cloudSyncStatus={cloudSyncStatus}
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
+          onOpenProfile={handleOpenProfile}
           onOpenErrorLog={handleOpenErrorLog}
           onSelectChoice={handleSelectChoice}
           onCheckAnswer={handleCheckAnswer}
@@ -814,6 +879,7 @@ export default function App() {
             setUser(null);
             try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
           }}
+          onOpenProfile={handleOpenProfile}
         />
       </>
     );
@@ -830,6 +896,7 @@ export default function App() {
           cloudSyncStatus={cloudSyncStatus}
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
+          onOpenProfile={handleOpenProfile}
           onReturnToDashboard={handleReturnToDashboard}
           onStartSerialErrorDrill={handleStartSerialErrorDrill}
           onJumpToQuestion={handleJumpToQuestion}
@@ -851,6 +918,7 @@ export default function App() {
             setUser(null);
             try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
           }}
+          onOpenProfile={handleOpenProfile}
         />
       </>
     );
@@ -869,6 +937,7 @@ export default function App() {
         cloudSyncStatus={cloudSyncStatus}
         onSignOut={handleSignOut}
         onOpenSettings={handleOpenSettings}
+        onOpenProfile={handleOpenProfile}
         onStartPractice={handleStartPractice}
         onJumpToQuestion={handleJumpToQuestion}
         onOpenErrorLog={handleOpenErrorLog}
@@ -892,9 +961,8 @@ export default function App() {
           setUser(null);
           try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
         }}
+        onOpenProfile={handleOpenProfile}
       />
     </>
   );
 }
-
-

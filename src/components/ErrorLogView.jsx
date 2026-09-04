@@ -11,6 +11,7 @@ export default function ErrorLogView({
   initialSkill = 'All',
   onSignOut,
   onOpenSettings,
+  onOpenProfile,
   onReturnToDashboard,
   onStartSerialErrorDrill,
   onJumpToQuestion,
@@ -230,10 +231,32 @@ export default function ErrorLogView({
             <span>Developed by Twashin Ilahi</span>
           </div>
 
+          {onOpenProfile && (
+            <button
+              onClick={onOpenProfile}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '7px 12px',
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                color: '#005a9c',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              title="Student Profile & Target Scores"
+            >
+              👤 Profile
+            </button>
+          )}
+
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #cbd5e1' }}>
               <span 
-                onClick={onOpenSettings}
+                onClick={onOpenProfile || onOpenSettings}
                 style={{ 
                   fontSize: '0.8rem', 
                   color: user.isGuest ? '#15803d' : '#334155', 
@@ -248,9 +271,9 @@ export default function ErrorLogView({
                   whiteSpace: 'nowrap',
                   cursor: 'pointer'
                 }} 
-                title={user.isGuest ? "Guest Mode: Click to open Settings & Sync" : `${user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email} (Click to open Settings & Sync)`}
+                title={user.isGuest ? "Guest Mode: Click to open Profile & Settings" : `${user.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : user.email} (Click to open Profile)`}
               >
-                👤 {user.isGuest ? 'Guest (Offline)' : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
+                👤 {user.isGuest ? (user.user_metadata?.full_name || 'Guest (Offline)') : (user.user_metadata?.full_name || user.user_metadata?.name || user.email)}
               </span>
               {user && !user.isGuest && (
                 <span 
