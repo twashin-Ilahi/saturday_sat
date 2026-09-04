@@ -6,6 +6,7 @@ import {
   sendPasswordReset, 
   updatePassword 
 } from '../utils/supabase';
+import SaturdayLogo from './SaturdayLogo';
 
 export default function AuthView({ initialMode = 'login', onAuthSuccess, onContinueAsGuest, onOpenDisclaimer }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot' | 'reset'
@@ -125,56 +126,64 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,0.2)'
       }}>
-        {/* Header Branding */}
+        {/* Header Branding with Saturday SAT Logo */}
         <div style={{
-          background: '#005a9c',
-          padding: '24px',
+          background: 'linear-gradient(180deg, #005a9c 0%, #004578 100%)',
+          padding: '28px 24px 22px 24px',
           color: '#ffffff',
           textAlign: 'center',
           position: 'relative'
         }}>
+          <div style={{ marginBottom: '14px', display: 'flex', justifyContent: 'center' }}>
+            <SaturdayLogo size={58} variant="icon" theme="light" />
+          </div>
+
           <div style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '44px',
-            height: '44px',
-            background: '#ffffff',
-            color: '#005a9c',
-            borderRadius: '6px',
-            fontWeight: '800',
-            fontSize: '1.4rem',
-            marginBottom: '12px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+            gap: '7px',
+            lineHeight: 1.1,
+            marginBottom: '4px'
           }}>
-            CB
+            <span style={{
+              fontSize: '1.45rem',
+              fontWeight: 900,
+              letterSpacing: '1px',
+              color: '#ffffff',
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif"
+            }}>
+              SATURDAY
+            </span>
+            <span style={{
+              fontSize: '1.45rem',
+              fontWeight: 900,
+              letterSpacing: '0.5px',
+              color: '#38bdf8',
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif"
+            }}>
+              SAT
+            </span>
           </div>
-          <h1 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            margin: '0 0 4px 0',
-            letterSpacing: '-0.2px'
+
+          <p style={{
+            fontSize: '0.84rem',
+            color: '#e0f2fe',
+            margin: '0 0 10px 0',
+            fontWeight: 500
           }}>
             Digital SAT Practice Platform
-          </h1>
-          <p style={{
-            fontSize: '0.82rem',
-            color: '#e2edff',
-            margin: 0,
-            opacity: 0.95
-          }}>
-            Independent Practice Bank & Error Log System
           </p>
 
           <div style={{
-            marginTop: '10px',
             display: 'inline-block',
             fontSize: '0.72rem',
             fontWeight: '600',
             background: 'rgba(255,255,255,0.18)',
-            padding: '2px 10px',
+            padding: '3px 12px',
             borderRadius: '12px',
-            letterSpacing: '0.3px'
+            letterSpacing: '0.3px',
+            color: '#ffffff'
           }}>
             Built for Students, by Students
           </div>

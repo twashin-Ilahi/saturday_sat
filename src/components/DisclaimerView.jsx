@@ -1,5 +1,6 @@
 import React from 'react';
 import Footer from './Footer';
+import SaturdayLogo from './SaturdayLogo';
 
 export default function DisclaimerView({
   onReturnToDashboard,
@@ -26,20 +27,7 @@ export default function DisclaimerView({
         zIndex: 50
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: 'var(--cb-blue, #005a9c)',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: '800',
-            fontSize: '1.1rem'
-          }}>
-            CB
-          </div>
+          <SaturdayLogo size={34} variant="icon" />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111', margin: 0 }}>

@@ -3,6 +3,7 @@ import { SYLLABUS, GUEST_QUESTION_LIMIT_PER_SKILL, isQuestionLockedForUser } fro
 import AiAnalysisModal from './AiAnalysisModal';
 import GuestLockModal from './GuestLockModal';
 import Footer from './Footer';
+import SaturdayLogo from './SaturdayLogo';
 
 export default function Dashboard({
   questions,
@@ -153,13 +154,11 @@ export default function Dashboard({
       {/* Top Header */}
       <header style={{ background: '#ffffff', borderBottom: '1px solid var(--cb-border)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'var(--cb-blue)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '1.1rem' }}>
-            CB
-          </div>
+          <SaturdayLogo size={36} variant="icon" />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111', lineHeight: 1.2 }}>
-                Digital SAT Practice Platform
+              <h1 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#111', lineHeight: 1.2 }}>
+                Saturday SAT Practice
               </h1>
               <span style={{ 
                 fontSize: '0.76rem', 
