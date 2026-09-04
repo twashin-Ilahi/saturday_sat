@@ -8,6 +8,7 @@ export default function ErrorLogView({
   allQuestions = [],
   user,
   cloudSyncStatus = 'idle',
+  initialSkill = 'All',
   onSignOut,
   onOpenSettings,
   onReturnToDashboard,
@@ -17,12 +18,20 @@ export default function ErrorLogView({
   onMarkMastered
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState(initialSkill || "All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [sortBy, setSortBy] = useState("qIndex"); // qIndex | difficulty | recent
   const [statusFilter, setStatusFilter] = useState("All"); // All | Unresolved | Mastered
   const [expandedRationales, setExpandedRationales] = useState({});
   const [aiBreakdownModal, setAiBreakdownModal] = useState(null); // { error, loading, text }
+
+  // Sync when initialSkill changes
+  React.useEffect(() => {
+    if (initialSkill) {
+      setSelectedSkill(initialSkill);
+    }
+  }, [initialSkill]);
 
   // Enhance error objects with question data if missing
   const richErrors = useMemo(() => {
@@ -44,6 +53,18 @@ export default function ErrorLogView({
       };
     });
   }, [errorLog, allQuestions]);
+
+  // Skill counts
+  const skillCounts = useMemo(() => {
+    const counts = { All: richErrors.length };
+    richErrors.forEach(err => {
+      const s = err.skill || 'Transitions';
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return counts;
+  }, [richErrors]);
+
+  const availableSkills = ["All", "Transitions", "Rhetorical Synthesis", "Boundaries", "Form, Structure, and Sense"];
 
   // Category counts
   const categoryCounts = useMemo(() => {
@@ -80,6 +101,7 @@ export default function ErrorLogView({
   // Filtered and sorted errors
   const filteredErrors = useMemo(() => {
     let list = richErrors.filter(err => {
+      if (selectedSkill !== "All" && err.skill !== selectedSkill) return false;
       if (selectedCategory !== "All" && err.category !== selectedCategory) return false;
       if (selectedDifficulty !== "All" && err.difficulty !== selectedDifficulty) return false;
       if (statusFilter === "Unresolved" && err.status === "mastered") return false;
@@ -92,7 +114,8 @@ export default function ErrorLogView({
         const inYourAnswer = err.yourAnswer?.toLowerCase().includes(query);
         const inCorrectAnswer = err.correctAnswer?.toLowerCase().includes(query);
         const inCategory = err.category?.toLowerCase().includes(query);
-        return inPassage || inId || inYourAnswer || inCorrectAnswer || inCategory;
+        const inSkill = err.skill?.toLowerCase().includes(query);
+        return inPassage || inId || inYourAnswer || inCorrectAnswer || inCategory || inSkill;
       }
 
       return true;
@@ -111,7 +134,7 @@ export default function ErrorLogView({
     });
 
     return list;
-  }, [richErrors, selectedCategory, selectedDifficulty, statusFilter, searchQuery, sortBy]);
+  }, [richErrors, selectedSkill, selectedCategory, selectedDifficulty, statusFilter, searchQuery, sortBy]);
 
   const toggleRationale = (id) => {
     setExpandedRationales(prev => ({
@@ -381,7 +404,7 @@ export default function ErrorLogView({
 
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <button
-                onClick={() => onStartSerialErrorDrill(richErrors)}
+                onClick={() => onStartSerialErrorDrill(filteredErrors.length > 0 ? filteredErrors : richErrors)}
                 style={{
                   background: '#1e293b',
                   color: '#ffffff',
@@ -397,7 +420,7 @@ export default function ErrorLogView({
                   gap: '6px'
                 }}
               >
-                <span>🔁 Review All {richErrors.length} Errors Serially</span>
+                <span>🔁 {filteredErrors.length !== richErrors.length ? `Drill ${filteredErrors.length} Filtered Errors Serially` : `Review All ${richErrors.length} Errors Serially`}</span>
               </button>
             </div>
           </div>
@@ -415,10 +438,10 @@ export default function ErrorLogView({
           flexDirection: 'column',
           gap: '14px'
         }}>
-          {/* Top Filter Row: Search, Difficulty, Status, Sort */}
+          {/* Top Filter Row: Search, Type, Difficulty, Status, Sort */}
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             {/* Live Search */}
-            <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
+            <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
               <input
                 type="text"
                 placeholder="Search passage context, transition word, or ID..."
@@ -437,6 +460,21 @@ export default function ErrorLogView({
               <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.85rem' }}>
                 🔍
               </span>
+            </div>
+
+            {/* Question Type Filter Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Type:</span>
+              <select
+                value={selectedSkill}
+                onChange={e => setSelectedSkill(e.target.value)}
+                style={{ padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', background: '#fff', color: '#334155', fontWeight: selectedSkill !== 'All' ? 700 : 500 }}
+              >
+                <option value="All">All Question Types ({richErrors.length})</option>
+                {availableSkills.filter(s => s !== 'All').map(sk => (
+                  <option key={sk} value={sk}>{sk} ({skillCounts[sk] || 0})</option>
+                ))}
+              </select>
             </div>
 
             {/* Difficulty Filter */}
@@ -476,29 +514,29 @@ export default function ErrorLogView({
                 onChange={e => setSortBy(e.target.value)}
                 style={{ padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', background: '#fff', color: '#334155' }}
               >
-                <option value="qIndex">Question # (1 to 70)</option>
+                <option value="qIndex">Question # (Low to High)</option>
                 <option value="difficulty">Difficulty (Hardest)</option>
                 <option value="recent">Recently Added</option>
               </select>
             </div>
           </div>
 
-          {/* Bottom Filter Row: Transition Category Pills */}
+          {/* Question Type Filter Pills */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginRight: '4px' }}>
-              Filter by Category:
+              Question Type:
             </span>
-            {categoriesList.map(cat => {
-              const count = categoryCounts[cat] || 0;
-              const isSelected = selectedCategory === cat;
+            {availableSkills.map(sk => {
+              const count = skillCounts[sk] || 0;
+              const isSelected = selectedSkill === sk;
               return (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  key={sk}
+                  onClick={() => setSelectedSkill(sk)}
                   style={{
-                    background: isSelected ? '#1e293b' : '#f8fafc',
+                    background: isSelected ? '#005a9c' : '#f8fafc',
                     color: isSelected ? '#ffffff' : '#475569',
-                    border: `1px solid ${isSelected ? '#1e293b' : '#cbd5e1'}`,
+                    border: `1px solid ${isSelected ? '#005a9c' : '#cbd5e1'}`,
                     borderRadius: '16px',
                     padding: '4px 12px',
                     fontSize: '0.78rem',
@@ -510,10 +548,10 @@ export default function ErrorLogView({
                     transition: 'all 0.12s'
                   }}
                 >
-                  <span>{cat}</span>
+                  <span>{sk}</span>
                   <span style={{
                     fontSize: '0.7rem',
-                    background: isSelected ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                    background: isSelected ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
                     padding: '1px 5px',
                     borderRadius: '10px'
                   }}>
@@ -523,6 +561,49 @@ export default function ErrorLogView({
               );
             })}
           </div>
+
+          {/* Bottom Filter Row: Transition Category Pills (if Transitions or All) */}
+          {(selectedSkill === 'All' || selectedSkill === 'Transitions') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginRight: '4px' }}>
+                Transition Category:
+              </span>
+              {categoriesList.map(cat => {
+                const count = categoryCounts[cat] || 0;
+                const isSelected = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    style={{
+                      background: isSelected ? '#1e293b' : '#f8fafc',
+                      color: isSelected ? '#ffffff' : '#475569',
+                      border: `1px solid ${isSelected ? '#1e293b' : '#cbd5e1'}`,
+                      borderRadius: '16px',
+                      padding: '4px 12px',
+                      fontSize: '0.78rem',
+                      fontWeight: isSelected ? 700 : 500,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      transition: 'all 0.12s'
+                    }}
+                  >
+                    <span>{cat}</span>
+                    <span style={{
+                      fontSize: '0.7rem',
+                      background: isSelected ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                      padding: '1px 5px',
+                      borderRadius: '10px'
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* 4. Error Cards Directory */}

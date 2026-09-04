@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { formatTime, loadHighlights, saveHighlights } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
 import VisualExplanation from './VisualExplanation';
@@ -35,6 +35,7 @@ export default function BluebookTestView({
   const [isTimerHidden, setIsTimerHidden] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [showNavPopover, setShowNavPopover] = useState(false);
+  const [popoverFilter, setPopoverFilter] = useState('all'); // 'all' | 'missed' | 'flagged'
   const [showNotesDrawer, setShowNotesDrawer] = useState(false);
   const [notes, setNotes] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -49,6 +50,20 @@ export default function BluebookTestView({
   const fileInputRef = useRef(null);
   const passageRef = useRef(null);
   const currentRangeRef = useRef(null);
+
+  const missedIndices = useMemo(() => {
+    return questions.map((q, idx) => (checkedStatus[idx] && selectedAnswers[idx] !== q.answer ? idx : null)).filter(x => x !== null);
+  }, [questions, checkedStatus, selectedAnswers]);
+
+  const flaggedIndices = useMemo(() => {
+    return questions.map((q, idx) => (flaggedStatus[idx] ? idx : null)).filter(x => x !== null);
+  }, [questions, flaggedStatus]);
+
+  const filteredNavIndices = useMemo(() => {
+    if (popoverFilter === 'missed') return missedIndices;
+    if (popoverFilter === 'flagged') return flaggedIndices;
+    return questions.map((_, i) => i);
+  }, [popoverFilter, missedIndices, flaggedIndices, questions]);
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -1080,6 +1095,61 @@ export default function BluebookTestView({
                 <span style={{ fontSize: '0.78rem', color: '#666' }}>{questions.length} Questions</span>
               </div>
 
+              {/* Status Filter Tabs (All, Missed, Flagged) */}
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+                <button
+                  onClick={() => setPopoverFilter('all')}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '0.74rem',
+                    fontWeight: popoverFilter === 'all' ? 700 : 500,
+                    background: popoverFilter === 'all' ? '#1e293b' : '#f1f5f9',
+                    color: popoverFilter === 'all' ? '#ffffff' : '#475569',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s'
+                  }}
+                >
+                  All ({questions.length})
+                </button>
+                <button
+                  onClick={() => setPopoverFilter('missed')}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '0.74rem',
+                    fontWeight: popoverFilter === 'missed' ? 700 : 500,
+                    background: popoverFilter === 'missed' ? '#dc2626' : (missedIndices.length > 0 ? '#fee2e2' : '#f1f5f9'),
+                    color: popoverFilter === 'missed' ? '#ffffff' : (missedIndices.length > 0 ? '#b91c1c' : '#94a3b8'),
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s'
+                  }}
+                >
+                  Missed ({missedIndices.length})
+                </button>
+                <button
+                  onClick={() => setPopoverFilter('flagged')}
+                  style={{
+                    flex: 1,
+                    padding: '4px 6px',
+                    fontSize: '0.74rem',
+                    fontWeight: popoverFilter === 'flagged' ? 700 : 500,
+                    background: popoverFilter === 'flagged' ? '#d97706' : (flaggedIndices.length > 0 ? '#fef3c7' : '#f1f5f9'),
+                    color: popoverFilter === 'flagged' ? '#ffffff' : (flaggedIndices.length > 0 ? '#b45309' : '#94a3b8'),
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s'
+                  }}
+                >
+                  Flagged ({flaggedIndices.length})
+                </button>
+              </div>
+
               {/* Difficulty Dot Color Code Legend */}
               <div style={{
                 display: 'flex',
@@ -1111,71 +1181,78 @@ export default function BluebookTestView({
               </div>
 
               {/* Grid of question buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-                {questions.map((qItem, idx) => {
-                  const isCurrent = idx === currentIndex;
-                  const isChecked = checkedStatus[idx];
-                  const flagged = flaggedStatus[idx];
+              {filteredNavIndices.length === 0 ? (
+                <div style={{ padding: '24px 10px', textAlign: 'center', color: '#64748b', fontSize: '0.84rem' }}>
+                  No {popoverFilter} questions in this session.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                  {filteredNavIndices.map((idx) => {
+                    const qItem = questions[idx];
+                    const isCurrent = idx === currentIndex;
+                    const isChecked = checkedStatus[idx];
+                    const flagged = flaggedStatus[idx];
 
-                  let btnBg = '#f8fafc';
-                  let btnColor = '#334155';
-                  let border = '1px solid #cbd5e1';
+                    let btnBg = '#f8fafc';
+                    let btnColor = '#334155';
+                    let border = '1px solid #cbd5e1';
 
-                  if (isChecked) {
-                    btnBg = selectedAnswers[idx] === qItem.answer ? '#dcfce7' : '#fee2e2';
-                    btnColor = selectedAnswers[idx] === qItem.answer ? '#15803d' : '#b91c1c';
-                    border = `1px solid ${selectedAnswers[idx] === qItem.answer ? '#86efac' : '#fca5a5'}`;
-                  }
+                    if (isChecked) {
+                      btnBg = selectedAnswers[idx] === qItem.answer ? '#dcfce7' : '#fee2e2';
+                      btnColor = selectedAnswers[idx] === qItem.answer ? '#15803d' : '#b91c1c';
+                      border = `1px solid ${selectedAnswers[idx] === qItem.answer ? '#86efac' : '#fca5a5'}`;
+                    }
 
-                  const diff = qItem.difficulty;
-                  const dotColor = diff === 'Easy' ? '#16a34a' : (diff === 'Medium' ? '#2563eb' : '#dc2626');
+                    const diff = qItem.difficulty;
+                    const dotColor = diff === 'Easy' ? '#16a34a' : (diff === 'Medium' ? '#2563eb' : '#dc2626');
 
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        onNavigate(idx);
-                        setShowNavPopover(false);
-                      }}
-                      title={`Q${idx + 1} (${diff || 'Normal'}) ${isChecked ? (selectedAnswers[idx] === qItem.answer ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
-                      style={{
-                        height: '38px',
-                        border: isCurrent ? '2px solid #005a9c' : border,
-                        background: btnBg,
-                        color: btnColor,
-                        fontWeight: 700,
-                        fontSize: '0.82rem',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '2px',
-                        padding: '2px 0'
-                      }}
-                    >
-                      <span style={{ lineHeight: 1 }}>{idx + 1}</span>
-                      <span
-                        style={{
-                          width: '4.5px',
-                          height: '4.5px',
-                          borderRadius: '50%',
-                          background: dotColor,
-                          display: 'inline-block'
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          onNavigate(idx);
+                          setShowNavPopover(false);
                         }}
-                        title={`${diff || 'Normal'} difficulty`}
-                      />
-                      {flagged && (
-                        <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.68rem', lineHeight: 1 }}>
-                          🔖
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                        title={`Q${idx + 1} (${diff || 'Normal'}) ${isChecked ? (selectedAnswers[idx] === qItem.answer ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
+                        style={{
+                          height: '38px',
+                          border: isCurrent ? '2px solid #005a9c' : border,
+                          background: btnBg,
+                          color: btnColor,
+                          fontWeight: 700,
+                          fontSize: '0.82rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '2px',
+                          padding: '2px 0'
+                        }}
+                      >
+                        <span style={{ lineHeight: 1 }}>{idx + 1}</span>
+                        <span
+                          style={{
+                            width: '4.5px',
+                            height: '4.5px',
+                            borderRadius: '50%',
+                            background: dotColor,
+                            display: 'inline-block'
+                          }}
+                          title={`${diff || 'Normal'} difficulty`}
+                        />
+                        {flagged && (
+                          <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.68rem', lineHeight: 1 }}>
+                            🔖
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -41,6 +41,12 @@ export default function Dashboard({
       return true;
     });
 
+  // Errors scoped strictly to active skill / question type
+  const skillErrors = errorLog.filter(e => {
+    const origIdx = e.originalIndex !== undefined ? e.originalIndex : (e.qIndex - 1);
+    return e.skill === activeSkill.name || activeSkillQuestions.some(sq => sq.originalIndex === origIdx || sq.id === e.id);
+  });
+
   // Compute metrics for active skill
   const totalCount = activeSkillQuestions.length;
   const answeredIndices = [];
@@ -98,11 +104,8 @@ export default function Dashboard({
 
   const handleStartDrill = (drillType) => {
     if (drillType === 'errors') {
-      const skillErr = errorLog.find(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1));
-      if (skillErr) {
-        onJumpToQuestion(skillErr.qIndex - 1);
-      } else if (errorLog.length > 0) {
-        onJumpToQuestion(errorLog[0].qIndex - 1);
+      if (skillErrors.length > 0) {
+        onStartSerialErrorDrill(skillErrors);
       }
     } else if (drillType === 'hard') {
       const firstHard = activeSkillQuestions.find(q => q.difficulty === 'Hard' && !checkedStatus[q.originalIndex]);
@@ -335,15 +338,15 @@ export default function Dashboard({
 
           <div style={{ background: '#fff', padding: '18px 20px', borderRadius: '6px', border: '1px solid var(--cb-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
             <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Logged Mistakes</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: errorLog.length > 0 ? 'var(--incorrect)' : '#555', marginTop: '4px' }}>
-              {errorLog.length}
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: skillErrors.length > 0 ? 'var(--incorrect)' : '#555', marginTop: '4px' }}>
+              {skillErrors.length}
             </div>
             <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '4px' }}>
-              {errorLog.length > 0 ? "Saved in Error Directory for review" : "Clean sheet!"}
+              {skillErrors.length > 0 ? `Saved in Error Directory for ${activeSkill.name}` : "Clean sheet!"}
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button 
-                onClick={onOpenErrorLog}
+                onClick={() => onOpenErrorLog(activeSkill.name)}
                 style={{
                   background: '#fef2f2',
                   border: '1px solid #fecaca',
@@ -357,9 +360,9 @@ export default function Dashboard({
               >
                 Open Directory
               </button>
-              {errorLog.length > 0 && (
+              {skillErrors.length > 0 && (
                 <button 
-                  onClick={() => onStartSerialErrorDrill(errorLog)}
+                  onClick={() => onStartSerialErrorDrill(skillErrors)}
                   style={{
                     background: '#2563eb',
                     border: 'none',
@@ -373,8 +376,9 @@ export default function Dashboard({
                     alignItems: 'center',
                     gap: '4px'
                   }}
+                  title={`Drill ${skillErrors.length} missed ${activeSkill.name} questions`}
                 >
-                  <span>▶</span> Serial Drill
+                  <span>▶</span> Serial Drill ({skillErrors.length})
                 </button>
               )}
             </div>
@@ -507,17 +511,14 @@ export default function Dashboard({
               >
                 ✨ AI Recommendations & Drills
               </button>
-              {errorLog.length > 0 && (
+              {skillErrors.length > 0 && (
                 <button 
                   className="btn btn-danger" 
                   style={{ padding: '9px 16px', fontSize: '0.92rem' }}
-                  onClick={() => {
-                    const skillErr = errorLog.find(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1));
-                    const targetErr = skillErr || errorLog[0];
-                    if (targetErr) onJumpToQuestion(targetErr.qIndex - 1);
-                  }}
+                  onClick={() => onStartSerialErrorDrill(skillErrors)}
+                  title={`Review ${skillErrors.length} missed ${activeSkill.name} questions`}
                 >
-                  Review Missed Questions ({errorLog.filter(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1)).length || errorLog.length})
+                  Review Missed Questions ({skillErrors.length})
                 </button>
               )}
               <button 
@@ -699,14 +700,14 @@ export default function Dashboard({
         <div className="modal-backdrop" onClick={() => setShowErrorModal(false)}>
           <div className="modal-window" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Missed Questions & Error Log ({errorLog.length})</h3>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Missed Questions & Error Log — {activeSkill.name} ({skillErrors.length})</h3>
               <button className="btn" onClick={() => setShowErrorModal(false)}>Close</button>
             </div>
             <div className="modal-body">
-              {errorLog.length === 0 ? (
-                <p style={{ color: '#666' }}>No mistakes recorded yet. Keep solving!</p>
+              {skillErrors.length === 0 ? (
+                <p style={{ color: '#666' }}>No mistakes recorded yet for {activeSkill.name}. Keep solving!</p>
               ) : (
-                errorLog.map((err, i) => (
+                skillErrors.map((err, i) => (
                   <div key={err.id || i} className="error-card">
                     <div className="error-card-header">
                       <span>#{err.qIndex} (ID: {err.id}) — Difficulty: {err.difficulty}</span>

@@ -552,7 +552,10 @@ export default function App() {
     setCurrentView('practice');
   };
 
-  const handleOpenErrorLog = () => {
+  const [errorLogInitialSkill, setErrorLogInitialSkill] = useState("All");
+
+  const handleOpenErrorLog = (skillName = "All") => {
+    setErrorLogInitialSkill(typeof skillName === 'string' ? skillName : "All");
     pushHistoryState('error-log');
     setCurrentView('error-log');
   };
