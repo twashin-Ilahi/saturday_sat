@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { SYLLABUS } from '../data/questions';
+import { SYLLABUS, GUEST_QUESTION_LIMIT_PER_SKILL, isQuestionLockedForUser } from '../data/questions';
 import AiAnalysisModal from './AiAnalysisModal';
+import GuestLockModal from './GuestLockModal';
 
 export default function Dashboard({
   questions,
@@ -13,6 +14,7 @@ export default function Dashboard({
   onSignOut,
   onOpenSettings,
   onOpenProfile,
+  onOpenAuth,
   onStartPractice,
   onJumpToQuestion,
   onOpenErrorLog,
@@ -27,6 +29,8 @@ export default function Dashboard({
   const [statusFilter, setStatusFilter] = useState("All"); // All | Unanswered | Missed | Correct
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showGuestLockModal, setShowGuestLockModal] = useState(false);
+  const [lockedQuestionTarget, setLockedQuestionTarget] = useState(null);
   const fileInputRef = useRef(null);
 
   const currentSectionData = SYLLABUS.find(s => s.section === selectedSection) || SYLLABUS[0];
@@ -545,19 +549,68 @@ export default function Dashboard({
                 style={{ padding: '9px 20px', fontSize: '0.95rem' }}
                 onClick={() => {
                   const isCurrentInSkill = activeSkillQuestions.some(sq => sq.originalIndex === currentIndex);
-                  if (isCurrentInSkill) {
-                    onStartPractice(currentIndex);
-                  } else {
-                    const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
-                    const targetIdx = nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex || 0);
-                    onStartPractice(targetIdx);
+                  const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
+                  const targetIdx = isCurrentInSkill
+                    ? currentIndex
+                    : (nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex || 0));
+
+                  if (isQuestionLockedForUser(targetIdx, user, questions)) {
+                    setLockedQuestionTarget(targetIdx + 1);
+                    setShowGuestLockModal(true);
+                    return;
                   }
+                  onStartPractice(targetIdx);
                 }}
               >
                 {answeredIndices.length === 0 ? `Start Practice (${activeSkill.name})` : `Resume Practice (Q${(activeSkillQuestions.find(sq => sq.originalIndex === currentIndex) ? currentIndex : (activeSkillQuestions[0]?.originalIndex || 0)) + 1})`} →
               </button>
             </div>
           </div>
+
+          {/* Guest Preview Notice Banner */}
+          {user?.isGuest && (
+            <div style={{
+              background: '#f0f9ff',
+              border: '1.5px solid #bae6fd',
+              borderRadius: '8px',
+              padding: '14px 18px',
+              marginBottom: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '14px',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.5rem' }}>🔒</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0369a1' }}>
+                    Guest Preview Mode: Free Access to First {GUEST_QUESTION_LIMIT_PER_SKILL} Questions
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: '#0284c7', marginTop: '2px' }}>
+                    You are exploring <strong>{activeSkill.name}</strong>. Questions 1–{GUEST_QUESTION_LIMIT_PER_SKILL} are free to practice. Questions {GUEST_QUESTION_LIMIT_PER_SKILL + 1}–{activeSkillQuestions.length} are locked. Sign in to unlock all 314 authentic College Board questions!
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={onOpenAuth}
+                style={{
+                  background: '#005a9c',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '9px 18px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 4px rgba(0,90,156,0.2)'
+                }}
+              >
+                Sign In / Unlock All 314 →
+              </button>
+            </div>
+          )}
 
           {/* Filters Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
@@ -629,12 +682,17 @@ export default function Dashboard({
                 const isCorrect = isChecked && selectedAnswers[idx] === q.answer;
                 const isIncorrect = isChecked && selectedAnswers[idx] !== q.answer;
                 const isCurrent = idx === currentIndex;
+                const isLocked = isQuestionLockedForUser(idx, user, questions);
 
                 let bg = "#f8f9fa";
                 let borderColor = "#dcdcdc";
                 let textColor = "#333";
 
-                if (isCorrect) {
+                if (isLocked) {
+                  bg = "#f1f5f9";
+                  borderColor = "#cbd5e1";
+                  textColor = "#94a3b8";
+                } else if (isCorrect) {
                   bg = "#e8f5e9";
                   borderColor = "var(--correct)";
                   textColor = "var(--correct)";
@@ -650,12 +708,19 @@ export default function Dashboard({
                 return (
                   <button
                     key={q.id || idx}
-                    onClick={() => onJumpToQuestion(idx)}
-                    title={`Q${idx + 1} (${q.difficulty}) - ${q.id} ${isChecked ? (isCorrect ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
+                    onClick={() => {
+                      if (isLocked) {
+                        setLockedQuestionTarget(idx + 1);
+                        setShowGuestLockModal(true);
+                        return;
+                      }
+                      onJumpToQuestion(idx);
+                    }}
+                    title={isLocked ? `Q${idx + 1} (${q.difficulty}) - Locked for Guest (Login Required)` : `Q${idx + 1} (${q.difficulty}) - ${q.id} ${isChecked ? (isCorrect ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
                     style={{
                       height: '44px',
                       borderRadius: '4px',
-                      border: `1px solid ${borderColor}`,
+                      border: isLocked ? '1px dashed #cbd5e1' : `1px solid ${borderColor}`,
                       background: bg,
                       color: textColor,
                       fontWeight: 700,
@@ -671,7 +736,11 @@ export default function Dashboard({
                     }}
                   >
                     <span>{idx + 1}</span>
-                    <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: dotColor, marginTop: '2px' }} />
+                    {isLocked ? (
+                      <span style={{ fontSize: '0.62rem', lineHeight: 1, marginTop: '2px' }}>🔒</span>
+                    ) : (
+                      <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: dotColor, marginTop: '2px' }} />
+                    )}
                   </button>
                 );
               })}
@@ -691,6 +760,12 @@ export default function Dashboard({
                 <span style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#f8f9fa', border: '1px solid #dcdcdc' }} />
                 <span>Unanswered</span>
               </div>
+              {user?.isGuest && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.78rem' }}>🔒</span>
+                  <span>Locked (Guest)</span>
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
                 <span>Easy</span>
@@ -774,6 +849,20 @@ export default function Dashboard({
         difficultyBreakdown={difficultyBreakdown}
         onJumpToQuestion={onJumpToQuestion}
         onStartDrill={handleStartDrill}
+      />
+
+      {/* Guest Lock Modal */}
+      <GuestLockModal
+        isOpen={showGuestLockModal}
+        onClose={() => setShowGuestLockModal(false)}
+        onOpenAuth={() => {
+          setShowGuestLockModal(false);
+          if (onOpenAuth) onOpenAuth();
+        }}
+        questionNumber={lockedQuestionTarget}
+        skillName={activeSkill?.name || "this skill"}
+        totalSkillQuestions={activeSkillQuestions.length}
+        freeLimit={GUEST_QUESTION_LIMIT_PER_SKILL}
       />
     </div>
   );

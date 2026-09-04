@@ -462,6 +462,10 @@ export default function App() {
 
   const handleOpenSettings = () => setShowSettingsModal(true);
   const handleCloseSettings = () => setShowSettingsModal(false);
+  const handleOpenAuth = () => {
+    setUser(null);
+    try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+  };
 
   const handleSelectChoice = (questionIndex, choiceIndex) => {
     setState(prev => {
@@ -783,6 +787,7 @@ export default function App() {
             onSignOut={handleSignOut}
             onOpenSettings={handleOpenSettings}
             onOpenProfile={handleOpenProfile}
+            onOpenAuth={handleOpenAuth}
             onOpenErrorLog={handleOpenErrorLog}
             onReturnFromErrorDrill={handleReturnFromErrorDrill}
             onSelectChoice={(subIdx, choiceIdx) => {
@@ -824,10 +829,7 @@ export default function App() {
             onResetProgress={handleReset}
             onExportProgress={handleExport}
             onImportProgress={handleImport}
-            onOpenAuth={() => {
-              setUser(null);
-              try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-            }}
+            onOpenAuth={handleOpenAuth}
             onOpenProfile={handleOpenProfile}
           />
         </>
@@ -852,6 +854,7 @@ export default function App() {
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
           onOpenProfile={handleOpenProfile}
+          onOpenAuth={handleOpenAuth}
           onOpenErrorLog={handleOpenErrorLog}
           onSelectChoice={handleSelectChoice}
           onCheckAnswer={handleCheckAnswer}
@@ -875,10 +878,7 @@ export default function App() {
           onResetProgress={handleReset}
           onExportProgress={handleExport}
           onImportProgress={handleImport}
-          onOpenAuth={() => {
-            setUser(null);
-            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-          }}
+          onOpenAuth={handleOpenAuth}
           onOpenProfile={handleOpenProfile}
         />
       </>
@@ -914,10 +914,7 @@ export default function App() {
           onResetProgress={handleReset}
           onExportProgress={handleExport}
           onImportProgress={handleImport}
-          onOpenAuth={() => {
-            setUser(null);
-            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-          }}
+          onOpenAuth={handleOpenAuth}
           onOpenProfile={handleOpenProfile}
         />
       </>
@@ -938,6 +935,7 @@ export default function App() {
         onSignOut={handleSignOut}
         onOpenSettings={handleOpenSettings}
         onOpenProfile={handleOpenProfile}
+        onOpenAuth={handleOpenAuth}
         onStartPractice={handleStartPractice}
         onJumpToQuestion={handleJumpToQuestion}
         onOpenErrorLog={handleOpenErrorLog}
@@ -957,10 +955,7 @@ export default function App() {
         onResetProgress={handleReset}
         onExportProgress={handleExport}
         onImportProgress={handleImport}
-        onOpenAuth={() => {
-          setUser(null);
-          try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-        }}
+        onOpenAuth={handleOpenAuth}
         onOpenProfile={handleOpenProfile}
       />
     </>

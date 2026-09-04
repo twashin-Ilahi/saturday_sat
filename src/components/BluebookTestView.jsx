@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { formatTime, loadHighlights, saveHighlights } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
 import VisualExplanation from './VisualExplanation';
+import GuestLockModal from './GuestLockModal';
+import { GUEST_QUESTION_LIMIT_PER_SKILL, isQuestionLockedForUser } from '../data/questions';
 
 export default function BluebookTestView({
   questions,
@@ -18,6 +20,7 @@ export default function BluebookTestView({
   onSignOut,
   onOpenSettings,
   onOpenProfile,
+  onOpenAuth,
   onOpenErrorLog,
   onReturnFromErrorDrill,
   onSelectChoice,
@@ -34,6 +37,19 @@ export default function BluebookTestView({
   const studentDisplayName = user?.isGuest
     ? (user?.user_metadata?.full_name || 'Guest Student')
     : (user?.user_metadata?.full_name || user?.user_metadata?.name || (user?.email ? user.email.split('@')[0] : 'Student'));
+
+  const [showGuestLockModal, setShowGuestLockModal] = useState(false);
+  const [lockedQuestionTarget, setLockedQuestionTarget] = useState(null);
+
+  const handleAttemptNavigate = (targetIndex) => {
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+    if (isQuestionLockedForUser(targetIndex, user, questions)) {
+      setLockedQuestionTarget(targetIndex + 1);
+      setShowGuestLockModal(true);
+      return;
+    }
+    onNavigate(targetIndex);
+  };
 
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -108,6 +124,7 @@ export default function BluebookTestView({
   const currentSelection = selectedAnswers[currentIndex];
   const isFlagged = flaggedStatus[currentIndex] || false;
   const eliminatedChoices = eliminatedStatus[currentIndex] || [];
+  const isCurrentQuestionLocked = isQuestionLockedForUser(currentIndex, user, questions);
 
   // Stopwatch timer
   useEffect(() => {
@@ -269,7 +286,7 @@ export default function BluebookTestView({
       if (e.key === 'ArrowLeft') {
         if (currentIndex > 0) onNavigate(currentIndex - 1);
       } else if (e.key === 'ArrowRight') {
-        if (currentIndex < questions.length - 1) onNavigate(currentIndex + 1);
+        if (currentIndex < questions.length - 1) handleAttemptNavigate(currentIndex + 1);
       } else if (!isCurrentChecked) {
         if (e.key === '1' || e.key.toLowerCase() === 'a') onSelectChoice(currentIndex, 0);
         else if (e.key === '2' || e.key.toLowerCase() === 'b') onSelectChoice(currentIndex, 1);
@@ -287,6 +304,11 @@ export default function BluebookTestView({
   }, [currentIndex, isCurrentChecked, currentSelection, questions.length, showErrorModal, showNotesDrawer, timerSeconds]);
 
   const handleCheck = () => {
+    if (isCurrentQuestionLocked) {
+      setLockedQuestionTarget(currentIndex + 1);
+      setShowGuestLockModal(true);
+      return;
+    }
     if (currentSelection === null) {
       alert("Please select an answer before checking.");
       return;
@@ -857,174 +879,228 @@ export default function BluebookTestView({
             {/* Dashed line under question header */}
             <div style={{ borderBottom: '1.5px dashed #cbd5e1', marginBottom: '20px' }} />
 
-            {/* Prompt text */}
-            <div style={{ fontSize: '1rem', color: '#111827', fontWeight: 500, lineHeight: 1.5, marginBottom: '20px' }}>
-              {q.prompt || "Which choice completes the text with the most logical transition?"}
-            </div>
-
-          {/* Choices List (Rounded Cards with circle letters and strikethrough eliminators) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
-            {q.choices.map((choice, idx) => {
-              const isSelected = currentSelection === idx;
-              const isEliminated = eliminatedChoices.includes(idx);
-
-              let cardBorder = '#64748b';
-              let cardBg = '#ffffff';
-              let textColor = '#111827';
-
-              if (isSelected) {
-                cardBorder = '#005a9c';
-                cardBg = '#edf4fc';
-              }
-
-              if (isEliminated) {
-                cardBg = '#f8fafc';
-                cardBorder = '#cbd5e1';
-                textColor = '#94a3b8';
-              }
-
-              if (isCurrentChecked) {
-                if (idx === q.answer) {
-                  cardBorder = '#16a34a';
-                  cardBg = '#dcfce7';
-                  textColor = '#14532d';
-                } else if (isSelected && idx !== q.answer) {
-                  cardBorder = '#dc2626';
-                  cardBg = '#fee2e2';
-                  textColor = '#7f1d1d';
-                }
-              }
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    if (!isCurrentChecked) onSelectChoice(currentIndex, idx);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    border: `1.5px solid ${cardBorder}`,
-                    borderRadius: '8px',
-                    padding: '12px 18px',
-                    background: cardBg,
-                    cursor: isCurrentChecked ? 'default' : 'pointer',
-                    transition: 'all 0.12s ease-in-out',
-                    boxShadow: isSelected ? '0 0 0 1px #005a9c' : 'none'
-                  }}
-                >
-                  {/* Left: Circle with letter (A), (B), (C), (D) + Option text */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                    <div style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      border: `1.5px solid ${isSelected ? '#005a9c' : isEliminated ? '#cbd5e1' : '#475569'}`,
-                      background: isSelected ? '#005a9c' : '#ffffff',
-                      color: isSelected ? '#ffffff' : isEliminated ? '#94a3b8' : '#111827',
-                      fontWeight: 700,
-                      fontSize: '0.88rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {letters[idx]}
-                    </div>
-                    <span style={{
-                      fontSize: '0.98rem',
-                      lineHeight: 1.4,
-                      color: textColor,
-                      fontWeight: isSelected || (isCurrentChecked && idx === q.answer) ? 600 : 400,
-                      textDecoration: isEliminated ? 'line-through' : 'none'
-                    }}>
-                      {choice}
-                    </span>
-                  </div>
-
-                  {/* Right: Eliminator Strike Button (A̶) */}
+            {isCurrentQuestionLocked ? (
+              <div style={{
+                background: '#ffffff',
+                border: '1.5px dashed #cbd5e1',
+                borderRadius: '8px',
+                padding: '44px 28px',
+                textAlign: 'center',
+                margin: '20px 0'
+              }}>
+                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+                <h3 style={{ fontSize: '1.28rem', fontWeight: 800, color: '#0f172a', margin: '0 0 10px 0' }}>
+                  Question {currentIndex + 1} is Locked for Guest Users
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.55, margin: '0 auto 24px', maxWidth: '420px' }}>
+                  Guest access includes the first <strong>{GUEST_QUESTION_LIMIT_PER_SKILL} free preview questions</strong> per question type. To practice this question and unlock all 314 authentic College Board questions with real-time cloud sync, please sign in or create a free account.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleEliminate(currentIndex, idx);
-                    }}
+                    onClick={onOpenAuth}
                     style={{
-                      background: 'none',
+                      background: '#005a9c',
+                      color: '#ffffff',
                       border: 'none',
+                      borderRadius: '6px',
+                      padding: '12px 22px',
+                      fontSize: '0.92rem',
+                      fontWeight: 700,
                       cursor: 'pointer',
-                      padding: '4px',
-                      color: isEliminated ? '#dc2626' : '#94a3b8',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      boxShadow: '0 2px 4px rgba(0,90,156,0.25)'
                     }}
-                    title={isEliminated ? "Restore Choice" : "Cross out choice"}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" stroke="#dc2626" strokeWidth="2" opacity={isEliminated ? "1" : "0.35"} />
-                      <text x="12" y="15.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" stroke="none">
-                        {letters[idx]}
-                      </text>
-                    </svg>
+                    Create Free Account / Sign In →
+                  </button>
+                  <button
+                    onClick={onReturnToDashboard}
+                    style={{
+                      background: '#ffffff',
+                      color: '#475569',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '12px 18px',
+                      fontSize: '0.92rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Return to Dashboard
                   </button>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Rationale & Gemini Breakdown Box (When checked) */}
-          {isCurrentChecked && (
-            <div style={{ background: '#f8fafc', borderLeft: '4px solid var(--cb-blue)', borderRadius: '4px', padding: '16px 20px', marginTop: '10px', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              <div style={{ fontWeight: 700, marginBottom: '6px', color: isCorrect ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>{isCorrect ? "✓ Correct" : "✕ Incorrect"}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#64748b' }}>
-                  — Correct Choice is {q.correctAnswerLetter}
-                </span>
               </div>
-              <div style={{ marginBottom: '12px' }}>
-                <VisualExplanation
-                  rationale={q.rationale}
-                  correctAnswerLetter={q.correctAnswerLetter}
-                  userChoiceLetter={currentSelection !== null ? letters[currentSelection] : null}
-                  isCorrect={isCorrect}
-                />
-              </div>
+            ) : (
+              <>
+                {/* Prompt text */}
+                <div style={{ fontSize: '1rem', color: '#111827', fontWeight: 500, lineHeight: 1.5, marginBottom: '20px' }}>
+                  {q.prompt || "Which choice completes the text with the most logical transition?"}
+                </div>
 
-              {/* Gemini AI On-Demand Breakdown */}
-              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px' }}>
-                {!aiExplanation && !aiLoading && (
-                  <button 
-                    className="btn"
-                    style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
-                    onClick={handleAskAi}
-                  >
-                    ✨ Ask Gemini: {
-                      q.skill === 'Rhetorical Synthesis' ? 'Why does this choice meet the goal?' :
-                      q.skill === 'Boundaries' ? 'Why is this punctuation correct?' :
-                      q.skill === 'Form, Structure, and Sense' ? 'Why is this grammatical form correct?' :
-                      'Why is this transition used?'
+                {/* Choices List (Rounded Cards with circle letters and strikethrough eliminators) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+                  {q.choices.map((choice, idx) => {
+                    const isSelected = currentSelection === idx;
+                    const isEliminated = eliminatedChoices.includes(idx);
+
+                    let cardBorder = '#64748b';
+                    let cardBg = '#ffffff';
+                    let textColor = '#111827';
+
+                    if (isSelected) {
+                      cardBorder = '#005a9c';
+                      cardBg = '#edf4fc';
                     }
-                  </button>
-                )}
-                {aiLoading && (
-                  <div style={{ fontSize: '0.85rem', color: '#6d28d9', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>✦ Gemini is breaking down this question...</span>
-                  </div>
-                )}
-                {aiExplanation && (
-                  <div style={{ background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '12px 16px', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.55, color: '#334155', whiteSpace: 'pre-wrap' }}>
-                    <div style={{ fontWeight: 700, color: '#6d28d9', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>✦ Gemini AI Coach Breakdown</span>
-                      <button style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#888', fontSize: '0.78rem' }} onClick={() => setAiExplanation("")}>✕</button>
+
+                    if (isEliminated) {
+                      cardBg = '#f8fafc';
+                      cardBorder = '#cbd5e1';
+                      textColor = '#94a3b8';
+                    }
+
+                    if (isCurrentChecked) {
+                      if (idx === q.answer) {
+                        cardBorder = '#16a34a';
+                        cardBg = '#dcfce7';
+                        textColor = '#14532d';
+                      } else if (isSelected && idx !== q.answer) {
+                        cardBorder = '#dc2626';
+                        cardBg = '#fee2e2';
+                        textColor = '#7f1d1d';
+                      }
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          if (!isCurrentChecked) onSelectChoice(currentIndex, idx);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          border: `1.5px solid ${cardBorder}`,
+                          borderRadius: '8px',
+                          padding: '12px 18px',
+                          background: cardBg,
+                          cursor: isCurrentChecked ? 'default' : 'pointer',
+                          transition: 'all 0.12s ease-in-out',
+                          boxShadow: isSelected ? '0 0 0 1px #005a9c' : 'none'
+                        }}
+                      >
+                        {/* Left: Circle with letter (A), (B), (C), (D) + Option text */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            border: `1.5px solid ${isSelected ? '#005a9c' : isEliminated ? '#cbd5e1' : '#475569'}`,
+                            background: isSelected ? '#005a9c' : '#ffffff',
+                            color: isSelected ? '#ffffff' : isEliminated ? '#94a3b8' : '#111827',
+                            fontWeight: 700,
+                            fontSize: '0.88rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            {letters[idx]}
+                          </div>
+                          <span style={{
+                            fontSize: '0.98rem',
+                            lineHeight: 1.4,
+                            color: textColor,
+                            fontWeight: isSelected || (isCurrentChecked && idx === q.answer) ? 600 : 400,
+                            textDecoration: isEliminated ? 'line-through' : 'none'
+                          }}>
+                            {choice}
+                          </span>
+                        </div>
+
+                        {/* Right: Eliminator Strike Button (A̶) */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleEliminate(currentIndex, idx);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            color: isEliminated ? '#dc2626' : '#94a3b8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title={isEliminated ? "Restore Choice" : "Cross out choice"}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" stroke="#dc2626" strokeWidth="2" opacity={isEliminated ? "1" : "0.35"} />
+                            <text x="12" y="15.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" stroke="none">
+                              {letters[idx]}
+                            </text>
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Rationale & Gemini Breakdown Box (When checked) */}
+                {isCurrentChecked && (
+                  <div style={{ background: '#f8fafc', borderLeft: '4px solid var(--cb-blue)', borderRadius: '4px', padding: '16px 20px', marginTop: '10px', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                    <div style={{ fontWeight: 700, marginBottom: '6px', color: isCorrect ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>{isCorrect ? "✓ Correct" : "✕ Incorrect"}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 500, color: '#64748b' }}>
+                        — Correct Choice is {q.correctAnswerLetter}
+                      </span>
                     </div>
-                    {aiExplanation}
+                    <div style={{ marginBottom: '12px' }}>
+                      <VisualExplanation
+                        rationale={q.rationale}
+                        correctAnswerLetter={q.correctAnswerLetter}
+                        userChoiceLetter={currentSelection !== null ? letters[currentSelection] : null}
+                        isCorrect={isCorrect}
+                      />
+                    </div>
+
+                    {/* Gemini AI On-Demand Breakdown */}
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px' }}>
+                      {!aiExplanation && !aiLoading && (
+                        <button 
+                          className="btn"
+                          style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
+                          onClick={handleAskAi}
+                        >
+                          ✨ Ask Gemini: {
+                            q.skill === 'Rhetorical Synthesis' ? 'Why does this choice meet the goal?' :
+                            q.skill === 'Boundaries' ? 'Why is this punctuation correct?' :
+                            q.skill === 'Form, Structure, and Sense' ? 'Why is this grammatical form correct?' :
+                            'Why is this transition used?'
+                          }
+                        </button>
+                      )}
+                      {aiLoading && (
+                        <div style={{ fontSize: '0.85rem', color: '#6d28d9', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>✦ Gemini is breaking down this question...</span>
+                        </div>
+                      )}
+                      {aiExplanation && (
+                        <div style={{ background: '#ffffff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '12px 16px', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.55, color: '#334155', whiteSpace: 'pre-wrap' }}>
+                          <div style={{ fontWeight: 700, color: '#6d28d9', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>✦ Gemini AI Coach Breakdown</span>
+                            <button style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#888', fontSize: '0.78rem' }} onClick={() => setAiExplanation("")}>✕</button>
+                          </div>
+                          {aiExplanation}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
+              </>
+            )}
 
           </div>
         </div>
@@ -1221,12 +1297,17 @@ export default function BluebookTestView({
                     const isCurrent = idx === currentIndex;
                     const isChecked = checkedStatus[idx];
                     const flagged = flaggedStatus[idx];
+                    const isLocked = isQuestionLockedForUser(idx, user, questions);
 
                     let btnBg = '#f8fafc';
                     let btnColor = '#334155';
                     let border = '1px solid #cbd5e1';
 
-                    if (isChecked) {
+                    if (isLocked) {
+                      btnBg = '#f1f5f9';
+                      btnColor = '#94a3b8';
+                      border = '1px dashed #cbd5e1';
+                    } else if (isChecked) {
                       btnBg = selectedAnswers[idx] === qItem.answer ? '#dcfce7' : '#fee2e2';
                       btnColor = selectedAnswers[idx] === qItem.answer ? '#15803d' : '#b91c1c';
                       border = `1px solid ${selectedAnswers[idx] === qItem.answer ? '#86efac' : '#fca5a5'}`;
@@ -1239,10 +1320,10 @@ export default function BluebookTestView({
                       <button
                         key={idx}
                         onClick={() => {
-                          onNavigate(idx);
+                          handleAttemptNavigate(idx);
                           setShowNavPopover(false);
                         }}
-                        title={`Q${idx + 1} (${diff || 'Normal'}) ${isChecked ? (selectedAnswers[idx] === qItem.answer ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
+                        title={isLocked ? `Q${idx + 1} - Locked for Guest (Login Required)` : `Q${idx + 1} (${diff || 'Normal'}) ${isChecked ? (selectedAnswers[idx] === qItem.answer ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
                         style={{
                           height: '38px',
                           border: isCurrent ? '2px solid #005a9c' : border,
@@ -1262,16 +1343,20 @@ export default function BluebookTestView({
                         }}
                       >
                         <span style={{ lineHeight: 1 }}>{idx + 1}</span>
-                        <span
-                          style={{
-                            width: '4.5px',
-                            height: '4.5px',
-                            borderRadius: '50%',
-                            background: dotColor,
-                            display: 'inline-block'
-                          }}
-                          title={`${diff || 'Normal'} difficulty`}
-                        />
+                        {isLocked ? (
+                          <span style={{ fontSize: '0.62rem', lineHeight: 1 }}>🔒</span>
+                        ) : (
+                          <span
+                            style={{
+                              width: '4.5px',
+                              height: '4.5px',
+                              borderRadius: '50%',
+                              background: dotColor,
+                              display: 'inline-block'
+                            }}
+                            title={`${diff || 'Normal'} difficulty`}
+                          />
+                        )}
                         {flagged && (
                           <span style={{ position: 'absolute', top: '-3px', right: '1px', color: '#d97706', fontSize: '0.68rem', lineHeight: 1 }}>
                             🔖
@@ -1308,24 +1393,24 @@ export default function BluebookTestView({
 
           <button
             onClick={handleCheck}
-            disabled={isCurrentChecked}
+            disabled={isCurrentChecked || isCurrentQuestionLocked}
             style={{
-              background: isCurrentChecked ? '#f1f5f9' : '#ffffff',
-              border: '1.5px solid #005a9c',
+              background: (isCurrentChecked || isCurrentQuestionLocked) ? '#f1f5f9' : '#ffffff',
+              border: `1.5px solid ${(isCurrentChecked || isCurrentQuestionLocked) ? '#cbd5e1' : '#005a9c'}`,
               borderRadius: '20px',
               padding: '8px 18px',
               fontSize: '0.9rem',
               fontWeight: 700,
-              color: isCurrentChecked ? '#94a3b8' : '#005a9c',
-              cursor: isCurrentChecked ? 'not-allowed' : 'pointer'
+              color: (isCurrentChecked || isCurrentQuestionLocked) ? '#94a3b8' : '#005a9c',
+              cursor: (isCurrentChecked || isCurrentQuestionLocked) ? 'not-allowed' : 'pointer'
             }}
           >
-            {isCurrentChecked ? "Checked" : "Check Answer"}
+            {isCurrentQuestionLocked ? "Locked 🔒" : isCurrentChecked ? "Checked" : "Check Answer"}
           </button>
 
           <button
             onClick={() => {
-              if (currentIndex < questions.length - 1) onNavigate(currentIndex + 1);
+              if (currentIndex < questions.length - 1) handleAttemptNavigate(currentIndex + 1);
             }}
             disabled={currentIndex === questions.length - 1}
             style={{
@@ -1555,6 +1640,20 @@ export default function BluebookTestView({
           </div>
         </div>
       )}
+
+      {/* Guest Lock Modal */}
+      <GuestLockModal
+        isOpen={showGuestLockModal}
+        onClose={() => setShowGuestLockModal(false)}
+        onOpenAuth={() => {
+          setShowGuestLockModal(false);
+          if (onOpenAuth) onOpenAuth();
+        }}
+        questionNumber={lockedQuestionTarget}
+        skillName={q?.skill || "this skill"}
+        totalSkillQuestions={questions.filter(item => item.skill === q?.skill).length || questions.length}
+        freeLimit={GUEST_QUESTION_LIMIT_PER_SKILL}
+      />
 
     </div>
   );

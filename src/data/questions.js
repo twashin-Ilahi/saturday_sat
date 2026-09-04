@@ -226,3 +226,28 @@ export const SYLLABUS = [
     ]
   }
 ];
+
+export const GUEST_QUESTION_LIMIT_PER_SKILL = 10;
+
+/**
+ * Returns true if the question is locked for guest users.
+ * Authenticated users have full access to all questions.
+ */
+export function isQuestionLockedForUser(questionOrIndex, user, allQuestions = ALL_QUESTIONS) {
+  if (!user || !user.isGuest) return false;
+  
+  const q = typeof questionOrIndex === 'number' ? allQuestions[questionOrIndex] : questionOrIndex;
+  if (!q) return false;
+
+  const skillName = q.skill || 'Transitions';
+  const skillQuestions = allQuestions.filter(item => (item.skill || 'Transitions') === skillName);
+  let indexInSkill = skillQuestions.indexOf(q);
+
+  if (indexInSkill === -1) {
+    indexInSkill = skillQuestions.findIndex(item => item.id === q.id);
+  }
+
+  if (indexInSkill === -1) return false;
+  return indexInSkill >= GUEST_QUESTION_LIMIT_PER_SKILL;
+}
+
