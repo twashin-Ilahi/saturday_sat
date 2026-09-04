@@ -586,10 +586,10 @@ export default function Dashboard({
                 <span style={{ fontSize: '1.5rem' }}>🔒</span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0369a1' }}>
-                    Guest Preview Mode: Free Access to First {GUEST_QUESTION_LIMIT_PER_SKILL} Questions
+                    Guest Preview Mode: Free Access to First {GUEST_QUESTION_LIMIT_PER_SKILL} Questions per Module
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#0284c7', marginTop: '2px' }}>
-                    You are exploring <strong>{activeSkill.name}</strong>. Questions 1–{GUEST_QUESTION_LIMIT_PER_SKILL} are free to practice. Questions {GUEST_QUESTION_LIMIT_PER_SKILL + 1}–{activeSkillQuestions.length} are locked. Sign in to unlock all 314 authentic College Board questions!
+                    You are exploring <strong>{activeSkill.name}</strong>. Sign in to unlock all 314 authentic questions. <em>All your guest answers and missed question logs will automatically sync and back up to your account with zero data loss!</em>
                   </div>
                 </div>
               </div>

@@ -64,7 +64,13 @@ export default function BluebookTestView({
   const [eliminatorMode, setEliminatorMode] = useState(false);
   const [aiExplanation, setAiExplanation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [savedHighlights, setSavedHighlights] = useState(() => loadHighlights());
+  const userId = user && !user.isGuest ? user.id : null;
+  const [savedHighlights, setSavedHighlights] = useState(() => loadHighlights(userId));
+
+  useEffect(() => {
+    setSavedHighlights(loadHighlights(userId));
+  }, [userId]);
+
   const [activePen, setActivePen] = useState('yellow'); // 'yellow' | 'pink' | null
   const [dustbinPopover, setDustbinPopover] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(() => !!(typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)));
@@ -197,7 +203,7 @@ export default function BluebookTestView({
       const updatedHtml = passageRef.current.innerHTML;
       const newMap = { ...savedHighlights, [q.id]: updatedHtml };
       setSavedHighlights(newMap);
-      saveHighlights(newMap);
+      saveHighlights(newMap, userId);
     }
 
     if (sel) {
@@ -255,7 +261,7 @@ export default function BluebookTestView({
         const updatedHtml = passageRef.current.innerHTML;
         const newMap = { ...savedHighlights, [q.id]: updatedHtml };
         setSavedHighlights(newMap);
-        saveHighlights(newMap);
+        saveHighlights(newMap, userId);
       }
     }
     setDustbinPopover(null);
@@ -267,7 +273,7 @@ export default function BluebookTestView({
       const newMap = { ...savedHighlights };
       delete newMap[q.id];
       setSavedHighlights(newMap);
-      saveHighlights(newMap);
+      saveHighlights(newMap, userId);
     }
     setDustbinPopover(null);
   };

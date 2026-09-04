@@ -18,6 +18,7 @@ export async function syncLocalToCloud(progressState, user) {
     flaggedStatus: progressState.flaggedStatus ?? [],
     eliminatedStatus: progressState.eliminatedStatus ?? [],
     errorLog: progressState.errorLog ?? [],
+    highlights: progressState.highlights ?? {},
     autoStartEnabled: progressState.autoStartEnabled ?? true,
     lastSyncedAt: timestamp,
   };

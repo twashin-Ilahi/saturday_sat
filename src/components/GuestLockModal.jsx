@@ -113,6 +113,10 @@ export default function GuestLockModal({
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: '#1e293b' }}>
                 <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
+                <span><strong>Instant Auto-Migration (Zero Data Loss):</strong> Everything you've practiced as a guest will automatically merge and back up to your account.</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: '#1e293b' }}>
+                <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
                 <span><strong>Real-Time Automatic Cloud Backup:</strong> Never lose your progress, answers, or flags when switching devices.</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: '#1e293b' }}>

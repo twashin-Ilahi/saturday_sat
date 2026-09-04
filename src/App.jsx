@@ -13,7 +13,12 @@ import {
   resetAllProgress, 
   exportProgressAsJson, 
   parseImportJson,
-  formatTime
+  formatTime,
+  loadHighlights,
+  saveHighlights,
+  hasGuestProgress,
+  clearGuestProgress,
+  mergeProgressStates
 } from './utils/storage';
 import { supabase, signOut } from './utils/supabase';
 import { syncLocalToCloud, fetchCloudProgress } from './utils/cloudSync';
@@ -95,6 +100,7 @@ export default function App() {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
+  const [toast, setToast] = useState(null); // { id, message, type: 'success' | 'info' | 'error' }
   const [currentView, setCurrentView] = useState(() => initialRoute.view);
   const [practiceMode, setPracticeMode] = useState(() => initialRoute.mode);
   const [serialErrorSubset, setSerialErrorSubset] = useState(() => initialRoute.serialSubset || []);
@@ -107,38 +113,105 @@ export default function App() {
     return loaded;
   });
 
+  const showToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToast({ id, message, type });
+    setTimeout(() => {
+      setToast(prev => (prev?.id === id ? null : prev));
+    }, 7000);
+  };
+
   const handleApplyCloudProgress = (cloudData) => {
     if (!cloudData) return;
     setState(prev => {
-      const qLen = ALL_QUESTIONS.length;
-      let newSelections = Array.isArray(cloudData.selectedAnswers) ? [...cloudData.selectedAnswers] : [...prev.selectedAnswers];
-      while (newSelections.length < qLen) newSelections.push(null);
-
-      let newChecked = Array.isArray(cloudData.checkedStatus) ? [...cloudData.checkedStatus] : [...prev.checkedStatus];
-      while (newChecked.length < qLen) newChecked.push(false);
-
-      let newFlagged = Array.isArray(cloudData.flaggedStatus) ? [...cloudData.flaggedStatus] : (prev.flaggedStatus || new Array(qLen).fill(false));
-      while (newFlagged.length < qLen) newFlagged.push(false);
-
-      let newEliminated = Array.isArray(cloudData.eliminatedStatus) ? [...cloudData.eliminatedStatus] : (prev.eliminatedStatus || Array.from({ length: qLen }, () => []));
-      while (newEliminated.length < qLen) newEliminated.push([]);
-
-      let newErrors = Array.isArray(cloudData.errorLog) ? [...cloudData.errorLog] : prev.errorLog;
-      let newIdx = typeof cloudData.currentIndex === 'number' && cloudData.currentIndex >= 0 && cloudData.currentIndex < qLen 
-        ? cloudData.currentIndex 
-        : prev.currentIndex;
-
-      return {
-        ...prev,
-        currentIndex: newIdx,
-        selectedAnswers: newSelections,
-        checkedStatus: newChecked,
-        flaggedStatus: newFlagged,
-        eliminatedStatus: newEliminated,
-        errorLog: newErrors,
-        autoStartEnabled: typeof cloudData.autoStartEnabled === 'boolean' ? cloudData.autoStartEnabled : prev.autoStartEnabled,
-      };
+      const merged = mergeProgressStates(prev, cloudData, ALL_QUESTIONS.length);
+      if (cloudData.highlights && user && !user.isGuest) {
+        saveHighlights(cloudData.highlights, user.id);
+      }
+      return merged;
     });
+  };
+
+  // Dedicated function to initialize and synchronize user sessions with zero data loss
+  const initUserSession = async (sessionUser) => {
+    if (!sessionUser) return;
+    setUser(sessionUser);
+
+    // 1. Detect if any guest practice progress existed before signing in
+    const guestInfo = hasGuestProgress(ALL_QUESTIONS.length);
+
+    // 2. Load scoped local user progress and highlights
+    const localUserData = loadProgress(ALL_QUESTIONS.length, sessionUser.id);
+    const localHighlights = loadHighlights(sessionUser.id);
+    localUserData.highlights = localHighlights;
+
+    if (typeof initialRoute.index === 'number' && initialRoute.view === 'practice' && initialRoute.mode === 'normal') {
+      localUserData.currentIndex = Math.max(0, Math.min(initialRoute.index, ALL_QUESTIONS.length - 1));
+    }
+
+    // 3. Fetch cloud progress (if previously saved)
+    let cloudData = null;
+    try {
+      cloudData = await fetchCloudProgress(sessionUser);
+    } catch (err) {
+      // First-time user or offline
+    }
+
+    // 4. Intelligent Multi-Source Merge:
+    // Base: merge cloudData and localUserData so no account data is lost
+    let combinedUserState = cloudData 
+      ? mergeProgressStates(cloudData, localUserData, ALL_QUESTIONS.length)
+      : localUserData;
+
+    let finalState = combinedUserState;
+    let didMigrateGuest = false;
+
+    // If guest practiced questions before logging in, seamlessly merge guest progress!
+    if (guestInfo.hasData && guestInfo.guestProgress) {
+      finalState = mergeProgressStates(combinedUserState, guestInfo.guestProgress, ALL_QUESTIONS.length);
+      didMigrateGuest = true;
+
+      // Persist merged state into user's scoped storage
+      saveProgress(finalState, sessionUser.id);
+      if (finalState.highlights) {
+        saveHighlights(finalState.highlights, sessionUser.id);
+      }
+
+      // Safely clear guest keys now that they are securely attached to the account
+      clearGuestProgress();
+    } else {
+      // Save combined user state
+      saveProgress(finalState, sessionUser.id);
+      if (finalState.highlights) {
+        saveHighlights(finalState.highlights, sessionUser.id);
+      }
+    }
+
+    // 5. Update local React state
+    setState(finalState);
+
+    // 6. Auto-upload the merged state to Supabase cloud immediately
+    setCloudSyncStatus('syncing');
+    try {
+      await syncLocalToCloud(finalState, sessionUser);
+      setCloudSyncStatus('synced');
+
+      if (didMigrateGuest) {
+        showToast(
+          `Guest practice progress (${guestInfo.answeredCount} questions, ${guestInfo.errorCount} mistakes) was automatically synchronized and backed up to your account!`,
+          'success'
+        );
+      }
+    } catch (syncErr) {
+      console.warn("Immediate cloud backup warning:", syncErr);
+      setCloudSyncStatus('error');
+      if (didMigrateGuest) {
+        showToast(
+          `Guest practice progress was preserved in your account storage. Auto-backup will retry in the background.`,
+          'info'
+        );
+      }
+    }
   };
 
   // Initialize Supabase Auth & Session listener
@@ -147,42 +220,6 @@ export default function App() {
     if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
       setIsPasswordReset(true);
     }
-
-    const initUserSession = async (sessionUser) => {
-      setUser(sessionUser);
-      try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-
-      // 1. Load local progress while keeping refreshed question index if active
-      const localData = loadProgress(ALL_QUESTIONS.length, sessionUser.id);
-      if (typeof initialRoute.index === 'number' && initialRoute.view === 'practice' && initialRoute.mode === 'normal') {
-        localData.currentIndex = Math.max(0, Math.min(initialRoute.index, ALL_QUESTIONS.length - 1));
-      }
-      setState(localData);
-
-      // 2. Automatically restore from cloud if cloud has data
-      try {
-        const cloudData = await fetchCloudProgress(sessionUser);
-        if (cloudData) {
-          const localAnswered = localData.checkedStatus?.filter(Boolean).length || 0;
-          const cloudAnswered = Array.isArray(cloudData.checkedStatus) 
-            ? cloudData.checkedStatus.filter(Boolean).length 
-            : 0;
-
-          if (cloudAnswered >= localAnswered && cloudAnswered > 0) {
-            handleApplyCloudProgress(cloudData);
-            setCloudSyncStatus('synced');
-          } else if (localAnswered > cloudAnswered) {
-            // Local data is newer, auto-upload to cloud
-            setCloudSyncStatus('syncing');
-            syncLocalToCloud(localData, sessionUser)
-              .then(() => setCloudSyncStatus('synced'))
-              .catch(() => setCloudSyncStatus('error'));
-          }
-        }
-      } catch (err) {
-        console.warn("Could not check initial cloud backup:", err);
-      }
-    };
 
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (session?.user) {
@@ -711,50 +748,242 @@ export default function App() {
   // If in dedicated Disclaimer / Legal notice view:
   if (currentView === 'disclaimer') {
     return (
-      <DisclaimerView
-        user={user}
-        onReturnToDashboard={handleReturnToDashboard}
-        onStartPractice={() => handleStartPractice(state.currentIndex || 0)}
-        onOpenAuth={handleOpenAuth}
-        onOpenProfile={handleOpenProfile}
-        onSignOut={handleSignOut}
-      />
+      <>
+        {toast && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: toast.type === 'success' ? '#065f46' : (toast.type === 'error' ? '#991b1b' : '#1e293b'),
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            maxWidth: '92vw',
+            animation: 'toastSlideDown 0.25s ease-out'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>{toast.type === 'success' ? '🎉' : (toast.type === 'error' ? '⚠️' : 'ℹ️')}</span>
+            <span style={{ lineHeight: 1.4 }}>{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                padding: '0 0 0 8px',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+            <style>{`
+              @keyframes toastSlideDown {
+                from { opacity: 0; transform: translate(-50%, -12px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+              }
+            `}</style>
+          </div>
+        )}
+        <DisclaimerView
+          user={user}
+          onReturnToDashboard={handleReturnToDashboard}
+          onStartPractice={() => handleStartPractice(state.currentIndex || 0)}
+          onOpenAuth={handleOpenAuth}
+          onOpenProfile={handleOpenProfile}
+          onSignOut={handleSignOut}
+        />
+      </>
     );
   }
 
   // If user is not authenticated and not in guest mode:
   if (!user && !isPasswordReset) {
     return (
-      <AuthView
-        initialMode="login"
-        onAuthSuccess={(authenticatedUser) => {
-          setUser(authenticatedUser);
-        }}
-        onContinueAsGuest={handleContinueAsGuest}
-        onOpenDisclaimer={handleOpenDisclaimer}
-      />
+      <>
+        {toast && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: toast.type === 'success' ? '#065f46' : (toast.type === 'error' ? '#991b1b' : '#1e293b'),
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            maxWidth: '92vw',
+            animation: 'toastSlideDown 0.25s ease-out'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>{toast.type === 'success' ? '🎉' : (toast.type === 'error' ? '⚠️' : 'ℹ️')}</span>
+            <span style={{ lineHeight: 1.4 }}>{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                padding: '0 0 0 8px',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+            <style>{`
+              @keyframes toastSlideDown {
+                from { opacity: 0; transform: translate(-50%, -12px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+              }
+            `}</style>
+          </div>
+        )}
+        <AuthView
+          initialMode="login"
+          onAuthSuccess={(authenticatedUser) => {
+            if (authenticatedUser) {
+              initUserSession(authenticatedUser);
+            }
+          }}
+          onContinueAsGuest={handleContinueAsGuest}
+          onOpenDisclaimer={handleOpenDisclaimer}
+        />
+      </>
     );
   }
 
   // If password reset recovery flow:
   if (isPasswordReset) {
     return (
-      <AuthView
-        initialMode="reset"
-        onAuthSuccess={(authenticatedUser) => {
-          setIsPasswordReset(false);
-          setUser(authenticatedUser);
-        }}
-        onContinueAsGuest={handleContinueAsGuest}
-        onOpenDisclaimer={handleOpenDisclaimer}
-      />
+      <>
+        {toast && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: toast.type === 'success' ? '#065f46' : (toast.type === 'error' ? '#991b1b' : '#1e293b'),
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            maxWidth: '92vw',
+            animation: 'toastSlideDown 0.25s ease-out'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>{toast.type === 'success' ? '🎉' : (toast.type === 'error' ? '⚠️' : 'ℹ️')}</span>
+            <span style={{ lineHeight: 1.4 }}>{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                padding: '0 0 0 8px',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+            <style>{`
+              @keyframes toastSlideDown {
+                from { opacity: 0; transform: translate(-50%, -12px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+              }
+            `}</style>
+          </div>
+        )}
+        <AuthView
+          initialMode="reset"
+          onAuthSuccess={(authenticatedUser) => {
+            setIsPasswordReset(false);
+            if (authenticatedUser) {
+              initUserSession(authenticatedUser);
+            }
+          }}
+          onContinueAsGuest={handleContinueAsGuest}
+          onOpenDisclaimer={handleOpenDisclaimer}
+        />
+      </>
     );
   }
+
+  // Common wrapper with floating toast
+  const renderToastNotification = () => {
+    if (!toast) return null;
+    return (
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 99999,
+        background: toast.type === 'success' ? '#065f46' : (toast.type === 'error' ? '#991b1b' : '#1e293b'),
+        color: '#ffffff',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        fontSize: '0.88rem',
+        fontWeight: 600,
+        maxWidth: '92vw',
+        animation: 'toastSlideDown 0.25s ease-out'
+      }}>
+        <span style={{ fontSize: '1.2rem' }}>{toast.type === 'success' ? '🎉' : (toast.type === 'error' ? '⚠️' : 'ℹ️')}</span>
+        <span style={{ lineHeight: 1.4 }}>{toast.message}</span>
+        <button
+          onClick={() => setToast(null)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '1rem',
+            cursor: 'pointer',
+            padding: '0 0 0 8px',
+            lineHeight: 1
+          }}
+        >
+          ✕
+        </button>
+        <style>{`
+          @keyframes toastSlideDown {
+            from { opacity: 0; transform: translate(-50%, -12px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+          }
+        `}</style>
+      </div>
+    );
+  };
 
   // If in dedicated Student Profile view:
   if (currentView === 'profile') {
     return (
       <>
+        {renderToastNotification()}
         <ProfileView
           user={user}
           cloudSyncStatus={cloudSyncStatus}
@@ -796,6 +1025,7 @@ export default function App() {
 
       return (
         <>
+          {renderToastNotification()}
           <BluebookTestView
             questions={activeQuestions}
             currentIndex={serialCurrentIndex}
@@ -864,6 +1094,7 @@ export default function App() {
     // Normal practice mode
     return (
       <>
+        {renderToastNotification()}
         <BluebookTestView
           questions={ALL_QUESTIONS}
           currentIndex={state.currentIndex}
@@ -915,6 +1146,7 @@ export default function App() {
   if (currentView === 'error-log') {
     return (
       <>
+        {renderToastNotification()}
         <ErrorLogView
           errorLog={state.errorLog}
           allQuestions={ALL_QUESTIONS}
@@ -952,6 +1184,7 @@ export default function App() {
   // Default: Dashboard
   return (
     <>
+      {renderToastNotification()}
       <Dashboard
         questions={ALL_QUESTIONS}
         currentIndex={state.currentIndex}
