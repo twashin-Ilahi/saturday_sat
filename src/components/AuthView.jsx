@@ -7,7 +7,7 @@ import {
   updatePassword 
 } from '../utils/supabase';
 
-export default function AuthView({ initialMode = 'login', onAuthSuccess, onContinueAsGuest }) {
+export default function AuthView({ initialMode = 'login', onAuthSuccess, onContinueAsGuest, onOpenDisclaimer }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'forgot' | 'reset'
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -163,7 +163,7 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
             margin: 0,
             opacity: 0.95
           }}>
-            Official Question Bank & Error Log System
+            Independent Practice Bank & Error Log System
           </p>
 
           <div style={{
@@ -176,7 +176,7 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
             borderRadius: '12px',
             letterSpacing: '0.3px'
           }}>
-            Developed by Twashin Ilahi
+            Built for Students, by Students
           </div>
         </div>
 
@@ -604,16 +604,32 @@ export default function AuthView({ initialMode = 'login', onAuthSuccess, onConti
           )}
         </div>
 
-        {/* Footer */}
+        {/* 2-Line Footer */}
         <div style={{
           background: '#f8fafc',
           borderTop: '1px solid #e2e8f0',
-          padding: '12px 24px',
+          padding: '14px 20px',
           textAlign: 'center',
           fontSize: '0.74rem',
-          color: '#64748b'
+          color: '#64748b',
+          lineHeight: 1.5
         }}>
-          Powered by Supabase Auth • College Board Practice
+          <div>Independent platform for SAT® practice, built by students for students. Not affiliated with College Board.</div>
+          <div style={{ marginTop: '3px', color: '#94a3b8' }}>
+            SAT® is a registered trademark of College Board. •{' '}
+            <a
+              href="#/disclaimer"
+              onClick={(e) => {
+                if (onOpenDisclaimer) {
+                  e.preventDefault();
+                  onOpenDisclaimer();
+                }
+              }}
+              style={{ color: '#005a9c', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Disclaimer & Trademark Notice
+            </a>
+          </div>
         </div>
       </div>
 

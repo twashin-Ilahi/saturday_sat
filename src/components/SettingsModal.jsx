@@ -14,6 +14,7 @@ export default function SettingsModal({
   onImportProgress,
   onOpenAuth,
   onOpenProfile,
+  onOpenDisclaimer,
 }) {
   const [syncing, setSyncing] = useState(false);
   const [pulling, setPulling] = useState(false);
@@ -502,10 +503,30 @@ CREATE POLICY "Users can manage own progress" ON public.user_progress
           borderTop: '1px solid #e2e8f0',
           background: '#f8fafc',
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           borderBottomLeftRadius: '10px',
           borderBottomRightRadius: '10px'
         }}>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              if (onOpenDisclaimer) onOpenDisclaimer();
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#005a9c',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: 0
+            }}
+          >
+            Disclaimer & Trademark Notice
+          </button>
           <button
             type="button"
             onClick={onClose}

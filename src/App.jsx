@@ -5,6 +5,7 @@ import ErrorLogView from './components/ErrorLogView';
 import AuthView from './components/AuthView';
 import SettingsModal from './components/SettingsModal';
 import ProfileView from './components/ProfileView';
+import DisclaimerView from './components/DisclaimerView';
 import { ALL_QUESTIONS } from './data/questions';
 import { 
   loadProgress, 
@@ -58,6 +59,8 @@ const loadPersistedRoute = () => {
     fromHash = { view: 'error-log', mode: 'normal' };
   } else if (hash.startsWith('#/profile') || hash.startsWith('#profile')) {
     fromHash = { view: 'profile', mode: 'normal' };
+  } else if (hash.startsWith('#/disclaimer') || hash.startsWith('#disclaimer')) {
+    fromHash = { view: 'disclaimer', mode: 'normal' };
   } else if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
     fromHash = { view: 'dashboard', mode: 'normal' };
   }
@@ -285,6 +288,9 @@ export default function App() {
     if (hash.startsWith('#/profile') || hash.startsWith('#profile')) {
       return { view: 'profile', mode: 'normal' };
     }
+    if (hash.startsWith('#/disclaimer') || hash.startsWith('#disclaimer')) {
+      return { view: 'disclaimer', mode: 'normal' };
+    }
     if (hash.startsWith('#/dashboard') || hash.startsWith('#dashboard')) {
       return { view: 'dashboard', mode: 'normal' };
     }
@@ -302,6 +308,8 @@ export default function App() {
       hash = '#/error-log';
     } else if (view === 'profile') {
       hash = '#/profile';
+    } else if (view === 'disclaimer') {
+      hash = '#/disclaimer';
     }
 
     const historyState = {
@@ -465,6 +473,10 @@ export default function App() {
   const handleOpenAuth = () => {
     setUser(null);
     try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
+  };
+  const handleOpenDisclaimer = () => {
+    setCurrentView('disclaimer');
+    pushHistoryState('disclaimer');
   };
 
   const handleSelectChoice = (questionIndex, choiceIndex) => {
@@ -696,6 +708,20 @@ export default function App() {
     );
   }
 
+  // If in dedicated Disclaimer / Legal notice view:
+  if (currentView === 'disclaimer') {
+    return (
+      <DisclaimerView
+        user={user}
+        onReturnToDashboard={handleReturnToDashboard}
+        onStartPractice={() => handleStartPractice(state.currentIndex || 0)}
+        onOpenAuth={handleOpenAuth}
+        onOpenProfile={handleOpenProfile}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
   // If user is not authenticated and not in guest mode:
   if (!user && !isPasswordReset) {
     return (
@@ -705,6 +731,7 @@ export default function App() {
           setUser(authenticatedUser);
         }}
         onContinueAsGuest={handleContinueAsGuest}
+        onOpenDisclaimer={handleOpenDisclaimer}
       />
     );
   }
@@ -719,6 +746,7 @@ export default function App() {
           setUser(authenticatedUser);
         }}
         onContinueAsGuest={handleContinueAsGuest}
+        onOpenDisclaimer={handleOpenDisclaimer}
       />
     );
   }
@@ -737,10 +765,8 @@ export default function App() {
           onStartPractice={() => handleStartPractice(state.currentIndex || 0)}
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
-          onOpenAuth={() => {
-            setUser(null);
-            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-          }}
+          onOpenAuth={handleOpenAuth}
+          onOpenDisclaimer={handleOpenDisclaimer}
         />
         <SettingsModal
           isOpen={showSettingsModal}
@@ -753,11 +779,9 @@ export default function App() {
           onResetProgress={handleReset}
           onExportProgress={handleExport}
           onImportProgress={handleImport}
-          onOpenAuth={() => {
-            setUser(null);
-            try { localStorage.removeItem('sat_guest_mode'); } catch (e) {}
-          }}
+          onOpenAuth={handleOpenAuth}
           onOpenProfile={handleOpenProfile}
+          onOpenDisclaimer={handleOpenDisclaimer}
         />
       </>
     );
@@ -831,6 +855,7 @@ export default function App() {
             onImportProgress={handleImport}
             onOpenAuth={handleOpenAuth}
             onOpenProfile={handleOpenProfile}
+            onOpenDisclaimer={handleOpenDisclaimer}
           />
         </>
       );
@@ -880,6 +905,7 @@ export default function App() {
           onImportProgress={handleImport}
           onOpenAuth={handleOpenAuth}
           onOpenProfile={handleOpenProfile}
+          onOpenDisclaimer={handleOpenDisclaimer}
         />
       </>
     );
@@ -897,6 +923,7 @@ export default function App() {
           onSignOut={handleSignOut}
           onOpenSettings={handleOpenSettings}
           onOpenProfile={handleOpenProfile}
+          onOpenDisclaimer={handleOpenDisclaimer}
           onReturnToDashboard={handleReturnToDashboard}
           onStartSerialErrorDrill={handleStartSerialErrorDrill}
           onJumpToQuestion={handleJumpToQuestion}
@@ -916,6 +943,7 @@ export default function App() {
           onImportProgress={handleImport}
           onOpenAuth={handleOpenAuth}
           onOpenProfile={handleOpenProfile}
+          onOpenDisclaimer={handleOpenDisclaimer}
         />
       </>
     );
@@ -936,6 +964,7 @@ export default function App() {
         onOpenSettings={handleOpenSettings}
         onOpenProfile={handleOpenProfile}
         onOpenAuth={handleOpenAuth}
+        onOpenDisclaimer={handleOpenDisclaimer}
         onStartPractice={handleStartPractice}
         onJumpToQuestion={handleJumpToQuestion}
         onOpenErrorLog={handleOpenErrorLog}
@@ -957,6 +986,7 @@ export default function App() {
         onImportProgress={handleImport}
         onOpenAuth={handleOpenAuth}
         onOpenProfile={handleOpenProfile}
+        onOpenDisclaimer={handleOpenDisclaimer}
       />
     </>
   );

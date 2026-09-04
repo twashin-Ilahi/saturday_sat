@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { SYLLABUS, GUEST_QUESTION_LIMIT_PER_SKILL, isQuestionLockedForUser } from '../data/questions';
 import AiAnalysisModal from './AiAnalysisModal';
 import GuestLockModal from './GuestLockModal';
+import Footer from './Footer';
 
 export default function Dashboard({
   questions,
@@ -15,6 +16,7 @@ export default function Dashboard({
   onOpenSettings,
   onOpenProfile,
   onOpenAuth,
+  onOpenDisclaimer,
   onStartPractice,
   onJumpToQuestion,
   onOpenErrorLog,
@@ -169,11 +171,11 @@ export default function Dashboard({
                 border: '1px solid #c9dff7',
                 letterSpacing: '0.2px'
               }}>
-                Developed by Twashin Ilahi
+                By Students, For Students
               </span>
             </div>
             <p style={{ fontSize: '0.82rem', color: '#666' }}>
-              Official College Board Question Bank & Practice System
+              Unofficial Independent Practice System • 314 Practice Questions
             </p>
           </div>
         </div>
@@ -192,7 +194,7 @@ export default function Dashboard({
             gap: '6px'
           }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-            Developed by Twashin Ilahi
+            Independent Platform
           </div>
           <button 
             className="btn" 
@@ -784,10 +786,8 @@ export default function Dashboard({
 
       </div>
 
-      {/* Footer */}
-      <footer style={{ background: '#fff', borderTop: '1px solid var(--cb-border)', padding: '14px 28px', textAlign: 'center', fontSize: '0.85rem', color: '#666' }}>
-        Digital SAT® Suite of Assessments • Transitions Practice Platform • Developed by Twashin Ilahi
-      </footer>
+      {/* 2-Line Footer */}
+      <Footer onOpenDisclaimer={onOpenDisclaimer} />
 
       {/* Error Log Modal */}
       {showErrorModal && (

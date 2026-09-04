@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { formatTime } from '../utils/storage';
 import { explainSingleQuestionWithGemini } from '../utils/gemini';
 import VisualExplanation from './VisualExplanation';
+import Footer from './Footer';
 
 export default function ErrorLogView({
   errorLog = [],
@@ -12,6 +13,7 @@ export default function ErrorLogView({
   onSignOut,
   onOpenSettings,
   onOpenProfile,
+  onOpenDisclaimer,
   onReturnToDashboard,
   onStartSerialErrorDrill,
   onJumpToQuestion,
@@ -214,7 +216,7 @@ export default function ErrorLogView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Developed By Attribution */}
+          {/* Student Initiative Attribution */}
           <div style={{
             fontSize: '0.78rem',
             fontWeight: 700,
@@ -228,7 +230,7 @@ export default function ErrorLogView({
             gap: '4px'
           }}>
             <span>★</span>
-            <span>Developed by Twashin Ilahi</span>
+            <span>By Students, For Students</span>
           </div>
 
           {onOpenProfile && (
@@ -1086,6 +1088,8 @@ export default function ErrorLogView({
         </div>
       )}
 
+      {/* 2-Line Footer */}
+      <Footer onOpenDisclaimer={onOpenDisclaimer} />
     </div>
   );
 }

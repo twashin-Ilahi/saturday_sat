@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { updateUserProfile } from '../utils/supabase';
+import Footer from './Footer';
 
 export default function ProfileView({
   user,
@@ -12,6 +13,7 @@ export default function ProfileView({
   onSignOut,
   onOpenSettings,
   onOpenAuth,
+  onOpenDisclaimer,
 }) {
   const isGuest = !user || user.isGuest;
   const userMeta = user?.user_metadata || {};
@@ -192,7 +194,7 @@ export default function ProfileView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Developed By Badge */}
+          {/* Student Initiative Badge */}
           <div style={{
             fontSize: '0.78rem',
             fontWeight: 700,
@@ -206,7 +208,7 @@ export default function ProfileView({
             gap: '4px'
           }}>
             <span>★</span>
-            <span>Developed by Twashin Ilahi</span>
+            <span>By Students, For Students</span>
           </div>
 
           <button
@@ -842,6 +844,9 @@ export default function ProfileView({
           </div>
         </div>
       </main>
+
+      {/* 2-Line Footer */}
+      <Footer onOpenDisclaimer={onOpenDisclaimer} />
     </div>
   );
 }
