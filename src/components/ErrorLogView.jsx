@@ -619,6 +619,21 @@ export default function ErrorLogView({
                         ID: {err.id}
                       </span>
 
+                      {/* Skill Badge */}
+                      {err.skill && (
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          background: err.skill === 'Rhetorical Synthesis' ? '#f5f3ff' : '#f1f5f9',
+                          color: err.skill === 'Rhetorical Synthesis' ? '#7c3aed' : '#475569',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          border: err.skill === 'Rhetorical Synthesis' ? '1px solid #ddd6fe' : '1px solid #cbd5e1'
+                        }}>
+                          {err.skill}
+                        </span>
+                      )}
+
                       {/* Category Badge */}
                       <span style={{
                         fontSize: '0.75rem',
@@ -757,7 +772,32 @@ export default function ErrorLogView({
                     borderLeft: '4px solid #3b82f6',
                     marginBottom: '14px'
                   }}>
-                    {err.passage.replace('[BLANK]', '_______')}
+                    {err.passage.includes('•') ? (
+                      <div>
+                        {err.passage.split('\n\n').map((block, bIdx) => {
+                          if (block.includes('•')) {
+                            const lines = block.split('\n');
+                            const leadText = lines[0].startsWith('•') ? null : lines[0];
+                            const bullets = lines.filter(l => l.trim().startsWith('•')).map(l => l.replace(/^•\s*/, ''));
+                            return (
+                              <div key={bIdx} style={{ marginBottom: '8px' }}>
+                                {leadText && <p style={{ marginBottom: '6px' }}>{leadText}</p>}
+                                <ul style={{ paddingLeft: '22px', margin: '4px 0', listStyleType: 'disc' }}>
+                                  {bullets.map((bText, bulletIdx) => (
+                                    <li key={bulletIdx} style={{ marginBottom: '6px', lineHeight: 1.6 }}>
+                                      {bText}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          }
+                          return <p key={bIdx} style={{ marginBottom: '8px' }}>{block.replace('[BLANK]', '_______')}</p>;
+                        })}
+                      </div>
+                    ) : (
+                      err.passage.replace('[BLANK]', '_______')
+                    )}
                   </div>
 
                   {/* Prompt */}
@@ -790,7 +830,7 @@ export default function ErrorLogView({
                       padding: '10px 14px'
                     }}>
                       <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', marginBottom: '2px' }}>
-                        ✅ Correct Transition:
+                        ✅ {err.skill === 'Transitions' ? 'Correct Transition:' : 'Correct Answer:'}
                       </div>
                       <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#166534' }}>
                         {err.correctAnswer}

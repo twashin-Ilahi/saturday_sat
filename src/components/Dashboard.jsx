@@ -28,13 +28,28 @@ export default function Dashboard({
   const [showAiModal, setShowAiModal] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Compute metrics
-  const totalCount = questions.length;
+  const currentSectionData = SYLLABUS.find(s => s.section === selectedSection) || SYLLABUS[0];
+  const activeSkill = currentSectionData.domains
+    .flatMap(d => d.skills)
+    .find(s => s.id === selectedSkillId) || { name: "Transitions", id: "transitions" };
+
+  // Questions scoped to active skill
+  const activeSkillQuestions = questions
+    .map((q, idx) => ({ ...q, originalIndex: idx }))
+    .filter(q => {
+      if (selectedSkillId === 'transitions') return q.skill === 'Transitions';
+      if (selectedSkillId === 'rhetorical-synthesis') return q.skill === 'Rhetorical Synthesis';
+      return true;
+    });
+
+  // Compute metrics for active skill
+  const totalCount = activeSkillQuestions.length;
   const answeredIndices = [];
   let correctCount = 0;
   let incorrectCount = 0;
 
-  questions.forEach((q, idx) => {
+  activeSkillQuestions.forEach(q => {
+    const idx = q.originalIndex;
     if (checkedStatus[idx]) {
       answeredIndices.push(idx);
       if (selectedAnswers[idx] === q.answer) {
@@ -49,26 +64,26 @@ export default function Dashboard({
     ? Math.round((correctCount / answeredIndices.length) * 100) 
     : 0;
 
-  // Question counts by difficulty
-  const easyCount = questions.filter(q => q.difficulty === 'Easy').length;
-  const medCount = questions.filter(q => q.difficulty === 'Medium').length;
-  const hardCount = questions.filter(q => q.difficulty === 'Hard').length;
+  // Question counts by difficulty for active skill
+  const easyCount = activeSkillQuestions.filter(q => q.difficulty === 'Easy').length;
+  const medCount = activeSkillQuestions.filter(q => q.difficulty === 'Medium').length;
+  const hardCount = activeSkillQuestions.filter(q => q.difficulty === 'Hard').length;
 
   const difficultyBreakdown = {
     easy: {
       total: easyCount,
-      answered: questions.filter((q, i) => q.difficulty === 'Easy' && checkedStatus[i]).length,
-      correct: questions.filter((q, i) => q.difficulty === 'Easy' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+      answered: activeSkillQuestions.filter(q => q.difficulty === 'Easy' && checkedStatus[q.originalIndex]).length,
+      correct: activeSkillQuestions.filter(q => q.difficulty === 'Easy' && checkedStatus[q.originalIndex] && selectedAnswers[q.originalIndex] === q.answer).length,
     },
     medium: {
       total: medCount,
-      answered: questions.filter((q, i) => q.difficulty === 'Medium' && checkedStatus[i]).length,
-      correct: questions.filter((q, i) => q.difficulty === 'Medium' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+      answered: activeSkillQuestions.filter(q => q.difficulty === 'Medium' && checkedStatus[q.originalIndex]).length,
+      correct: activeSkillQuestions.filter(q => q.difficulty === 'Medium' && checkedStatus[q.originalIndex] && selectedAnswers[q.originalIndex] === q.answer).length,
     },
     hard: {
       total: hardCount,
-      answered: questions.filter((q, i) => q.difficulty === 'Hard' && checkedStatus[i]).length,
-      correct: questions.filter((q, i) => q.difficulty === 'Hard' && checkedStatus[i] && selectedAnswers[i] === q.answer).length,
+      answered: activeSkillQuestions.filter(q => q.difficulty === 'Hard' && checkedStatus[q.originalIndex]).length,
+      correct: activeSkillQuestions.filter(q => q.difficulty === 'Hard' && checkedStatus[q.originalIndex] && selectedAnswers[q.originalIndex] === q.answer).length,
     }
   };
 
@@ -84,20 +99,23 @@ export default function Dashboard({
 
   const handleStartDrill = (drillType) => {
     if (drillType === 'errors') {
-      if (errorLog.length > 0) {
+      const skillErr = errorLog.find(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1));
+      if (skillErr) {
+        onJumpToQuestion(skillErr.qIndex - 1);
+      } else if (errorLog.length > 0) {
         onJumpToQuestion(errorLog[0].qIndex - 1);
       }
     } else if (drillType === 'hard') {
-      const firstHard = questions.findIndex((q, i) => q.difficulty === 'Hard' && !checkedStatus[i]);
-      onJumpToQuestion(firstHard !== -1 ? firstHard : questions.findIndex(q => q.difficulty === 'Hard'));
+      const firstHard = activeSkillQuestions.find(q => q.difficulty === 'Hard' && !checkedStatus[q.originalIndex]);
+      onJumpToQuestion(firstHard ? firstHard.originalIndex : (activeSkillQuestions.find(q => q.difficulty === 'Hard')?.originalIndex ?? activeSkillQuestions[0]?.originalIndex ?? 0));
     } else {
-      const nextUnanswered = checkedStatus.findIndex(s => !s);
-      onJumpToQuestion(nextUnanswered !== -1 ? nextUnanswered : 0);
+      const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
+      onJumpToQuestion(nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex ?? 0));
     }
   };
 
   // Filter questions for the grid
-  const filteredQuestions = questions.map((q, idx) => ({ ...q, originalIndex: idx })).filter(q => {
+  const filteredQuestions = activeSkillQuestions.filter(q => {
     if (difficultyFilter !== "All" && q.difficulty !== difficultyFilter) return false;
     if (statusFilter === "Unanswered" && checkedStatus[q.originalIndex]) return false;
     if (statusFilter === "Correct" && (!checkedStatus[q.originalIndex] || selectedAnswers[q.originalIndex] !== q.answer)) return false;
@@ -120,8 +138,6 @@ export default function Dashboard({
     reader.readAsText(file);
     e.target.value = "";
   };
-
-  const currentSectionData = SYLLABUS.find(s => s.section === selectedSection) || SYLLABUS[0];
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6f9', color: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
@@ -480,7 +496,7 @@ export default function Dashboard({
                 </span>
               </div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginTop: '4px' }}>
-                Transitions (70 Authentic Practice Questions)
+                {activeSkill.name} ({activeSkillQuestions.length} Authentic Practice Questions)
               </h3>
             </div>
 
@@ -497,19 +513,29 @@ export default function Dashboard({
                   className="btn btn-danger" 
                   style={{ padding: '9px 16px', fontSize: '0.92rem' }}
                   onClick={() => {
-                    const firstError = errorLog[0];
-                    if (firstError) onJumpToQuestion(firstError.qIndex - 1);
+                    const skillErr = errorLog.find(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1));
+                    const targetErr = skillErr || errorLog[0];
+                    if (targetErr) onJumpToQuestion(targetErr.qIndex - 1);
                   }}
                 >
-                  Review Missed Questions ({errorLog.length})
+                  Review Missed Questions ({errorLog.filter(e => activeSkillQuestions.some(sq => sq.originalIndex === e.qIndex - 1)).length || errorLog.length})
                 </button>
               )}
               <button 
                 className="btn btn-primary" 
                 style={{ padding: '9px 20px', fontSize: '0.95rem' }}
-                onClick={() => onStartPractice(currentIndex)}
+                onClick={() => {
+                  const isCurrentInSkill = activeSkillQuestions.some(sq => sq.originalIndex === currentIndex);
+                  if (isCurrentInSkill) {
+                    onStartPractice(currentIndex);
+                  } else {
+                    const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
+                    const targetIdx = nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex || 0);
+                    onStartPractice(targetIdx);
+                  }
+                }}
               >
-                {answeredIndices.length === 0 ? "Start Practice" : `Resume Practice (Q${currentIndex + 1})`} →
+                {answeredIndices.length === 0 ? `Start Practice (${activeSkill.name})` : `Resume Practice (Q${(activeSkillQuestions.find(sq => sq.originalIndex === currentIndex) ? currentIndex : (activeSkillQuestions[0]?.originalIndex || 0)) + 1})`} →
               </button>
             </div>
           </div>

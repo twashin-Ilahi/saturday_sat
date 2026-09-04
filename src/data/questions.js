@@ -1,4 +1,7 @@
-import rawQuestions from './questions.json';
+import rawTransitions from './questions.json';
+import rawRhetorical from './rhetorical_synthesis.json';
+
+const rawQuestions = [...rawTransitions, ...rawRhetorical];
 
 const LETTER_INDEX = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
 
@@ -75,6 +78,9 @@ export const ALL_QUESTIONS = rawQuestions.map(q => {
   };
 });
 
+const transitionCount = ALL_QUESTIONS.filter(q => q.skill === "Transitions").length;
+const rhetoricalCount = ALL_QUESTIONS.filter(q => q.skill === "Rhetorical Synthesis").length;
+
 export const SYLLABUS = [
   {
     section: "Reading and Writing",
@@ -86,15 +92,15 @@ export const SYLLABUS = [
           {
             id: "transitions",
             name: "Transitions",
-            questionCount: ALL_QUESTIONS.length,
+            questionCount: transitionCount,
             available: true,
             description: "Choose the word or phrase that most logically links phrases, clauses, sentences, or paragraphs."
           },
           {
             id: "rhetorical-synthesis",
             name: "Rhetorical Synthesis",
-            questionCount: 0,
-            available: false,
+            questionCount: rhetoricalCount,
+            available: true,
             description: "Strategically integrate provided notes to achieve a specified rhetorical goal."
           }
         ]

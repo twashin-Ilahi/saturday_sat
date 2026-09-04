@@ -1,0 +1,994 @@
+[
+  {
+    "id": "25755def",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Generally, an object will heat up when twisted.\n• The twisting of an object is known as torsion.\n• A 2019 study led by Zunfeng Liu and Ray Baughman tested the torsional heating of various fibers.\n• When a 3-millimeter-thick sample of thermoplastic polyurethane (TPU) fiber was twisted, its average surface temperature increased by 6°C.\n• When a 4-millimeter-thick sample of styrene-ethylene-butylene-styrene (SEBS) rubber fiber was twisted, its average surface temperature increased by 3.5°C.",
+    "prompt": "The student wants to contrast the two samples. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "When the fibers were twisted as part of the 2019 study, the surface temperature of both samples increased."
+      },
+      {
+        "key": "B",
+        "text": "In 2019, researchers studied the effect of torsional heating on various fibers, including samples of SEBS rubber and TPU."
+      },
+      {
+        "key": "C",
+        "text": "Twisting an object will generally cause its temperature to increase, a process known as torsional heating."
+      },
+      {
+        "key": "D",
+        "text": "The SEBS rubber sample used in the 2019 study was thicker than the TPU sample."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Contrast",
+    "rationale": "Choice D is the best answer. The sentence contrasts the two samples, noting that the SEBS rubber sample, at 4 millimeters thick, was thicker than the TPU sample, which was 3 millimeters thick.\n\nChoice A is incorrect because the sentence mentions a similarity between the TPU fiber and the SEBS rubber; it doesn’t contrast the two samples. Choice B is incorrect because the sentence indicates that both the SEBS rubber and TPU samples were part of the 2019 study; it doesn’t contrast the two samples. Choice C is incorrect because the sentence describes the process of torsional heating; it doesn’t contrast the two samples."
+  },
+  {
+    "id": "5222ffab",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Neuroscientists Krishnan Padmanabhan and Zhen Chen sought to better understand the workings of the brain’s olfactory system.\n• They devised a study using mathematical models.\n• They found that certain fibers allow the brain to toggle from one method of processing smells to another.\n• In one method, cells in the piriform cortex (where the perception of odor forms) capture olfactory information at a given moment.\n• In the other, the cells track changes in olfactory information over time.",
+    "prompt": "The student wants to summarize the study’s findings. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "To arrive at these findings, which describe dual methods of processing smells in the piriform cortex, Padmanabhan and Chen devised a study using mathematical models."
+      },
+      {
+        "key": "B",
+        "text": "Padmanabhan and Chen showed that olfactory information is captured by cells in the piriform cortex, where the perception of odor forms."
+      },
+      {
+        "key": "C",
+        "text": "Using mathematical models, Padmanabhan and Chen devised a study to better understand the workings of the brain’s olfactory system."
+      },
+      {
+        "key": "D",
+        "text": "According to Padmanabhan and Chen, the brain can toggle between capturing olfactory information at a given moment and tracking changes in that information over time."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Summarize Findings",
+    "rationale": "Choice D is the best answer. The sentence effectively summarizes the study’s findings, explaining what Padmanabhan and Chen found: that the brain can toggle between one method of processing smells (capturing information at a given moment) and another (tracking changes in information over time).\n\nChoice A is incorrect. While the sentence mentions findings, it mainly focuses on Padmanabhan and Chen’s methodology. It doesn’t effectively summarize the study’s findings. Choice B is incorrect. The sentence notes a fact about the olfactory system—that the perception of odor forms in the piriform cortex—but doesn’t summarize the findings of Padmanabhan and Chen’s study. Choice C is incorrect. The sentence presents the goal of Padmanabhan and Chen’s study; it doesn’t summarize the study’s findings."
+  },
+  {
+    "id": "742695d7",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Spiders are classified as arachnids.\n• There are other types of arachnids besides spiders.\n• Harvestmen are a type of arachnid.\n• Harvestmen are also known as daddy longlegs.\n• Harvestmen are not spiders.",
+    "prompt": "The student wants to explain what harvestmen are. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Spiders, also known as harvestmen, are classified as arachnids."
+      },
+      {
+        "key": "B",
+        "text": "There are other types of arachnids besides spiders, such as daddy longlegs."
+      },
+      {
+        "key": "C",
+        "text": "The spiders known as daddy longlegs are classified as harvestmen."
+      },
+      {
+        "key": "D",
+        "text": "Harvestmen, also known as daddy longlegs, are arachnids but not spiders."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Explanation / Definition",
+    "rationale": "Choice D is the best answer. The sentence explains what harvestmen are, noting that they are also known as daddy longlegs and that they are arachnids but not spiders.\n\nChoice A is incorrect. While the sentence does mention harvestmen, its main focus is on spiders. Moreover, it misrepresents information from the notes: harvestmen are not spiders. Choice B is incorrect. The sentence focuses on the broader point that arachnids include more than just spiders; it doesn’t mention harvestmen directly or explain what they are. Choice C is incorrect. The sentence focuses on how daddy longlegs are classified; it doesn’t explain what harvestmen are. Moreover, it misrepresents information from the notes. The notes indicate that harvestmen are not spiders, and “harvestmen” is presented in the notes as an alternate name for “daddy longlegs,” not a category in which daddy longlegs belong."
+  },
+  {
+    "id": "3dcc7140",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Nissologists are scientists who study islands.\n• Some nissologists define an island as any piece of land surrounded by water.\n• Using that definition, they determined that Sweden has 221,000 islands.\n• Other nissologists define an island as being 1 kilometer square, a certain distance from the mainland, and having at least 50 permanent residents.\n• Using that definition, they determined that Sweden has 24 islands.",
+    "prompt": "The student wants to make and support a generalization about nissologists’ definition of an island. Which choice most effectively uses relevant information from the notes to accomplish these goals?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The definition of an island as any piece of land surrounded by water is supported by some nissologists, scientists who study islands."
+      },
+      {
+        "key": "B",
+        "text": "Multiple counts of Sweden’s islands have been based on different definitions of an island."
+      },
+      {
+        "key": "C",
+        "text": "Based on a recent count, Sweden has a relatively small number of islands with at least 50 permanent residents."
+      },
+      {
+        "key": "D",
+        "text": "Nissologists’ different definitions can result in huge disparities in counts of islands, as the example of Sweden shows."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Generalization with Support",
+    "rationale": "Choice D is the best answer. The sentence makes a generalization about nissologists’ definition of an island—specifically, that the use of one definition rather than another can result in huge disparities in the number of islands counted—and supports that generalization by citing Sweden as an example.\n\nChoice A is incorrect. The sentence introduces one definition of an island to an audience unfamiliar with nissologists; it doesn’t make a generalization about nissologists’ definition of an island. Choice B is incorrect. While the sentence synthesizes information from the notes about counts of Sweden’s islands, it doesn’t make and support a generalization about nissologists’ definition of an island. Choice C is incorrect. The sentence makes an inference about islands in Sweden; it doesn’t mention nissologists’ definition of an island or make a generalization about it."
+  },
+  {
+    "id": "45eaf7fb",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Tecozautla is a municipality in the state of Hidalgo, Mexico.\n• Municipalities are governmental regions responsible for providing many public services to their residents.\n• One service they provide is street lighting.\n• Tecozautla covers an area of roughly 535 km².\n• Hidalgo is divided into 84 municipalities.",
+    "prompt": "The student wants to emphasize the size of Tecozautla. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The municipality of Tecozautla in Hidalgo, Mexico, covers an area of roughly 535 km²."
+      },
+      {
+        "key": "B",
+        "text": "Providing street lighting is just one example of the public services that municipalities provide."
+      },
+      {
+        "key": "C",
+        "text": "Tecozautla is one of 84 governmental regions, known as municipalities, across Hidalgo."
+      },
+      {
+        "key": "D",
+        "text": "Tecozautla—a governmental region in the state of Hidalgo, Mexico—provides many public services to its residents."
+      }
+    ],
+    "correctAnswer": "A",
+    "category": "Emphasize Detail",
+    "rationale": "Choice A is the best answer. The sentence emphasizes the size of Tecozautla, noting that it covers an area of roughly 535 km².\n\nChoice B is incorrect. The sentence gives an example of a public service that municipalities provide; it doesn’t emphasize the size of Tecozautla. Choice C is incorrect. While the sentence provides information about Tecozautla, it doesn’t emphasize Tecozautla’s size. Choice D is incorrect. While the sentence provides information about Tecozautla, it doesn’t emphasize Tecozautla’s size."
+  },
+  {
+    "id": "a1ca7ec4",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Cecilia Vicuña is a multidisciplinary artist.\n• In 1971, her first solo art exhibition, Pinturas, poemas y explicaciones, was shown at the Museo Nacional de Bellas Artes in Santiago, Chile.\n• Her poetry collection Precario/Precarious was published in 1983 by Tanam Press.\n• Her poetry collection Instan was published in 2002 by Kelsey St. Press.\n• She lives part time in Chile, where she was born, and part time in New York.",
+    "prompt": "The student wants to introduce the artist’s 1983 poetry collection. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Before she published the books Precario/Precarious (1983) and Instan (2002), Cecilia Vicuña exhibited visual art at the Museo Nacional de Bellas Artes in Santiago, Chile."
+      },
+      {
+        "key": "B",
+        "text": "Cecilia Vicuña is a true multidisciplinary artist whose works include numerous poetry collections and visual art exhibitions."
+      },
+      {
+        "key": "C",
+        "text": "Published in 1983 by Tanam Press, Precario/Precarious is a collection of poetry by the multidisciplinary artist Cecilia Vicuña."
+      },
+      {
+        "key": "D",
+        "text": "In 1971, Cecilia Vicuña exhibited her first solo art exhibition, Pinturas, poemas y explicaciones, in Chile, her country of birth."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Introduce Work",
+    "rationale": "Choice C is the best answer. The sentence effectively introduces the poetry collection Precario/Precarious, noting that it is a collection by Vicuña that was published in 1983 by Tanam Press.\n\nChoice A is incorrect. While the sentence mentions the 1983 poetry collection Precario/Precarious, it focuses mainly on Vicuña’s visual art. Choice B is incorrect. The sentence doesn’t introduce the 1983 poetry collection Precario/Precarious; instead, it introduces Vicuña. Choice D is incorrect. The sentence emphasizes the location of Vicuña’s 1971 exhibition Pinturas, poemas y explicaciones; it doesn’t introduce the 1983 poetry collection Precario/Precarious."
+  },
+  {
+    "id": "0778b4ac",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Chromosomes are cellular structures that contain genes.\n• Genes carry critical instructions for determining an organism’s physical traits.\n• Members of the same species typically have the same number of chromosomes.\n• The pineapple (Ananas comosus) and the melon (Cucumis melo) are species of fruits.\n• The pineapple has fifty chromosomes.\n• The melon has twenty-four chromosomes.",
+    "prompt": "The student wants to specify how many chromosomes the pineapple has. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The pineapple’s chromosomes contain genes, which are critical to determining an organism’s physical traits."
+      },
+      {
+        "key": "B",
+        "text": "The pineapple (Ananas comosus) has fifty chromosomes."
+      },
+      {
+        "key": "C",
+        "text": "The pineapple (Ananas comosus) and the melon (Cucumis melo) both have chromosomes, but the pineapple has more than the melon does."
+      },
+      {
+        "key": "D",
+        "text": "The melon, a species of fruit, has twenty-four structures called chromosomes."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Specify Information",
+    "rationale": "Choice B is the best answer. The sentence directly specifies how many chromosomes the pineapple has, as indicated in the notes: fifty.\n\nChoice A is incorrect. While the sentence mentions the pineapple’s chromosomes, it doesn’t specify how many it has. Choice C is incorrect. The sentence indicates that the pineapple has more chromosomes than the melon; it doesn’t specify the exact number of chromosomes the pineapple has. Choice D is incorrect. The sentence specifies how many chromosomes the melon has, not how many the pineapple has."
+  },
+  {
+    "id": "622a351d",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In 1978, Sámi activists staged protests to block the construction of a dam on the Alta River in Norway.\n• The dam would disrupt Sámi fishing and reindeer herding.\n• The dam was ultimately built, but the Alta conflict had a lasting impact.\n• It brought international attention to the issue of Sámi rights.\n• It led to a set of 2005 legal protections establishing Sámi rights to lands, waters, and resources.",
+    "prompt": "The student wants to make and support a generalization about the Alta conflict. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "During the Alta conflict, Sámi activists staged protests to block the construction of a dam on the Alta River in Norway that would disrupt local fishing and reindeer herding."
+      },
+      {
+        "key": "B",
+        "text": "Although the dam that the Sámi activists had protested was ultimately built, the Alta conflict had a lasting impact."
+      },
+      {
+        "key": "C",
+        "text": "Sámi rights to lands, waters, and resources received international attention and legal protections as a result of the Alta conflict."
+      },
+      {
+        "key": "D",
+        "text": "The Alta conflict had a lasting impact, resulting in international attention and legal protections for Sámi rights to lands, waters, and resources."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Generalization with Support",
+    "rationale": "Choice D is the best answer. It makes a generalization—the conflict had a lasting impact—and then supports it with evidence—the attention and protections were results of the conflict.\n\nChoice A is incorrect. This choice doesn’t make a generalization about the conflict. It describes a specific event from the conflict. Choice B is incorrect. This choice makes a generalization about the Alta conflict, but doesn’t support it. Choice C is incorrect. This choice makes a statement about the aftermath of the conflict, but doesn’t support it. The statement is also a little too specific to be a generalization."
+  },
+  {
+    "id": "5645f119",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In a 2023 study, environmental scientist Jazmin Locke-Rodriguez and colleagues tested the use of floating treatment wetlands (FTWs) in Florida.\n• FTWs are artificial floating platforms of plants used to remediate polluted or nutrient-imbalanced water.\n• Finding: FTWs using marigold flowers removed 52% more total phosphorus than the control.\n• Finding: The test yielded 65 market-quality blooms per square meter.\n• The authors concluded marigolds showed “promising potential as a commercially viable remediating crop cultivated on FTWs in South Florida.”",
+    "prompt": "The student wants to present the findings of the study. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The authors concluded that marigolds grown on FTWs were “commercially viable,” having produced 65 blooms per square meter of market-quality blooms in a 2023 study."
+      },
+      {
+        "key": "B",
+        "text": "In a 2023 study, Locke-Rodriguez and colleagues found that marigolds cultivated on FTWs produced 52% more market-quality flower blooms than the control."
+      },
+      {
+        "key": "C",
+        "text": "Locke-Rodriguez and colleagues found that FTWs using marigolds not only helped remove phosphorus from the water but also yielded market-quality blooms."
+      },
+      {
+        "key": "D",
+        "text": "FTWs using marigolds, Locke-Rodriguez and colleagues found, yielded 65 flower blooms and removed 52% of phosphorus from the water."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Present Findings",
+    "rationale": "Choice C is the best answer. The sentence presents both findings from the study, noting that FTWs using marigolds both removed phosphorus from the water and yielded market-quality blooms.\n\nChoice A is incorrect. While the sentence presents a finding from the study, the presentation is incomplete; the study found that marigolds cultivated on FTWs both removed phosphorus from the water and yielded market-quality blooms. Choice B is incorrect. The sentence misrepresents information in the notes. The figure of 52% refers to the amount of phosphorus removed by FTWs using marigolds when compared to the control; the marigolds’ bloom yield was 65 market-quality blooms per square meter, and it was not compared to the control. Choice D is incorrect. The sentence misrepresents information in the notes. The FTWs using marigolds removed 52% more phosphorus from the water than did the control, not 52% of the total phosphorus. Additionally, the bloom figure is incomplete; the figure is 65 market-quality flower blooms per square meter."
+  },
+  {
+    "id": "34e1124f",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In geology, an Aeolian landform is one that has been created by the wind.\n• In Greek mythology, Aeolus is the keeper of the winds.\n• Aeolian landforms are created when the wind erodes, transports, or deposits material.\n• A mushroom rock is a rock formation in which the top is wider than the base.\n• A mushroom rock can be formed when the wind erodes the base and the top at different rates.",
+    "prompt": "The student wants to provide an explanation and an example of Aeolian landforms. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Aeolian landforms are created by different wind-based processes; for example, some are created by wind erosion."
+      },
+      {
+        "key": "B",
+        "text": "Aeolian landforms—landforms created by the wind—include the mushroom rock, a rock formation in which the wind erodes the base of the rock faster than the top."
+      },
+      {
+        "key": "C",
+        "text": "Erosion, transportation, and deposition are three examples of how the wind can create Aeolian landforms and mushroom rocks."
+      },
+      {
+        "key": "D",
+        "text": "A mushroom rock is a rock formation that owes its shape to the wind, a natural force associated with Aeolus in Greek mythology."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Explanation and Example",
+    "rationale": "Choice B is the best answer. The sentence provides an explanation and an example of Aeolian landforms, explaining that they are landforms created by wind and offering the mushroom rock as an example.\n\nChoice A is incorrect. The sentence explains that Aeolian landforms are created by wind but does not provide an example of any specific Aeolian landforms. Rather, the example it provides is of a wind-based process. Choice C is incorrect. While the sentence provides a partial explanation of Aeolian landforms, noting that they are created by the wind, it does not effectively provide an example. The sentence seems to indicate that mushroom rocks, rather than being an example of Aeolian landforms, are distinct from them. Choice D is incorrect. While the sentence provides an explanation of a mushroom rock, which is a specific example of an Aeolian landform, it doesn’t provide an explanation of Aeolian landforms in general."
+  },
+  {
+    "id": "db3ad406",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Stars form in a galaxy when gravity causes a massive cloud of dust and gas to collapse.\n• A galaxy in a phase of rapid star formation is called a starburst galaxy.\n• Quenching is a process in which a galaxy loses star-forming gas.\n• A galaxy that no longer forms stars is called a quenched galaxy.\n• A quenched galaxy has entered the poststarburst phase.",
+    "prompt": "The student wants to explain what a quenched galaxy is. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Before quenching, a starburst galaxy will form stars at a rapid rate."
+      },
+      {
+        "key": "B",
+        "text": "When it becomes quenched, a starburst galaxy enters the poststarburst phase."
+      },
+      {
+        "key": "C",
+        "text": "Having entered the poststarburst phase, a quenched galaxy is one that no longer forms stars."
+      },
+      {
+        "key": "D",
+        "text": "A starburst galaxy will lose star-forming gas and eventually become quenched."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Explanation / Definition",
+    "rationale": "Choice C is the best answer. This choice defines a quenched galaxy as “one that no longer forms stars.”\n\nChoice A is incorrect. This choice only describes what happens before quenching. Choice B is incorrect. This choice only describes what happens after quenching. Choice D is incorrect. This choice only describes what causes quenching."
+  },
+  {
+    "id": "1469d23a",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Etel Adnan was a Lebanese American poet and artist known for making many leporellos.\n• A leporello is an artist’s book that is folded accordion style.\n• When the book is expanded, the artist’s work is revealed, and its zigzag shape allows it to stand on its own.\n• Her leporello December from My Window (1993) features a panoramic landscape.\n• It is painted using ink and watercolor.",
+    "prompt": "The student wants to describe Adnan’s December from My Window to an audience already familiar with leporellos. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Featuring a panoramic landscape, the 1993 work is one of Adnan’s many leporellos, which are accordion-style folded books that when expanded reveal the artist’s work."
+      },
+      {
+        "key": "B",
+        "text": "When expanded, Adnan’s 1993 leporello December from My Window reveals a panoramic landscape painted in ink and watercolor."
+      },
+      {
+        "key": "C",
+        "text": "Known for making many other accordion-style folded books called leporellos, Adnan created December from My Window in 1993."
+      },
+      {
+        "key": "D",
+        "text": "A leporello, such as Adnan’s December from My Window, is folded accordion style, and due to its zigzag shape it is able to stand on its own when fully expanded."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Audience Adaptation",
+    "rationale": "Choice B is the best answer. This choice describes Adnan’s December from My Window in a way that assumes the audience is already familiar with leporellos and focuses on the specific features of the work—its content and medium.\n\nChoice A is incorrect. This choice isn’t suited for an audience already familiar with leporellos. A familiar audience wouldn’t need to have the term defined or explained. Choice C is incorrect. This choice doesn’t describe Adnan’s December from My Window. It mentions the year and the type of work but not the content or the medium. In addition, it provides a simple definition of leporellos, making this an inappropriate choice for an audience already familiar with leporellos. Choice D is incorrect. This choice isn’t suited for an audience already familiar with leporellos. A familiar audience wouldn’t need to have the term defined."
+  },
+  {
+    "id": "1c60119d",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Jacob Lawrence was a US painter best known for The Migration Series (1940–41).\n• The Migration Series portrays scenes from the Great Migration of African Americans from the rural South to cities in the North and Midwest.\n• The series consists of 60 colorful semiabstract paintings, numbered 1 through 60.\n• The odd-numbered paintings are on display at the Phillips Collection in Washington, DC.\n• The even-numbered paintings are on display at the Museum of Modern Art in New York City.\n• Painting #12 depicts people buying tickets in a crowded train station.",
+    "prompt": "The student wants to indicate where to go to view Painting #12 from Lawrence’s Migration Series. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Depicting a crowded train station, Painting #12 from The Migration Series is on display at the Museum of Modern Art in New York City."
+      },
+      {
+        "key": "B",
+        "text": "In Painting #12 and the other works of The Migration Series, Lawrence painted African Americans going from the rural South to cities in the North and Midwest."
+      },
+      {
+        "key": "C",
+        "text": "To view an even-numbered painting from Lawrence’s Migration Series, such as the one that depicts people buying train tickets, one must go to Washington, DC."
+      },
+      {
+        "key": "D",
+        "text": "The 60 colorful semiabstract paintings of Lawrence’s series can be viewed in two places: the Phillips Collection in Washington, DC, and the Museum of Modern Art in New York City."
+      }
+    ],
+    "correctAnswer": "A",
+    "category": "Specific Location Goal",
+    "rationale": "Choice A is the best answer. The sentence indicates where to go to view Painting #12 from Lawrence’s Migration Series, noting that this even-numbered painting is on display at the Museum of Modern Art in New York City.\n\nChoice B is incorrect. The sentence describes the subject matter of The Migration Series; it doesn’t indicate where to go to view Painting #12. Choice C is incorrect. The sentence misrepresents information from the notes: even-numbered paintings, such as Painting #12, are on display at the Museum of Modern Art in New York City, not in Washington, DC. Choice D is incorrect. While the sentence mentions both locations where paintings from the series are displayed, it doesn’t indicate where to go to view Painting #12 specifically."
+  },
+  {
+    "id": "19b08ead",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Producing the nutrient-rich cyanobacterium L. maxima at industrial scale requires high-quality samples of L. maxima DNA.\n• Yirlis Yadeth Pineda-Rodriguez and a team of researchers at the University of Córdoba, Colombia, evaluated the quantity and purity of L. maxima DNA extracted using three different DNA extraction kits.\n• CTAB 2X (kit 1) had a DNA yield of 2,134 nanograms per microliter (ng/µL) and a purity ratio of 2.2.\n• Pbact (kit 2) had a DNA yield of 157 ng/µL and a purity ratio of 1.6.\n• Pplant (kit 3) had a DNA yield of 12.5 ng/µL and a purity ratio of 1.5.\n• According to the researchers, Pbact was the most effective because it was the only one with both a sufficiently high yield and a purity rate close to the ideal of 1.8.",
+    "prompt": "The student wants to emphasize the significance of a similarity between two of the kits. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Due to their insufficient yield or purity, CTAB 2X and Pplant were deemed by the researchers to be less effective than Pbact."
+      },
+      {
+        "key": "B",
+        "text": "Compared to CTAB 2X, which had a DNA yield of 2,134 ng/µL, both Pbact and Pplant had insufficient yields; Pplant, in particular, was ineffective due to its low yield."
+      },
+      {
+        "key": "C",
+        "text": "CTAB 2X and Pplant both had a DNA yield above 10 and a purity ratio above 1.4."
+      },
+      {
+        "key": "D",
+        "text": "With the ideal purity ratio being 1.8, CTAB 2X and Pbact were equal in purity, according to the researchers."
+      }
+    ],
+    "correctAnswer": "A",
+    "category": "Significance of Similarity",
+    "rationale": "Choice A is the best answer. The sentence emphasizes the significance of a similarity between CTAB 2X and Pplant, noting that both were deemed less effective than Pbact due to their insufficient yield or purity. According to the notes, the researchers concluded that Pbact was the most effective kit because it was the only one with both a sufficiently high yield and a purity ratio close to 1.8. Since Pbact was the only kit to meet both criteria, it follows that CTAB 2X and Pplant each fell short on at least one critical measure.\n\nChoice B is incorrect. The sentence presents a similarity between two of the kits (Pbact and Pplant), but in doing so, it misrepresents information from the notes. The researchers deemed Pbact the most effective kit overall, not one with an insufficient yield. Choice C is incorrect. While the sentence identifies a similarity between CTAB 2X and Pplant (that both had a DNA yield above 10 and a purity ratio above 1.4), it doesn’t emphasize the significance of that similarity. Choice D is incorrect. The sentence presents a similarity between the CTAB 2X and Pbact kits, but in doing so, it misrepresents information from the notes. CTAB 2X had a purity ratio of 2.2, while Pbact had a purity ratio of 1.6, so they were not equal in purity."
+  },
+  {
+    "id": "ba263620",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In 1897, African American inventor Andrew Beard invented an automatic coupler.\n• It improved on the existing design of train car couplers.\n• It made the job of connecting train cars safer.\n• In 1938, African American inventor Frederick Jones invented a mobile refrigeration system.\n• It improved on the existing design of food transport trucks.\n• It enabled trucks to carry perishable foods farther.",
+    "prompt": "The student wants to emphasize a similarity between Beard’s invention and Jones’s invention. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Beard’s automatic coupler and Jones’s mobile refrigeration system both improved on existing designs."
+      },
+      {
+        "key": "B",
+        "text": "In 1897, Beard invented an automatic coupler, which made the job of connecting train cars safer."
+      },
+      {
+        "key": "C",
+        "text": "Beard’s invention made the job of connecting train cars safer, whereas Jones’s invention enabled food transport trucks to carry perishables farther."
+      },
+      {
+        "key": "D",
+        "text": "Jones’s mobile refrigeration system, which he invented in 1938, made it possible for food transport trucks to carry perishable foods farther."
+      }
+    ],
+    "correctAnswer": "A",
+    "category": "Emphasize Similarity",
+    "rationale": "Choice A is the best answer. It compares Beard’s and Jones’s inventions to one another, and emphasizes what they have in common.\n\nChoice B is incorrect. This choice doesn’t emphasize a similarity. It only mentions Beard’s invention. It doesn’t compare it to Jones’s invention. Choice C is incorrect. This choice doesn’t emphasize a similarity between the two inventions. Instead, it emphasizes a difference. Choice D is incorrect. This choice doesn’t emphasize a similarity. It only mentions Jones’s invention. It doesn’t compare it to Beard’s invention."
+  },
+  {
+    "id": "c34d6bff",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• African American women played prominent roles in the Civil Rights Movement, including at the famous 1963 March on Washington.\n• Civil rights activist Anna Hedgeman, one of the march’s organizers, was a political adviser who had worked for President Truman.\n• Civil rights activist Daisy Bates was a well-known journalist and advocate for school desegregation.\n• Hedgeman worked behind the scenes to make sure a woman was included in the lineup of speakers at the march.\n• Bates was the sole woman to speak, delivering a brief but memorable address to the cheering crowd.",
+    "prompt": "The student wants to compare the two women’s contributions to the March on Washington. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Hedgeman and Bates contributed to the march in different ways; Bates, for example, delivered a brief but memorable address."
+      },
+      {
+        "key": "B",
+        "text": "Hedgeman worked in politics and helped organize the march, while Bates was a journalist and school desegregation advocate."
+      },
+      {
+        "key": "C",
+        "text": "Although Hedgeman worked behind the scenes to make sure a woman speaker was included, Bates was the sole woman to speak at the march."
+      },
+      {
+        "key": "D",
+        "text": "Many African American women, including Bates and Hedgeman, fought for civil rights, but only one spoke at the march."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Compare Contributions",
+    "rationale": "Choice C is the best answer. The sentence compares the two women’s contributions to the march: Hedgeman worked behind the scenes to make sure a woman speaker was included, whereas Bates actually spoke at the event.\n\nChoice A is incorrect. While it acknowledges that the two women both contributed to the march, it doesn’t indicate what Hedgeman did, so no comparison is made. Choice B is incorrect. While the sentence provides information about the two women, it doesn’t mention anything about Bates’s contribution to the march. Choice D is incorrect. While the sentence indicates that the two women both fought for civil rights, it doesn’t compare their individual contributions to the march."
+  },
+  {
+    "id": "ed80971c",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• The Pueblo of Zuni is located about 150 miles west of Albuquerque, New Mexico.\n• It is the traditional home of the A:shiwi (Zuni) people.\n• The A:shiwi A:wan Museum and Heritage Center was established by tribal members in 1992.\n• Its mission is stated on its website: “As a tribal museum and heritage center for the Zuni people and by the Zuni people we work to provide learning experiences that emphasize A:shiwi ways of knowing, as well as exploring modern concepts of knowledge and the transfer of knowledge.”",
+    "prompt": "The student wants to emphasize how long the museum has existed. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The Pueblo of Zuni is home to the A:shiwi A:wan Museum and Heritage Center, which was founded by tribal members."
+      },
+      {
+        "key": "B",
+        "text": "The A:shiwi A:wan Museum and Heritage Center has served the Pueblo of Zuni since 1992."
+      },
+      {
+        "key": "C",
+        "text": "According to its website, the A:shiwi A:wan Museum and Heritage Center (founded in the 1990s) works to “emphasize A:shiwi ways of knowing.”"
+      },
+      {
+        "key": "D",
+        "text": "Knowledge has been one of the central themes of the A:shiwi A:wan Museum and Heritage Center from its founding."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Emphasize Duration",
+    "rationale": "Choice B is the best answer. This choice effectively uses information from the notes to emphasize how long the museum has existed. It says that the museum has existed since 1992.\n\nChoice A is incorrect. This choice doesn’t emphasize how long the museum has existed. It doesn’t say when the museum was founded. Choice C is incorrect. This choice doesn’t emphasize how long the museum has existed. It doesn’t say the exact date of the museum’s founding. Rather, it emphasizes the museum’s mission. Choice D is incorrect. This choice doesn’t emphasize how long the museum has existed. It doesn’t say when the museum was founded."
+  },
+  {
+    "id": "eaded344",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• The painter Frida Kahlo is one of the most influential artists of the twentieth century.\n• She was born in Coyoacán, Mexico, in 1907.\n• She is best known for her vivid and richly symbolic self-portraits.\n• The Two Fridas (1939) features two versions of Kahlo sitting together.\n• One version wears a European-style dress and the other a traditional Tehuana dress.",
+    "prompt": "The student wants to introduce Kahlo to an audience unfamiliar with the artist. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Known for being vivid and richly symbolic, Frida Kahlo’s self-portraits include The Two Fridas (1939)."
+      },
+      {
+        "key": "B",
+        "text": "The 1939 painting The Two Fridas is one example of a self-portrait by Frida Kahlo."
+      },
+      {
+        "key": "C",
+        "text": "One painting by Frida Kahlo features two versions of herself, with one version wearing a European-style dress and the other a traditional Tehuana dress."
+      },
+      {
+        "key": "D",
+        "text": "One of the most influential artists of the twentieth century, Mexican painter Frida Kahlo is best known for her self-portraits, which are vivid and richly symbolic."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Audience Adaptation",
+    "rationale": "Choice D is the best answer. By identifying Kahlo as an influential artist from Mexico, and by describing the work she’s best known for, this choice provides the background information necessary to introduce Kahlo to an unfamiliar audience.\n\nChoice A is incorrect. This choice doesn’t effectively introduce Kahlo. It doesn’t include any background information about who Kahlo is or where she’s from. It simply identifies one of her paintings. Choice B is incorrect. This choice doesn’t effectively introduce Kahlo. It doesn’t include any background information about who Kahlo is or where she’s from. It simply identifies one of her paintings. Choice C is incorrect. This choice doesn’t effectively introduce Kahlo. It doesn’t include any background information about who Kahlo is or where she’s from. Instead, it describes one of her paintings in detail."
+  },
+  {
+    "id": "b0620764",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Phobetor, a name drawn from Greek mythology, is an exoplanet that orbits the star PSR B1257+12, also known as Lich.\n• Phobetor’s mass is 0.01 times that of Jupiter, or 0.01 Jupiter masses.\n• Mastika, which means “gem” or “jewel” in Malay, is an exoplanet that orbits the star HD 179949, also known as Gumala.\n• Mastika’s mass is 0.92 Jupiter masses.",
+    "prompt": "The student wants to make and support a generalization about exoplanets. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Exoplanets that are named Phobetor orbit Lich, and those that are named Mastika orbit Gumala."
+      },
+      {
+        "key": "B",
+        "text": "Even though Phobetor and Mastika are both exoplanets, their masses are different: Phobetor’s mass is 0.01 Jupiter masses, and Mastika’s is 0.92 Jupiter masses."
+      },
+      {
+        "key": "C",
+        "text": "Many stars have both a designation and a proper name; for instance, PSR B1257+12 is also known as Lich, and HD 179949 is also known as Gumala."
+      },
+      {
+        "key": "D",
+        "text": "Exoplanet names have diverse origins, a fact that can be seen in the cases of Phobetor, a name drawn from Greek mythology, and Mastika, which means “gem” or “jewel” in Malay."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Generalization with Support",
+    "rationale": "Choice D is the best answer. The sentence makes and supports a generalization about exoplanets, noting that the names of exoplanets have diverse origins and supporting this with the examples of the origins of \"Phobetor\" and \"Mastika.\"\n\nChoice A is incorrect. The sentence misrepresents information from the notes, implying that there are multiple exoplanets with the same names. Additionally, the sentence provides no support for its generalization. Choice B is incorrect. The sentence contrasts the masses of two specific exoplanets; it doesn’t make and support a generalization about exoplanets. Choice C is incorrect. The sentence makes and supports a generalization about stars, not exoplanets."
+  },
+  {
+    "id": "e3484c07",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Bioluminescence is the emission of light by living organisms.\n• This light is produced by chemical reactions in organisms’ cells.\n• Jellyfish emit flashes of blue light.\n• This behavior serves to startle predators.\n• Black dragonfish emit a steady red light.\n• This behavior helps them locate prey in deep waters.",
+    "prompt": "The student wants to emphasize a difference between the behavior of jellyfish and that of black dragonfish. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Both jellyfish and black dragonfish are organisms that emit light, which is produced by chemical reactions in these organisms’ cells."
+      },
+      {
+        "key": "B",
+        "text": "Black dragonfish emit a steady red light, which helps them locate prey in deep waters."
+      },
+      {
+        "key": "C",
+        "text": "Bioluminescence, the emission of light by living organisms, results from chemical reactions in organisms’ cells."
+      },
+      {
+        "key": "D",
+        "text": "Jellyfish emit light to startle predators, whereas black dragonfish do so to locate prey."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Emphasize Difference",
+    "rationale": "Choice D is the best answer. The sentence emphasizes a difference between the behavior of jellyfish and that of black dragonfish, noting that jellyfish and black dragonfish emit light as part of different behaviors (protection and predation, respectively).\n\nChoice A is incorrect. The sentence emphasizes a similarity between jellyfish and black dragonfish; it doesn’t emphasize a difference between the behavior of the two animals. Choice B is incorrect. The sentence emphasizes the type of bioluminescence exhibited by black dragonfish, noting that it’s used in predation; it doesn’t emphasize a difference between the behavior of the two animals. Choice C is incorrect. The sentence defines bioluminescence and explains how it works; the sentence doesn’t mention either animal or emphasize a difference between them."
+  },
+  {
+    "id": "5a5e22b5",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Gravitational waves are powerful ripples that originate in deep space and eventually pass through Earth.\n• The Laser Interferometer Gravitational Wave Observatory (LIGO) is a physics study that began in 2002.\n• LIGO’s goal is to detect and analyze gravitational waves.\n• LIGO uses a pair of massive gravitational wave detectors called interferometers that are thousands of miles apart.\n• In 2015, for the first time in history, LIGO researchers detected a gravitational wave passing through Earth.",
+    "prompt": "The student wants to present LIGO’s aim and methodology. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "In 2015, LIGO’s massive interferometers detected a powerful ripple that originated in deep space and eventually passed through Earth."
+      },
+      {
+        "key": "B",
+        "text": "Though the physics study LIGO began in 2002, its massive interferometers didn’t detect a gravitational wave until 2015."
+      },
+      {
+        "key": "C",
+        "text": "To achieve its aims, LIGO uses a pair of massive interferometers that are thousands of miles apart."
+      },
+      {
+        "key": "D",
+        "text": "A physics study designed to detect and analyze gravitational waves, LIGO uses a pair of massive interferometers that are thousands of miles apart."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Aim and Methodology",
+    "rationale": "Choice D is the best answer. The sentence effectively presents the LIGO study’s aim, noting that it is designed to detect and analyze gravitational waves, and its methodology (it uses two interferometers to detect the waves).\n\nChoice A is incorrect. The sentence describes a finding from the LIGO study; it doesn’t effectively present the study’s aim or its methodology. Choice B is incorrect. The sentence provides background information about the LIGO study’s timeline; it doesn’t effectively present the study’s aim or its methodology. Choice C is incorrect. The sentence touches on LIGO’s methodology, noting that it uses two interferometers, but doesn’t indicate what the study’s aims are."
+  },
+  {
+    "id": "d7f31e68",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Annie Wu is a prominent American flutist who graduated from the New England Conservatory.\n• She has won multiple national flute competitions.\n• She is best known for a 2011 YouTube video that has been viewed over two million times.\n• The video shows her performing Three Beats for Beatbox Flute, an original work by composer Greg Pattillo.\n• Wu combines flute playing and beatboxing in the video.",
+    "prompt": "The student wants to emphasize Wu’s most well-known achievement. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Annie Wu, who has won multiple national flute competitions, has also combined flute playing and beatboxing."
+      },
+      {
+        "key": "B",
+        "text": "Among her many achievements, prominent American flutist Annie Wu graduated from the New England Conservatory and has won multiple national flute competitions."
+      },
+      {
+        "key": "C",
+        "text": "Annie Wu is best known for a 2011 YouTube video performance of Three Beats for Beatbox Flute that has been viewed over two million times."
+      },
+      {
+        "key": "D",
+        "text": "Composer Greg Pattillo’s original work Three Beats for Beatbox Flute combines flute playing and beatboxing."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Emphasize Achievement",
+    "rationale": "Choice C is the best answer. This describes the achievement for which Wu is best known.\n\nChoice A is incorrect. This choice doesn’t emphasize Wu’s most well-known achievement. It mentions some of her general achievements, but not the one for which she is “best known.” Choice B is incorrect. This choice doesn’t emphasize Wu’s most well-known achievement—it describes several of her achievements equally. Choice D is incorrect. This choice doesn’t emphasize Wu’s most well-known achievement. It describes a piece of music featured in her most well-known achievement."
+  },
+  {
+    "id": "6351062d",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In the late 1890s, over 14,000 unique varieties of apples were grown in the US.\n• The rise of industrial agriculture in the mid-1900s narrowed the range of commercially grown crops.\n• Thousands of apple varieties considered less suitable for commercial growth were lost.\n• Today, only 15 apple varieties dominate the market, making up 90% of apples purchased in the US.\n• The Lost Apple Project, based in Washington State, attempts to find and grow lost apple varieties.",
+    "prompt": "The student wants to emphasize the decline in unique apple varieties in the US and specify why this decline occurred. Which choice most effectively uses relevant information from the notes to accomplish these goals?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The Lost Apple Project is dedicated to finding some of the apple varieties lost following a shift in agricultural practices in the mid-1900s."
+      },
+      {
+        "key": "B",
+        "text": "While over 14,000 apple varieties were grown in the US in the late 1890s, only 15 unique varieties make up most of the apples sold today."
+      },
+      {
+        "key": "C",
+        "text": "Since the rise of industrial agriculture, US farmers have mainly grown the same few unique apple varieties, resulting in the loss of thousands of varieties less suitable for commercial growth."
+      },
+      {
+        "key": "D",
+        "text": "As industrial agriculture rose to prominence in the mid-1900s, the number of crops selected for cultivation decreased dramatically."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Decline and Cause",
+    "rationale": "Choice C is the best answer. The sentence emphasizes the decline in unique apple varieties in the US and specifies why this decline occurred, noting that thousands of apple varieties were lost because US farmers started mainly growing the same few unique varieties.\n\nChoice A is incorrect. The sentence introduces the Lost Apple Project; it doesn’t emphasize the decline in unique apple varieties in the US and specify why this decline occurred. Choice B is incorrect. While the sentence emphasizes the decline in unique apple varieties in the US, it doesn’t explain why this decline occurred. Choice D is incorrect. The sentence emphasizes the general decline of crop varieties in the mid-1900s; it doesn’t emphasize the specific decline in unique apple varieties in the US."
+  },
+  {
+    "id": "7f5715e4",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• The farm-size transition hypothesis predicts that economic pressures associated with modernization result in smaller farms amalgamating into larger-scale commercial farms.\n• Masters et al. (2013): The average farm size in Asia “already has or will soon begin to rise.”\n• Promkhambut et al. (2023) argue that small rice farms in Thailand have adopted modern farming methods without a significant scaling-up of farm size.\n• Promkhambut et al.: “The persistence of [small] rice farms [in Thailand] does not represent a ‘failure’ to modernize...or a ‘truncated’ transition—it is a response to modernization.”",
+    "prompt": "The student wants to make and support a claim regarding the applicability of the farm-size transition hypothesis to Thailand. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Taken together, the studies by Masters et al. and Promkhambut et al. suggest that rice farms in Thailand have responded to the economic pressures associated with modernization by expanding in size."
+      },
+      {
+        "key": "B",
+        "text": "Masters et al. report that the average farm size “already has or will soon begin to rise” in Asia, a finding that is consistent with the farm-size transition hypothesis."
+      },
+      {
+        "key": "C",
+        "text": "The predicted shift to large-scale commercial farming may not hold true for rice farms in Thailand, where, according to Promkhambut et al., rice farms have remained small as they’ve modernized."
+      },
+      {
+        "key": "D",
+        "text": "Although the farm-size transition hypothesis may be applicable to some countries in Asia, it is inconsistent with the development of rice farming in Thailand."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Claim with Support",
+    "rationale": "Choice C is the best answer. The sentence makes a claim about the applicability of the farm-size transition hypothesis—the prediction that smaller farms will amalgamate into larger-scale commercial farms as a response to the economic pressures of modernization—to Thailand, noting that the hypothesis may not hold true for Thailand. It supports the claim with the argument from Promkhambut et al. that Thailand’s rice farms have remained small despite modernizing.\n\nChoice A is incorrect. While the sentence makes a claim about the applicability of the farm-size transition hypothesis to Thailand, it mischaracterizes information from the notes: Promkhambut et al. argue that, despite modernizing in response to economic pressures, rice farms in Thailand have not expanded in size. Choice B is incorrect. The sentence connects a claim from Masters et al. to the farm-size transition hypothesis; it doesn’t make and support a claim about the applicability of the hypothesis to Thailand, specifically. Choice D is incorrect. While the sentence makes a claim about the applicability of the farm-size transition hypothesis to Thailand, it doesn’t support the claim."
+  },
+  {
+    "id": "00bb356a",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Miguel Luciano is a multimedia visual artist.\n• One of his sculptures is Double Phantom/EntroP.R. (2017).\n• The work consists of two red Schwinn Phantom bicycles that he fused together.\n• The bicycles face opposite directions.\n• The bicycles share the same rear wheel.",
+    "prompt": "The student wants to describe how the bicycles in Double Phantom/EntroP.R. are fused together. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "To create the sculpture Double Phantom/EntroP.R., Miguel Luciano fused together two Schwinn Phantom bicycles."
+      },
+      {
+        "key": "B",
+        "text": "There are two red Schwinn Phantom bicycles in the sculpture Double Phantom/EntroP.R."
+      },
+      {
+        "key": "C",
+        "text": "The two red bicycles in Double Phantom/EntroP.R. are fused together so that they share the same rear wheel while facing opposite directions."
+      },
+      {
+        "key": "D",
+        "text": "Double Phantom/EntroP.R. is a sculpture created by multimedia visual artist Miguel Luciano."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Describe Process / Feature",
+    "rationale": "Choice C is the best answer. The sentence correctly describes how the bicycles in the sculpture are fused together: they share the same rear wheel while facing opposite directions.\n\nChoice A is incorrect. The sentence states that the bicycles are fused together but doesn’t describe how they are fused. Choice B is incorrect. The sentence states that there are two bicycles in the sculpture without indicating that they are fused together or describing how they are fused. Choice D is incorrect. It identifies the artist who created the sculpture but doesn’t describe how the bicycles are fused together."
+  },
+  {
+    "id": "0f64ded3",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Albert Einstein’s theory of general relativity allows for potential shortcuts through spacetime.\n• These hypothetical spacetime tunnels are known as wormholes.\n• For matter to travel through a wormhole, it would need to have negative energy density.\n• Negative energy density means that the matter would have less energy than empty space.\n• Such matter has not been shown to exist.",
+    "prompt": "The student wants to acknowledge a complication affecting travel through wormholes. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Einstein’s theory of general relativity allows for potential spacetime shortcuts called wormholes but does not explain how matter with negative energy density could travel through them."
+      },
+      {
+        "key": "B",
+        "text": "For matter to travel through a wormhole, the matter would need to have less energy than empty space; such matter has not been shown to exist."
+      },
+      {
+        "key": "C",
+        "text": "The hypothetical tunnels known as wormholes would be potential shortcuts through spacetime were it not for one complication: they have less energy than empty space."
+      },
+      {
+        "key": "D",
+        "text": "For wormholes to be possible, according to Einstein’s theory of general relativity, they would have to allow for potential shortcuts through spacetime."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Acknowledge Complication",
+    "rationale": "Choice B is the best answer. The sentence acknowledges a complication affecting travel through wormholes, noting that the matter traveling through a wormhole would need to have less energy than empty space and that such matter has not been shown to exist.\n\nChoice A is incorrect. The sentence notes that Einstein’s theory doesn’t explain how matter with negative energy density can travel through wormholes; it doesn’t acknowledge a complication affecting travel through wormholes. Choice C is incorrect. While the sentence acknowledges a complication affecting travel through wormholes, it misrepresents information from the notes; matter traveling through wormholes, not the wormholes themselves, would need to have negative energy density. Choice D is incorrect. The sentence presents a misleading interpretation of Einstein’s theory (confusing the definition of a wormhole with a condition a wormhole must fulfill); it doesn’t acknowledge a complication affecting travel through wormholes."
+  },
+  {
+    "id": "d4b07ce6",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Shanawdithit (1801–1829) was a Beothuk cartographer (mapmaker).\n• Her maps of Newfoundland’s Beothuk Lake outline both the lake and various points around the lake where encounters between the Indigenous Beothuk people and British colonists occurred.\n• Her maps are notable for depicting the experiences the Beothuk had within the landscape.\n• Contemporary Potawatomi cartographer Margaret Pearce: Indigenous cartography emphasizes “experienced space, or place, as opposed to the Western convention of depicting space as universal, homogenized, and devoid of human experience.”\n• Pearce: “Indigenous cartographies are as diverse as Indigenous cultures, from Hawaiian performative cartographies to Navajo verbal maps and sand paintings.”",
+    "prompt": "The student wants to describe Shanawdithit’s approach and explain its significance. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Shanawdithit’s maps are part of a broader tradition of Indigenous cartography that, according to Pearce, ranges from “Hawaiian performative cartographies to Navajo verbal maps and sand paintings.”"
+      },
+      {
+        "key": "B",
+        "text": "Shanawdithit mapped Beothuk Lake through significant encounters that occurred there, an approach described as “depicting space as universal [and] homogenized.”"
+      },
+      {
+        "key": "C",
+        "text": "According to Pearce, Indigenous cartography, such as Shanawdithit’s maps of Beothuk Lake, emphasizes “experienced space, or place,” with a variety of approaches that reflect the diversity of Indigenous cultures."
+      },
+      {
+        "key": "D",
+        "text": "By depicting experiences of the Beothuk that occurred around Beothuk Lake, Shanawdithit’s maps reflect Indigenous cartography’s emphasis on “experienced space, or place” rather than the landscape alone."
+      }
+    ],
+    "correctAnswer": "D",
+    "category": "Approach and Significance",
+    "rationale": "Choice D is the best answer. The sentence accomplishes both parts of the goal. It describes Shanawdithit’s approach by noting that she depicted experiences of the Beothuk that occurred around Beothuk Lake, and it explains the significance of that approach by connecting it to Indigenous cartography’s emphasis on “experienced space, or place.”\n\nChoice A is incorrect. While the sentence places Shanawdithit’s maps within the broader tradition of Indigenous cartography, it doesn’t describe her specific approach to mapmaking or explain its significance. Choice B is incorrect. While the sentence does describe Shanawdithit’s approach to mapmaking, it misrepresents information in the notes when explaining the significance of that approach. “Depicting space as universal [and] homogenized” is described as a Western convention, not a convention of Indigenous cartography. Choice C is incorrect. While the sentence mentions Shanawdithit’s maps as an example of Indigenous cartography, it focuses primarily on the broader tradition rather than describing Shanawdithit’s specific approach and explaining its significance."
+  },
+  {
+    "id": "7f2781fd",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Easy",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Certhidea olivacea is a perching bird that can be found on the Galápagos Island of Pinzón.\n• Creagrus furcatus is a seabird that can be found on the Galápagos Island of Darwin.\n• Conservation organizations evaluate the risk that species will become extinct in the near future.\n• C. olivacea faces a high risk of extinction.\n• C. furcatus faces little risk of becoming extinct in the near future.",
+    "prompt": "The student wants to compare the extinction risk faced by C. olivacea with that faced by C. furcatus. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "According to conservation organizations, C. olivacea has a higher risk of becoming extinct in the near future than C. furcatus."
+      },
+      {
+        "key": "B",
+        "text": "C. furcatus faces a high risk of extinction, while C. olivacea faces little risk of becoming extinct in the near future."
+      },
+      {
+        "key": "C",
+        "text": "Conservation organizations have evaluated both C. furcatus’s and C. olivacea’s risk of becoming extinct in the near future."
+      },
+      {
+        "key": "D",
+        "text": "C. olivacea is a perching bird that faces a high risk of extinction."
+      }
+    ],
+    "correctAnswer": "A",
+    "category": "Compare Risk",
+    "rationale": "Choice A is the best answer. The sentence compares the extinction risks of the two species, noting that C. olivacea has a higher risk of becoming extinct in the near future than C. furcatus.\n\nChoice B is incorrect. While the sentence does compare the extinction risks of the two species, it misrepresents information from the notes; C. olivacea faces a higher risk of becoming extinct in the near future than C. furcatus, not the other way around. Choice C is incorrect. While the sentence mentions that conservation organizations have evaluated both species for extinction risk, it doesn’t compare the extinction risks of the two species. Choice D is incorrect. While the sentence states that C. olivacea faces a high risk of extinction, it doesn’t mention C. furcatus or compare the extinction risks of the two species."
+  },
+  {
+    "id": "61c0f7b3",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• In 2017, a research team led by Mary Caswell Stoddard determined the average lengths of eggs produced by various bird species.\n• Gygis alba is a species of bird in the order Charadriiformes.\n• Gygis alba eggs had an average length of 4.46 cm.\n• Gavia stellata is a species of bird in the order Gaviiformes.\n• Gavia stellata eggs had an average length of 7.22 cm.",
+    "prompt": "Which choice most effectively uses information from the given sentences to emphasize a difference between the eggs of the two species?",
+    "options": [
+      {
+        "key": "A",
+        "text": "A 2017 study compared the lengths of eggs produced by an array of different bird species, such as Gygis alba and Gavia stellata."
+      },
+      {
+        "key": "B",
+        "text": "A 2017 study found that Gygis alba eggs had an average length of 4.46 cm, whereas Gavia stellata eggs were longer, with an average length of 7.22 cm."
+      },
+      {
+        "key": "C",
+        "text": "The bird species Gygis alba, which belongs to the order Charadriiformes, and Gavia stellata, of the order Gaviiformes, were included in a 2017 study that compared the average lengths of their eggs."
+      },
+      {
+        "key": "D",
+        "text": "Mary Caswell Stoddard led a research study that determined the average lengths of eggs, including those of Gygis alba birds (4.46 cm) and Gavia stellata birds (7.22 cm)."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Emphasize Difference",
+    "rationale": "Choice B is the best answer. The sentence emphasizes a difference between the eggs of the two species, directly contrasting the shorter average length of Gygis alba eggs (4.46 cm) with the longer average length of Gavia stellata eggs (7.22 cm).\n\nChoice A is incorrect. While the sentence mentions both bird species, it doesn’t emphasize a difference between their eggs. Choice C is incorrect. While the sentence provides information about the two bird species, it doesn’t emphasize a difference between their eggs. Choice D is incorrect. While the sentence provides the average lengths of both species’ eggs, it doesn’t explicitly emphasize the difference between them."
+  },
+  {
+    "id": "92dec236",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Maika’i Tubbs is a Native Hawaiian sculptor and installation artist.\n• His work has been shown in the United States, Canada, Japan, and Germany, among other places.\n• Many of his sculptures feature discarded objects.\n• His work Erasure (2008) includes discarded audiocassette tapes and magnets.\n• His work Home Grown (2009) includes discarded pushpins, plastic plates and forks, and wood.",
+    "prompt": "The student wants to emphasize a similarity between the two works. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "Erasure (2008) uses discarded objects such as audiocassette tapes and magnets; Home Grown (2009), however, includes pushpins, plastic plates and forks, and wood."
+      },
+      {
+        "key": "B",
+        "text": "Tubbs’s work, which often features discarded objects, has been shown both within the United States and abroad."
+      },
+      {
+        "key": "C",
+        "text": "Like many of Tubbs’s sculptures, both Erasure and Home Grown include discarded objects: Erasure uses audiocassette tapes, and Home Grown uses plastic forks."
+      },
+      {
+        "key": "D",
+        "text": "Tubbs completed Erasure in 2008 and Home Grown in 2009."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Emphasize Similarity",
+    "rationale": "Choice C is the best answer. This choice most effectively emphasizes \"a similarity\" by identifying a trait the works share: \"both Erasure and Home Grown include discarded objects.\"\n\nChoice A is incorrect. This choice doesn’t \"emphasize a similarity.\" Instead, this choice shows how the materials used in the two works are different. Notice the use of the contrast word \"however.\" Choice B is incorrect. This choice doesn’t \"emphasize a similarity between the two works.\" While it says that Tubbs’s work \"often features discarded objects,\" it doesn’t provide details about the two works in question. Choice D is incorrect. This choice doesn’t \"emphasize a similarity.\" Instead, this choice shows how the works were produced at different times."
+  },
+  {
+    "id": "bfad4508",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Medium",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• Brass is a metal alloy composed primarily of zinc and copper.\n• Alpha brass contains less than 35% zinc.\n• It is more malleable than beta brass and can be manipulated at room temperature.\n• Beta brass contains more than 45% zinc.\n• It is harder and stronger than alpha brass but is more difficult to work with because it requires heat to manipulate.",
+    "prompt": "The student wants to specify an advantage of alpha brass. Which choice most effectively uses information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "As a metal alloy composed primarily of zinc and copper, alpha brass has a notable advantage over beta brass."
+      },
+      {
+        "key": "B",
+        "text": "Unlike beta brass, which requires heat to manipulate, alpha brass can be shaped at room temperature."
+      },
+      {
+        "key": "C",
+        "text": "Alpha brass contains less than 35% zinc, whereas beta brass contains more than 45% zinc."
+      },
+      {
+        "key": "D",
+        "text": "With its higher zinc content, alpha brass is a stronger material than beta brass."
+      }
+    ],
+    "correctAnswer": "B",
+    "category": "Specify Advantage",
+    "rationale": "Choice B is the best answer. The sentence specifies an advantage of alpha brass, noting that unlike beta brass, which requires heat to manipulate, alpha brass can be shaped at room temperature.\n\nChoice A is incorrect. While the sentence indicates that alpha brass has an advantage over beta brass, it doesn’t specify what that advantage is. Both alpha brass and beta brass are metal alloys composed primarily of zinc and copper. Choice C is incorrect. The sentence contrasts the zinc content of alpha and beta brass; it doesn’t specify an advantage of alpha brass. Choice D is incorrect. While the sentence does specify an advantage, it misrepresents information from the notes: beta brass, not alpha brass, has the higher zinc content and is the stronger material."
+  },
+  {
+    "id": "87d34a39",
+    "assessment": "SAT",
+    "test": "Reading and Writing",
+    "domain": "Expression of Ideas",
+    "skill": "Rhetorical Synthesis",
+    "difficulty": "Hard",
+    "passage": "While researching a topic, a student has taken the following notes:\n\n• The National Congress of American Indians (NCAI) was founded in 1944 by representatives of fifty tribal governments.\n• The NCAI was created to protect the sovereignty of Indigenous tribes.\n• Napoleon B. Johnson (Cherokee) was the NCAI’s first president.\n• In 1975, the US Congress passed the Indian Self-Determination and Education Assistance Act (Public Law 96-638).\n• This legislation formally acknowledged tribes’ right to self-governance.\n• The advocacy of the NCAI was a key factor in the law’s passing.",
+    "prompt": "The student wants to identify an accomplishment of the NCAI. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "options": [
+      {
+        "key": "A",
+        "text": "The NCAI, founded by representatives of fifty tribal governments, had Napoleon B. Johnson (Cherokee) as its first president."
+      },
+      {
+        "key": "B",
+        "text": "Founded in 1944, the NCAI was created by representatives of tribal governments from fifty sovereign Indigenous tribes."
+      },
+      {
+        "key": "C",
+        "text": "The NCAI’s advocacy was key to the passing of Public Law 96-638, legislation formally acknowledging Indigenous tribes’ right to self-governance."
+      },
+      {
+        "key": "D",
+        "text": "In 1975, the NCAI passed the Indian Self-Determination and Education Assistance Act, which was created to protect the sovereignty of Indigenous tribes."
+      }
+    ],
+    "correctAnswer": "C",
+    "category": "Identify Accomplishment",
+    "rationale": "Choice C is the best answer. The sentence directly identifies an accomplishment of the NCAI: that its advocacy was key to the passing of Public Law 96-638, which formally acknowledged Indigenous tribes’ right to self-governance.\n\nChoice A is incorrect. The sentence provides information about the NCAI’s founding and its first president, but it doesn’t identify an accomplishment of the organization. Choice B is incorrect. The sentence describes the NCAI’s founding, but it doesn’t identify an accomplishment of the organization. Choice D is incorrect. The sentence misrepresents the information in the notes: the US Congress, not the NCAI, passed the Indian Self-Determination and Education Assistance Act."
+  }
+]

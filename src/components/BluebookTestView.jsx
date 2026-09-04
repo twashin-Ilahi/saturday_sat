@@ -311,11 +311,21 @@ export default function BluebookTestView({
   const isCorrect = currentSelection === q.answer;
   const letters = ["A", "B", "C", "D"];
 
-  // Replace [BLANK] with authentic line
-  const renderedPassage = q.passage.replace(
+  // Replace [BLANK] with authentic line, and format bullet notes if present
+  let renderedPassage = (q.passage || "").replace(
     "[BLANK]",
     '<span style="display:inline-block; min-width:60px; border-bottom:2px solid #000; margin:0 4px; vertical-align:bottom;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'
   );
+  if (renderedPassage.includes('\n•') || renderedPassage.includes('\n-') || renderedPassage.includes('\n\n•')) {
+    const blocks = renderedPassage.split(/\n\n+/);
+    renderedPassage = blocks.map(block => {
+      if (block.includes('•') || block.includes('-')) {
+        const items = block.split('\n').filter(Boolean).map(item => `<li>${item.replace(/^[•\-\*]\s*/, '')}</li>`).join('');
+        return `<ul style="margin: 12px 0 16px 24px; padding-left: 6px; list-style-type: disc; line-height: 1.8;">${items}</ul>`;
+      }
+      return `<p style="margin-bottom: 12px; line-height: 1.85;">${block.replace(/\n/g, '<br/>')}</p>`;
+    }).join('');
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#ffffff', color: '#111827', overflow: 'hidden', userSelect: 'text' }}>
@@ -961,7 +971,7 @@ export default function BluebookTestView({
                     style={{ background: '#f5f3ff', color: '#6d28d9', borderColor: '#ddd6fe', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
                     onClick={handleAskAi}
                   >
-                    ✨ Ask Gemini: Why is this transition used?
+                    ✨ Ask Gemini: {q.skill === 'Rhetorical Synthesis' ? 'Why does this choice meet the goal?' : 'Why is this transition used?'}
                   </button>
                 )}
                 {aiLoading && (
