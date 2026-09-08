@@ -60,6 +60,15 @@ const loadPersistedRoute = () => {
       mode: 'serial-error',
       serialIndex: !isNaN(q) && q > 0 ? q - 1 : 0,
     };
+  } else if (hash.startsWith('#/focused') || hash.startsWith('#focused')) {
+    const query = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(query);
+    const q = parseInt(params.get('q'), 10);
+    fromHash = {
+      view: 'practice',
+      mode: 'focused',
+      focusedIndex: !isNaN(q) && q > 0 ? q - 1 : 0,
+    };
   } else if (hash.startsWith('#/error-log') || hash.startsWith('#error-log')) {
     fromHash = { view: 'error-log', mode: 'normal' };
   } else if (hash.startsWith('#/profile') || hash.startsWith('#profile')) {
@@ -83,6 +92,9 @@ const loadPersistedRoute = () => {
       index: fromHash.index !== undefined ? fromHash.index : (saved?.index ?? 0),
       serialSubset: saved?.serialSubset || [],
       serialIndex: fromHash.serialIndex !== undefined ? fromHash.serialIndex : (saved?.serialIndex ?? 0),
+      focusedSubset: saved?.focusedSubset || [],
+      focusedIndex: fromHash.focusedIndex !== undefined ? fromHash.focusedIndex : (saved?.focusedIndex ?? 0),
+      focusedMeta: saved?.focusedMeta || null,
     };
   }
 
@@ -90,7 +102,7 @@ const loadPersistedRoute = () => {
     return saved;
   }
 
-  return { view: 'dashboard', mode: 'normal', index: 0, serialSubset: [], serialIndex: 0 };
+  return { view: 'dashboard', mode: 'normal', index: 0, serialSubset: [], serialIndex: 0, focusedSubset: [], focusedIndex: 0, focusedMeta: null };
 };
 
 export default function App() {
@@ -105,6 +117,9 @@ export default function App() {
   const [practiceMode, setPracticeMode] = useState(() => initialRoute.mode);
   const [serialErrorSubset, setSerialErrorSubset] = useState(() => initialRoute.serialSubset || []);
   const [serialCurrentIndex, setSerialCurrentIndex] = useState(() => initialRoute.serialIndex || 0);
+  const [focusedSubset, setFocusedSubset] = useState(() => initialRoute.focusedSubset || []);
+  const [focusedCurrentIndex, setFocusedCurrentIndex] = useState(() => initialRoute.focusedIndex || 0);
+  const [focusedMeta, setFocusedMeta] = useState(() => initialRoute.focusedMeta || null);
   const [state, setState] = useState(() => {
     const loaded = loadProgress(ALL_QUESTIONS.length);
     if (typeof initialRoute.index === 'number' && initialRoute.view === 'practice' && initialRoute.mode === 'normal') {
@@ -339,8 +354,14 @@ export default function App() {
 
     let hash = '#/dashboard';
     if (view === 'practice') {
-      const targetIdx = index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : state.currentIndex);
-      hash = mode === 'serial-error' ? `#/drill?q=${targetIdx + 1}` : `#/practice?q=${targetIdx + 1}`;
+      const targetIdx = index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : (mode === 'focused' ? focusedCurrentIndex : state.currentIndex));
+      if (mode === 'serial-error') {
+        hash = `#/drill?q=${targetIdx + 1}`;
+      } else if (mode === 'focused') {
+        hash = `#/focused?q=${targetIdx + 1}`;
+      } else {
+        hash = `#/practice?q=${targetIdx + 1}`;
+      }
     } else if (view === 'error-log') {
       hash = '#/error-log';
     } else if (view === 'profile') {
@@ -352,9 +373,12 @@ export default function App() {
     const historyState = {
       view,
       mode,
-      index: index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : state.currentIndex),
+      index: index !== null ? index : (mode === 'serial-error' ? serialCurrentIndex : (mode === 'focused' ? focusedCurrentIndex : state.currentIndex)),
       serialSubset: mode === 'serial-error' ? serialErrorSubset : [],
       serialIndex: mode === 'serial-error' ? (index !== null ? index : serialCurrentIndex) : 0,
+      focusedSubset: mode === 'focused' ? focusedSubset : [],
+      focusedIndex: mode === 'focused' ? (index !== null ? index : focusedCurrentIndex) : 0,
+      focusedMeta: mode === 'focused' ? focusedMeta : null,
     };
 
     if (replace) {
@@ -377,9 +401,12 @@ export default function App() {
         index: state.currentIndex,
         serialSubset: serialErrorSubset,
         serialIndex: serialCurrentIndex,
+        focusedSubset: focusedSubset,
+        focusedIndex: focusedCurrentIndex,
+        focusedMeta: focusedMeta,
       }));
     } catch (e) {}
-  }, [currentView, practiceMode, state.currentIndex, serialErrorSubset, serialCurrentIndex]);
+  }, [currentView, practiceMode, state.currentIndex, serialErrorSubset, serialCurrentIndex, focusedSubset, focusedCurrentIndex, focusedMeta]);
 
   // Synchronize browser history and handle Back / Forward buttons
   useEffect(() => {
@@ -388,8 +415,16 @@ export default function App() {
     if (route) {
       let hash = '#/dashboard';
       if (route.view === 'practice') {
-        const qNum = (route.mode === 'serial-error' ? (route.serialIndex || 0) : (route.index || 0)) + 1;
-        hash = route.mode === 'serial-error' ? `#/drill?q=${qNum}` : `#/practice?q=${qNum}`;
+        if (route.mode === 'serial-error') {
+          const qNum = (route.serialIndex || 0) + 1;
+          hash = `#/drill?q=${qNum}`;
+        } else if (route.mode === 'focused') {
+          const qNum = (route.focusedIndex || 0) + 1;
+          hash = `#/focused?q=${qNum}`;
+        } else {
+          const qNum = (route.index || 0) + 1;
+          hash = `#/practice?q=${qNum}`;
+        }
       } else if (route.view === 'error-log') {
         hash = '#/error-log';
       }
@@ -399,7 +434,10 @@ export default function App() {
         mode: route.mode,
         index: route.index,
         serialSubset: route.serialSubset,
-        serialIndex: route.serialIndex
+        serialIndex: route.serialIndex,
+        focusedSubset: route.focusedSubset,
+        focusedIndex: route.focusedIndex,
+        focusedMeta: route.focusedMeta,
       }, '', hash);
     }
 
@@ -414,19 +452,26 @@ export default function App() {
           setSerialErrorSubset(currentRoute.serialSubset);
         }
 
-        if (typeof currentRoute.index === 'number') {
-          if (mode === 'serial-error') {
-            setSerialCurrentIndex(currentRoute.serialIndex || 0);
-          } else {
-            setState(prev => ({
-              ...prev,
-              currentIndex: Math.max(0, Math.min(currentRoute.index, ALL_QUESTIONS.length - 1))
-            }));
-          }
+        if (Array.isArray(currentRoute.focusedSubset) && currentRoute.focusedSubset.length > 0) {
+          setFocusedSubset(currentRoute.focusedSubset);
+        }
+        setFocusedMeta(currentRoute.focusedMeta || null);
+
+        if (mode === 'serial-error') {
+          setSerialCurrentIndex(currentRoute.serialIndex || 0);
+        } else if (mode === 'focused') {
+          setFocusedCurrentIndex(currentRoute.focusedIndex || 0);
+        } else if (typeof currentRoute.index === 'number') {
+          setState(prev => ({
+            ...prev,
+            currentIndex: Math.max(0, Math.min(currentRoute.index, ALL_QUESTIONS.length - 1))
+          }));
         }
       } else {
         setCurrentView('dashboard');
         setPracticeMode('normal');
+        setFocusedSubset([]);
+        setFocusedMeta(null);
       }
     };
 
@@ -609,18 +654,33 @@ export default function App() {
     }));
   };
 
-  const handleStartPractice = (index = 0) => {
+  const handleStartPractice = (index = 0, filterContext = null) => {
+    if (filterContext && filterContext.difficulty && filterContext.difficulty !== "All" && Array.isArray(filterContext.subsetIndices) && filterContext.subsetIndices.length > 0) {
+      const subset = filterContext.subsetIndices;
+      const subIdx = Math.max(0, subset.indexOf(index));
+      setFocusedSubset(subset);
+      setFocusedCurrentIndex(subIdx);
+      setFocusedMeta({
+        difficulty: filterContext.difficulty,
+        label: `${filterContext.difficulty} Difficulty`,
+        total: subset.length
+      });
+      setPracticeMode('focused');
+      pushHistoryState('practice', 'focused', subIdx);
+      setCurrentView('practice');
+      return;
+    }
+
     setPracticeMode('normal');
+    setFocusedSubset([]);
+    setFocusedMeta(null);
     setState(prev => ({ ...prev, currentIndex: index }));
     pushHistoryState('practice', 'normal', index);
     setCurrentView('practice');
   };
 
-  const handleJumpToQuestion = (targetIndex) => {
-    setPracticeMode('normal');
-    setState(prev => ({ ...prev, currentIndex: targetIndex }));
-    pushHistoryState('practice', 'normal', targetIndex);
-    setCurrentView('practice');
+  const handleJumpToQuestion = (targetIndex, filterContext = null) => {
+    handleStartPractice(targetIndex, filterContext);
   };
 
   const [errorLogInitialSkill, setErrorLogInitialSkill] = useState("All");
@@ -693,6 +753,8 @@ export default function App() {
 
   const handleReturnToDashboard = () => {
     setPracticeMode('normal');
+    setFocusedSubset([]);
+    setFocusedMeta(null);
     pushHistoryState('dashboard');
     setCurrentView('dashboard');
   };
@@ -1064,6 +1126,78 @@ export default function App() {
               if (newSubIndex >= 0 && newSubIndex < serialErrorSubset.length) {
                 setSerialCurrentIndex(newSubIndex);
                 pushHistoryState('practice', 'serial-error', newSubIndex);
+              }
+            }}
+            onToggleAutoStart={handleToggleAutoStart}
+            onReset={handleReset}
+            onExport={handleExport}
+            onImport={handleImport}
+            onReturnToDashboard={handleReturnToDashboard}
+          />
+          <SettingsModal
+            isOpen={showSettingsModal}
+            onClose={handleCloseSettings}
+            user={user}
+            cloudSyncStatus={cloudSyncStatus}
+            currentState={state}
+            totalQuestions={ALL_QUESTIONS.length}
+            onApplyCloudProgress={handleApplyCloudProgress}
+            onResetProgress={handleReset}
+            onExportProgress={handleExport}
+            onImportProgress={handleImport}
+            onOpenAuth={handleOpenAuth}
+            onOpenProfile={handleOpenProfile}
+            onOpenDisclaimer={handleOpenDisclaimer}
+          />
+        </>
+      );
+    }
+
+    if (practiceMode === 'focused' && focusedSubset.length > 0) {
+      // Focused difficulty practice mode: map questions & state to the difficulty subset
+      const activeQuestions = focusedSubset.map(idx => ALL_QUESTIONS[idx]);
+
+      return (
+        <>
+          {renderToastNotification()}
+          <BluebookTestView
+            questions={activeQuestions}
+            currentIndex={focusedCurrentIndex}
+            selectedAnswers={focusedSubset.map(idx => state.selectedAnswers[idx])}
+            checkedStatus={focusedSubset.map(idx => state.checkedStatus[idx])}
+            flaggedStatus={focusedSubset.map(idx => (state.flaggedStatus || [])[idx])}
+            eliminatedStatus={focusedSubset.map(idx => (state.eliminatedStatus || [])[idx])}
+            errorLog={state.errorLog}
+            autoStartEnabled={state.autoStartEnabled}
+            practiceMode="focused"
+            practiceFilterMeta={focusedMeta}
+            user={user}
+            cloudSyncStatus={cloudSyncStatus}
+            onSignOut={handleSignOut}
+            onOpenSettings={handleOpenSettings}
+            onOpenProfile={handleOpenProfile}
+            onOpenAuth={handleOpenAuth}
+            onOpenErrorLog={handleOpenErrorLog}
+            onSelectChoice={(subIdx, choiceIdx) => {
+              const origIdx = focusedSubset[subIdx];
+              handleSelectChoice(origIdx, choiceIdx);
+            }}
+            onCheckAnswer={(subIdx, timerSeconds) => {
+              const origIdx = focusedSubset[subIdx];
+              handleCheckAnswer(origIdx, timerSeconds);
+            }}
+            onToggleFlag={(subIdx) => {
+              const origIdx = focusedSubset[subIdx];
+              handleToggleFlag(origIdx);
+            }}
+            onToggleEliminate={(subIdx, choiceIdx) => {
+              const origIdx = focusedSubset[subIdx];
+              handleToggleEliminate(origIdx, choiceIdx);
+            }}
+            onNavigate={(newSubIndex) => {
+              if (newSubIndex >= 0 && newSubIndex < focusedSubset.length) {
+                setFocusedCurrentIndex(newSubIndex);
+                pushHistoryState('practice', 'focused', newSubIndex);
               }
             }}
             onToggleAutoStart={handleToggleAutoStart}

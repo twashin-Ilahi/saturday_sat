@@ -116,8 +116,10 @@ export default function Dashboard({
         onStartSerialErrorDrill(skillErrors);
       }
     } else if (drillType === 'hard') {
-      const firstHard = activeSkillQuestions.find(q => q.difficulty === 'Hard' && !checkedStatus[q.originalIndex]);
-      onJumpToQuestion(firstHard ? firstHard.originalIndex : (activeSkillQuestions.find(q => q.difficulty === 'Hard')?.originalIndex ?? activeSkillQuestions[0]?.originalIndex ?? 0));
+      const hardQuestions = activeSkillQuestions.filter(q => q.difficulty === 'Hard');
+      const firstHard = hardQuestions.find(q => !checkedStatus[q.originalIndex]) || hardQuestions[0];
+      const targetIdx = firstHard ? firstHard.originalIndex : 0;
+      onJumpToQuestion(targetIdx, { difficulty: 'Hard', subsetIndices: hardQuestions.map(q => q.originalIndex) });
     } else {
       const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
       onJumpToQuestion(nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex ?? 0));
@@ -547,23 +549,38 @@ export default function Dashboard({
               )}
               <button 
                 className="btn btn-primary" 
-                style={{ padding: '9px 20px', fontSize: '0.95rem' }}
+                style={{ 
+                  padding: '9px 20px', 
+                  fontSize: '0.95rem',
+                  background: difficultyFilter === 'Easy' ? '#16a34a' : (difficultyFilter === 'Medium' ? '#2563eb' : (difficultyFilter === 'Hard' ? '#dc2626' : 'var(--cb-blue)'))
+                }}
                 onClick={() => {
-                  const isCurrentInSkill = activeSkillQuestions.some(sq => sq.originalIndex === currentIndex);
-                  const nextUnanswered = activeSkillQuestions.find(sq => !checkedStatus[sq.originalIndex]);
-                  const targetIdx = isCurrentInSkill
+                  const targetList = difficultyFilter !== "All"
+                    ? activeSkillQuestions.filter(sq => sq.difficulty === difficultyFilter)
+                    : activeSkillQuestions;
+                  const isCurrentInTarget = targetList.some(sq => sq.originalIndex === currentIndex);
+                  const nextUnanswered = targetList.find(sq => !checkedStatus[sq.originalIndex]);
+                  const targetIdx = isCurrentInTarget
                     ? currentIndex
-                    : (nextUnanswered ? nextUnanswered.originalIndex : (activeSkillQuestions[0]?.originalIndex || 0));
+                    : (nextUnanswered ? nextUnanswered.originalIndex : (targetList[0]?.originalIndex || 0));
 
                   if (isQuestionLockedForUser(targetIdx, user, questions)) {
                     setLockedQuestionTarget(targetIdx + 1);
                     setShowGuestLockModal(true);
                     return;
                   }
-                  onStartPractice(targetIdx);
+                  
+                  const filterContext = difficultyFilter !== "All"
+                    ? { difficulty: difficultyFilter, subsetIndices: targetList.map(sq => sq.originalIndex) }
+                    : null;
+                  onStartPractice(targetIdx, filterContext);
                 }}
               >
-                {answeredIndices.length === 0 ? `Start Practice (${activeSkill.name})` : `Resume Practice (Q${(activeSkillQuestions.find(sq => sq.originalIndex === currentIndex) ? currentIndex : (activeSkillQuestions[0]?.originalIndex || 0)) + 1})`} →
+                {difficultyFilter !== "All" ? (
+                  `🎯 Start Focused Practice (${difficultyFilter} • ${filteredQuestions.length} Qs)`
+                ) : (
+                  answeredIndices.length === 0 ? `Start Practice (${activeSkill.name})` : `Resume Practice (Q${(activeSkillQuestions.find(sq => sq.originalIndex === currentIndex) ? currentIndex : (activeSkillQuestions[0]?.originalIndex || 0)) + 1})`
+                )} →
               </button>
             </div>
           </div>
@@ -637,6 +654,36 @@ export default function Dashboard({
                   {diff} {diff === "All" ? `(${totalCount})` : diff === "Easy" ? `(${easyCount})` : diff === "Medium" ? `(${medCount})` : `(${hardCount})`}
                 </button>
               ))}
+              {difficultyFilter !== "All" && (
+                <button
+                  onClick={() => {
+                    const subset = activeSkillQuestions.filter(sq => sq.difficulty === difficultyFilter);
+                    const firstUnanswered = subset.find(sq => !checkedStatus[sq.originalIndex]) || subset[0];
+                    if (firstUnanswered) {
+                      onStartPractice(firstUnanswered.originalIndex, { difficulty: difficultyFilter, subsetIndices: subset.map(sq => sq.originalIndex) });
+                    }
+                  }}
+                  style={{
+                    background: difficultyFilter === 'Easy' ? '#16a34a' : (difficultyFilter === 'Medium' ? '#2563eb' : '#dc2626'),
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '4px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    marginLeft: '4px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }}
+                  title={`Start focused practice on ${difficultyFilter} questions only`}
+                >
+                  <span>▶</span>
+                  <span>Drill {difficultyFilter} Only ({filteredQuestions.length})</span>
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -716,7 +763,10 @@ export default function Dashboard({
                         setShowGuestLockModal(true);
                         return;
                       }
-                      onJumpToQuestion(idx);
+                      const filterContext = difficultyFilter !== "All"
+                        ? { difficulty: difficultyFilter, subsetIndices: filteredQuestions.map(sq => sq.originalIndex) }
+                        : null;
+                      onJumpToQuestion(idx, filterContext);
                     }}
                     title={isLocked ? `Q${idx + 1} (${q.difficulty}) - Locked for Guest (Login Required)` : `Q${idx + 1} (${q.difficulty}) - ${q.id} ${isChecked ? (isCorrect ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
                     style={{
