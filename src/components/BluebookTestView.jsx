@@ -398,22 +398,6 @@ export default function BluebookTestView({
                 Serial Error Drill
               </span>
             )}
-            {practiceMode === 'focused' && practiceFilterMeta && (
-              <span style={{
-                fontSize: '0.72rem',
-                background: practiceFilterMeta.difficulty === 'Easy' ? '#dcfce7' : (practiceFilterMeta.difficulty === 'Medium' ? '#dbeafe' : '#fee2e2'),
-                color: practiceFilterMeta.difficulty === 'Easy' ? '#15803d' : (practiceFilterMeta.difficulty === 'Medium' ? '#1d4ed8' : '#b91c1c'),
-                border: `1px solid ${practiceFilterMeta.difficulty === 'Easy' ? '#86efac' : (practiceFilterMeta.difficulty === 'Medium' ? '#93c5fd' : '#fca5a5')}`,
-                padding: '1px 8px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                🎯 Focused: {practiceFilterMeta.difficulty} ({currentIndex + 1} of {questions.length})
-              </span>
-            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button 
@@ -428,15 +412,6 @@ export default function BluebookTestView({
                 style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#005a9c', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}
               >
                 ← Return to Error Directory
-              </button>
-            )}
-            {practiceMode === 'focused' && (
-              <button 
-                onClick={onReturnToDashboard}
-                style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#005a9c', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}
-                title="Return to Dashboard to change difficulty or view all questions"
-              >
-                ← Exit Focused Practice
               </button>
             )}
           </div>
@@ -768,11 +743,7 @@ export default function BluebookTestView({
         style={{ position: 'relative', borderTop: '1.5px dashed #cbd5e1', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}
       >
         <div style={{
-          background: practiceMode === 'serial-error' 
-            ? '#991b1b' 
-            : (practiceMode === 'focused' 
-                ? (practiceFilterMeta?.difficulty === 'Hard' ? '#7f1d1d' : practiceFilterMeta?.difficulty === 'Medium' ? '#1e3a8a' : '#14532d')
-                : '#23325c'),
+          background: practiceMode === 'serial-error' ? '#991b1b' : '#23325c',
           color: '#ffffff',
           fontSize: '0.74rem',
           fontWeight: 800,
@@ -782,11 +753,7 @@ export default function BluebookTestView({
           textTransform: 'uppercase',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          {practiceMode === 'serial-error' 
-            ? "🔁 SERIAL ERROR RECOVERY DRILL" 
-            : (practiceMode === 'focused' 
-                ? `🎯 FOCUSED PRACTICE: ${practiceFilterMeta?.difficulty?.toUpperCase() || 'FILTERED'} DIFFICULTY (${currentIndex + 1} OF ${questions.length})` 
-                : "THIS IS A PRACTICE TEST")}
+          {practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : "THIS IS A PRACTICE TEST"}
         </div>
       </div>
 
