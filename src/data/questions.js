@@ -1,8 +1,9 @@
 import rawTransitions from './questions.json';
 import rawRhetorical from './rhetorical_synthesis.json';
 import rawSEC from './standard_english_conventions.json';
+import rawInfoIdeas from './information_and_ideas.json';
 
-const rawQuestions = [...rawTransitions, ...rawRhetorical, ...rawSEC];
+const rawQuestions = [...rawTransitions, ...rawRhetorical, ...rawSEC, ...rawInfoIdeas];
 
 const LETTER_INDEX = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
 
@@ -83,6 +84,9 @@ const transitionCount = ALL_QUESTIONS.filter(q => q.skill === "Transitions").len
 const rhetoricalCount = ALL_QUESTIONS.filter(q => q.skill === "Rhetorical Synthesis").length;
 const boundariesCount = ALL_QUESTIONS.filter(q => q.skill === "Boundaries").length;
 const formCount = ALL_QUESTIONS.filter(q => q.skill === "Form, Structure, and Sense").length;
+const centralIdeasCount = ALL_QUESTIONS.filter(q => q.skill === "Central Ideas and Details").length;
+const inferencesCount = ALL_QUESTIONS.filter(q => q.skill === "Inferences").length;
+const commandOfEvidenceCount = ALL_QUESTIONS.filter(q => q.skill === "Command of Evidence").length;
 
 export const SYLLABUS = [
   {
@@ -142,22 +146,22 @@ export const SYLLABUS = [
           {
             id: "central-ideas-details",
             name: "Central Ideas and Details",
-            questionCount: 0,
-            available: false,
+            questionCount: centralIdeasCount,
+            available: true,
             description: "Identify stated or implied central ideas and key supporting details."
           },
           {
             id: "inferences",
             name: "Inferences",
-            questionCount: 0,
-            available: false,
+            questionCount: inferencesCount,
+            available: true,
             description: "Draw reasonable, logically sound conclusions based on evidence in the text."
           },
           {
             id: "command-of-evidence",
             name: "Command of Evidence",
-            questionCount: 0,
-            available: false,
+            questionCount: commandOfEvidenceCount,
+            available: true,
             description: "Evaluate textual or quantitative evidence to support, weaken, or challenge a claim."
           }
         ]

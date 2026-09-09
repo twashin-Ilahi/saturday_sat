@@ -85,7 +85,7 @@ export default function DisclaimerView({
               boxShadow: '0 2px 4px rgba(0,90,156,0.2)'
             }}
           >
-            Start Practice (314 Questions) →
+            Start Practice (566 Questions) →
           </button>
         </div>
       </header>
@@ -235,7 +235,7 @@ export default function DisclaimerView({
                 boxShadow: '0 2px 4px rgba(0,90,156,0.25)'
               }}
             >
-              Continue Practice (314 Questions) →
+              Continue Practice (566 Questions) →
             </button>
           </div>
         </div>

@@ -31,6 +31,8 @@ export default function BluebookTestView({
   onNavigate,
   onToggleAutoStart,
   onReset,
+  onResetQuestion,
+  onResetAllDrillQuestions,
   onExport,
   onImport,
   onReturnToDashboard,
@@ -132,6 +134,36 @@ export default function BluebookTestView({
   const isFlagged = flaggedStatus[currentIndex] || false;
   const eliminatedChoices = eliminatedStatus[currentIndex] || [];
   const isCurrentQuestionLocked = isQuestionLockedForUser(currentIndex, user, questions);
+
+  const checkedInSubsetCount = useMemo(() => {
+    return (checkedStatus || []).filter(Boolean).length;
+  }, [checkedStatus]);
+
+  const handleResetSingleQuestion = () => {
+    if (onResetQuestion) {
+      onResetQuestion(currentIndex);
+    }
+    setAiExplanation("");
+    setAiLoading(false);
+    setTimerSeconds(0);
+    if (autoStartEnabled) {
+      setIsTimerRunning(true);
+    }
+  };
+
+  const handleResetAllQuestions = () => {
+    if (window.confirm("Reset all questions in this drill so you can practice them fresh from scratch?")) {
+      if (onResetAllDrillQuestions) {
+        onResetAllDrillQuestions();
+      }
+      setAiExplanation("");
+      setAiLoading(false);
+      setTimerSeconds(0);
+      if (autoStartEnabled) {
+        setIsTimerRunning(true);
+      }
+    }
+  };
 
   // Stopwatch timer
   useEffect(() => {
@@ -407,12 +439,26 @@ export default function BluebookTestView({
               Directions {showDirections ? '▴' : '▾'}
             </button>
             {practiceMode === 'serial-error' && (
-              <button 
-                onClick={onReturnFromErrorDrill || onReturnToDashboard}
-                style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#005a9c', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}
-              >
-                ← Return to Error Directory
-              </button>
+              <>
+                <button 
+                  onClick={onReturnFromErrorDrill || onReturnToDashboard}
+                  style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#005a9c', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}
+                >
+                  ← Return to Error Directory
+                </button>
+                {onResetAllDrillQuestions && (
+                  <>
+                    <span style={{ color: '#cbd5e1' }}>|</span>
+                    <button
+                      onClick={handleResetAllQuestions}
+                      style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: '0.82rem', color: '#dc2626', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      title="Reset all questions in this drill to practice them like fresh questions"
+                    >
+                      🔄 Reset Drill Answers
+                    </button>
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -682,6 +728,22 @@ export default function BluebookTestView({
                 >
                   Load Backup (JSON)
                 </button>
+                {isCurrentChecked && onResetQuestion && (
+                  <button 
+                    onClick={() => { setShowMoreMenu(false); handleResetSingleQuestion(); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#dc2626' }}
+                  >
+                    🔄 Reset Current Question
+                  </button>
+                )}
+                {(practiceMode === 'serial-error' || practiceMode === 'focused') && onResetAllDrillQuestions && (
+                  <button 
+                    onClick={() => { setShowMoreMenu(false); handleResetAllQuestions(); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#991b1b' }}
+                  >
+                    🔄 Reset All Drill Questions (Practice Fresh)
+                  </button>
+                )}
                 <button 
                   onClick={() => {
                     setShowMoreMenu(false);
@@ -689,7 +751,7 @@ export default function BluebookTestView({
                   }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', borderBottom: onSignOut ? '1px solid #f1f5f9' : 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#64748b' }}
                 >
-                  Reset Progress
+                  Reset All Progress
                 </button>
                 {onSignOut && (
                   <button 
@@ -748,12 +810,43 @@ export default function BluebookTestView({
           fontSize: '0.74rem',
           fontWeight: 800,
           letterSpacing: '1px',
-          padding: '4px 34px',
+          padding: '4px 24px',
           borderRadius: '0 0 10px 10px',
           textTransform: 'uppercase',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
         }}>
-          {practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : "THIS IS A PRACTICE TEST"}
+          <span>{practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : (practiceMode === 'focused' ? `🎯 FOCUSED PRACTICE: ${practiceFilterMeta?.difficulty || ''}` : "THIS IS A PRACTICE TEST")}</span>
+          {practiceMode === 'serial-error' && onResetAllDrillQuestions && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResetAllQuestions();
+              }}
+              style={{
+                background: '#ffffff',
+                color: '#991b1b',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '2px 10px',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                letterSpacing: '0px',
+                textTransform: 'none',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+              }}
+              title="Reset all questions in this drill to practice them fresh without marked answers"
+            >
+              <span>🔄</span>
+              <span>{checkedInSubsetCount === 0 ? "Drill Reset (Fresh)" : "Reset All to Practice Fresh"}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -908,7 +1001,7 @@ export default function BluebookTestView({
                   Question {currentIndex + 1} is Locked for Guest Users
                 </h3>
                 <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.55, margin: '0 auto 24px', maxWidth: '420px' }}>
-                  Guest access includes the first <strong>{GUEST_QUESTION_LIMIT_PER_SKILL} free preview questions</strong> per question type. To practice this question and unlock all 314 authentic College Board questions with real-time cloud sync, please sign in or create a free account.
+                  Guest access includes the first <strong>{GUEST_QUESTION_LIMIT_PER_SKILL} free preview questions</strong> per question type. To practice this question and unlock all 566 authentic College Board questions with real-time cloud sync, please sign in or create a free account.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
@@ -1081,8 +1174,8 @@ export default function BluebookTestView({
                       />
                     </div>
 
-                    {/* Gemini AI On-Demand Breakdown */}
-                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px' }}>
+                    {/* Gemini AI On-Demand Breakdown & Re-attempt */}
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       {!aiExplanation && !aiLoading && (
                         <button 
                           className="btn"
@@ -1095,6 +1188,16 @@ export default function BluebookTestView({
                             q.skill === 'Form, Structure, and Sense' ? 'Why is this grammatical form correct?' :
                             'Why is this transition used?'
                           }
+                        </button>
+                      )}
+                      {onResetQuestion && (
+                        <button 
+                          className="btn"
+                          style={{ background: '#fff1f2', color: '#be123c', borderColor: '#fecdd3', fontSize: '0.82rem', padding: '5px 12px', fontWeight: 600 }}
+                          onClick={handleResetSingleQuestion}
+                          title="Reset this question so you can re-attempt it fresh"
+                        >
+                          🔄 Re-attempt Question
                         </button>
                       )}
                       {aiLoading && (
@@ -1405,48 +1508,100 @@ export default function BluebookTestView({
                       </button>
                     );
                   })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                {onResetAllDrillQuestions && (
+                  <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setShowNavPopover(false);
+                        handleResetAllQuestions();
+                      }}
+                      style={{
+                        background: '#fef2f2',
+                        color: '#991b1b',
+                        border: '1px solid #fecaca',
+                        borderRadius: '4px',
+                        padding: '6px 12px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <span>🔄</span>
+                      <span>Reset All Drill Questions for Fresh Practice</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-        {/* Right: Navigation Buttons (Back, Check Answer, Next) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {currentIndex > 0 && (
-            <button
-              onClick={() => onNavigate(currentIndex - 1)}
-              style={{
-                background: '#ffffff',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '20px',
-                padding: '8px 20px',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                color: '#334155',
-                cursor: 'pointer'
-              }}
-            >
-              Back
-            </button>
-          )}
-
+      {/* Right: Navigation Buttons (Back, Reset Question, Check Answer, Next) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {currentIndex > 0 && (
           <button
-            onClick={handleCheck}
-            disabled={isCurrentChecked || isCurrentQuestionLocked}
+            onClick={() => onNavigate(currentIndex - 1)}
             style={{
-              background: (isCurrentChecked || isCurrentQuestionLocked) ? '#f1f5f9' : '#ffffff',
-              border: `1.5px solid ${(isCurrentChecked || isCurrentQuestionLocked) ? '#cbd5e1' : '#005a9c'}`,
+              background: '#ffffff',
+              border: '1.5px solid #cbd5e1',
               borderRadius: '20px',
-              padding: '8px 18px',
+              padding: '8px 20px',
               fontSize: '0.9rem',
               fontWeight: 700,
-              color: (isCurrentChecked || isCurrentQuestionLocked) ? '#94a3b8' : '#005a9c',
-              cursor: (isCurrentChecked || isCurrentQuestionLocked) ? 'not-allowed' : 'pointer'
+              color: '#334155',
+              cursor: 'pointer'
             }}
           >
-            {isCurrentQuestionLocked ? "Locked 🔒" : isCurrentChecked ? "Checked" : "Check Answer"}
+            Back
           </button>
+        )}
+
+        {isCurrentChecked && !isCurrentQuestionLocked && onResetQuestion && (
+          <button
+            onClick={handleResetSingleQuestion}
+            style={{
+              background: '#ffffff',
+              border: '1.5px solid #dc2626',
+              borderRadius: '20px',
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: '#dc2626',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.15s'
+            }}
+            title="Reset this question to solve it again like a normal question"
+          >
+            <span>🔄</span>
+            <span>Reset Question</span>
+          </button>
+        )}
+
+        <button
+          onClick={handleCheck}
+          disabled={isCurrentChecked || isCurrentQuestionLocked}
+          style={{
+            background: (isCurrentChecked || isCurrentQuestionLocked) ? '#f1f5f9' : '#ffffff',
+            border: `1.5px solid ${(isCurrentChecked || isCurrentQuestionLocked) ? '#cbd5e1' : '#005a9c'}`,
+            borderRadius: '20px',
+            padding: '8px 18px',
+            fontSize: '0.9rem',
+            fontWeight: 700,
+            color: (isCurrentChecked || isCurrentQuestionLocked) ? '#94a3b8' : '#005a9c',
+            cursor: (isCurrentChecked || isCurrentQuestionLocked) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {isCurrentQuestionLocked ? "Locked 🔒" : isCurrentChecked ? "Checked" : "Check Answer"}
+        </button>
 
           <button
             onClick={() => {

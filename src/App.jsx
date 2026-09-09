@@ -691,13 +691,61 @@ export default function App() {
     setCurrentView('error-log');
   };
 
-  const handleStartSerialErrorDrill = (errorList) => {
+  const handleResetQuestion = (questionIndex) => {
+    if (questionIndex === undefined || questionIndex === null || questionIndex < 0 || questionIndex >= ALL_QUESTIONS.length) return;
+    setState(prev => {
+      const newChecked = [...prev.checkedStatus];
+      const newSelected = [...prev.selectedAnswers];
+      const newEliminated = [...(prev.eliminatedStatus || new Array(ALL_QUESTIONS.length).fill([]))];
+
+      newChecked[questionIndex] = false;
+      newSelected[questionIndex] = null;
+      newEliminated[questionIndex] = [];
+
+      return {
+        ...prev,
+        checkedStatus: newChecked,
+        selectedAnswers: newSelected,
+        eliminatedStatus: newEliminated
+      };
+    });
+  };
+
+  const handleResetQuestions = (indices) => {
+    if (!indices || indices.length === 0) return;
+    setState(prev => {
+      const newChecked = [...prev.checkedStatus];
+      const newSelected = [...prev.selectedAnswers];
+      const newEliminated = [...(prev.eliminatedStatus || new Array(ALL_QUESTIONS.length).fill([]))];
+
+      indices.forEach(idx => {
+        if (idx >= 0 && idx < ALL_QUESTIONS.length) {
+          newChecked[idx] = false;
+          newSelected[idx] = null;
+          newEliminated[idx] = [];
+        }
+      });
+
+      return {
+        ...prev,
+        checkedStatus: newChecked,
+        selectedAnswers: newSelected,
+        eliminatedStatus: newEliminated
+      };
+    });
+  };
+
+  const handleStartSerialErrorDrill = (errorList, options = {}) => {
     if (!errorList || errorList.length === 0) return;
+    const shouldReset = typeof options === 'boolean' ? options : !!options.resetForPractice;
     const indices = errorList.map(err => {
       if (err.originalIndex !== undefined) return err.originalIndex;
       const foundIdx = ALL_QUESTIONS.findIndex(q => q.id === err.id);
       return foundIdx !== -1 ? foundIdx : (err.qIndex - 1);
     });
+    if (shouldReset) {
+      handleResetQuestions(indices);
+    }
     setSerialErrorSubset(indices);
     setSerialCurrentIndex(0);
     setPracticeMode('serial-error');
@@ -1122,6 +1170,13 @@ export default function App() {
               const origIdx = serialErrorSubset[subIdx];
               handleToggleEliminate(origIdx, choiceIdx);
             }}
+            onResetQuestion={(subIdx) => {
+              const origIdx = serialErrorSubset[subIdx];
+              handleResetQuestion(origIdx);
+            }}
+            onResetAllDrillQuestions={() => {
+              handleResetQuestions(serialErrorSubset);
+            }}
             onNavigate={(newSubIndex) => {
               if (newSubIndex >= 0 && newSubIndex < serialErrorSubset.length) {
                 setSerialCurrentIndex(newSubIndex);
@@ -1194,6 +1249,13 @@ export default function App() {
               const origIdx = focusedSubset[subIdx];
               handleToggleEliminate(origIdx, choiceIdx);
             }}
+            onResetQuestion={(subIdx) => {
+              const origIdx = focusedSubset[subIdx];
+              handleResetQuestion(origIdx);
+            }}
+            onResetAllDrillQuestions={() => {
+              handleResetQuestions(focusedSubset);
+            }}
             onNavigate={(newSubIndex) => {
               if (newSubIndex >= 0 && newSubIndex < focusedSubset.length) {
                 setFocusedCurrentIndex(newSubIndex);
@@ -1250,6 +1312,7 @@ export default function App() {
           onCheckAnswer={handleCheckAnswer}
           onToggleFlag={handleToggleFlag}
           onToggleEliminate={handleToggleEliminate}
+          onResetQuestion={handleResetQuestion}
           onNavigate={handleNavigate}
           onToggleAutoStart={handleToggleAutoStart}
           onReset={handleReset}

@@ -28,6 +28,23 @@ export default function ErrorLogView({
   const [statusFilter, setStatusFilter] = useState("All"); // All | Unresolved | Mastered
   const [expandedRationales, setExpandedRationales] = useState({});
   const [aiBreakdownModal, setAiBreakdownModal] = useState(null); // { error, loading, text }
+  const [drillResetMode, setDrillResetMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sat_drill_fresh_practice');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleDrillReset = (val) => {
+    setDrillResetMode(val);
+    try {
+      localStorage.setItem('sat_drill_fresh_practice', String(val));
+    } catch (e) {
+      console.warn("Could not save drill reset preference", e);
+    }
+  };
 
   // Sync when initialSkill changes
   React.useEffect(() => {
@@ -67,7 +84,7 @@ export default function ErrorLogView({
     return counts;
   }, [richErrors]);
 
-  const availableSkills = ["All", "Transitions", "Rhetorical Synthesis", "Boundaries", "Form, Structure, and Sense"];
+  const availableSkills = ["All", "Transitions", "Rhetorical Synthesis", "Boundaries", "Form, Structure, and Sense", "Central Ideas and Details", "Inferences", "Command of Evidence"];
 
   // Category counts
   const categoryCounts = useMemo(() => {
@@ -342,28 +359,56 @@ export default function ErrorLogView({
 
           {/* Primary Action: Start Serial Error Drill */}
           {filteredErrors.length > 0 && (
-            <button
-              onClick={() => onStartSerialErrorDrill(filteredErrors)}
-              style={{
-                background: '#2563eb',
-                border: 'none',
-                borderRadius: '20px',
-                padding: '9px 22px',
-                color: '#ffffff',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
-                transition: 'transform 0.1s'
-              }}
-              title="Enter full Bluebook testing interface and solve all filtered errors sequentially"
-            >
-              <span>▶</span>
-              <span>Start Serial Error Drill ({filteredErrors.length})</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label 
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  fontSize: '0.8rem', 
+                  color: '#475569', 
+                  cursor: 'pointer', 
+                  fontWeight: 600, 
+                  userSelect: 'none',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  padding: '6px 10px',
+                  borderRadius: '16px'
+                }}
+                title="Reset previous answers so you can practice each question from scratch like a normal test"
+              >
+                <input 
+                  type="checkbox" 
+                  checked={drillResetMode} 
+                  onChange={(e) => handleToggleDrillReset(e.target.checked)} 
+                  style={{ cursor: 'pointer', accentColor: '#2563eb' }}
+                />
+                <span>Reset for practice</span>
+              </label>
+
+              <button
+                onClick={() => onStartSerialErrorDrill(filteredErrors, { resetForPractice: drillResetMode })}
+                style={{
+                  background: '#2563eb',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '9px 20px',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                  transition: 'transform 0.1s'
+                }}
+                title={drillResetMode ? "Reset answers and solve all filtered errors sequentially like normal questions" : "Review filtered errors sequentially with previous answers marked"}
+              >
+                <span>{drillResetMode ? "🎯 Practice Fresh" : "🔁 Review Marked"}</span>
+                <span>({filteredErrors.length})</span>
+              </button>
+            </div>
           )}
         </div>
       </header>
@@ -427,11 +472,11 @@ export default function ErrorLogView({
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
-                onClick={() => onStartSerialErrorDrill(filteredErrors.length > 0 ? filteredErrors : richErrors)}
+                onClick={() => onStartSerialErrorDrill(filteredErrors.length > 0 ? filteredErrors : richErrors, { resetForPractice: true })}
                 style={{
-                  background: '#1e293b',
+                  background: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
@@ -441,11 +486,34 @@ export default function ErrorLogView({
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(37,99,235,0.25)'
+                }}
+                title="Reset previous answers and solve all errors fresh from scratch like normal questions"
+              >
+                <span>🎯</span>
+                <span>Practice Fresh ({filteredErrors.length > 0 ? filteredErrors.length : richErrors.length})</span>
+              </button>
+
+              <button
+                onClick={() => onStartSerialErrorDrill(filteredErrors.length > 0 ? filteredErrors : richErrors, { resetForPractice: false })}
+                style={{
+                  background: '#1e293b',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '10px 14px',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: '6px'
                 }}
+                title="Review previous answers and rationales"
               >
-                <span>🔁 {filteredErrors.length !== richErrors.length ? `Drill ${filteredErrors.length} Filtered Errors Serially` : `Review All ${richErrors.length} Errors Serially`}</span>
+                <span>📖</span>
+                <span>Review Marked</span>
               </button>
             </div>
           </div>

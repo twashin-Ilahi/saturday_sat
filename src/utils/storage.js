@@ -145,7 +145,7 @@ export function resetAllProgress(totalQuestions, userId = null) {
 /**
  * Checks if meaningful guest practice progress exists in local storage
  */
-export function hasGuestProgress(totalQuestions = 314) {
+export function hasGuestProgress(totalQuestions = 566) {
   try {
     const guestState = loadProgress(totalQuestions, null);
     const guestHighlights = loadHighlights(null);
@@ -206,7 +206,7 @@ export function clearGuestProgress() {
  * Intelligently merges two progress states (e.g. guest progress into user state, or cloud into local).
  * Guaranteed ZERO DATA LOSS.
  */
-export function mergeProgressStates(baseState, incomingState, totalQuestions = 314) {
+export function mergeProgressStates(baseState, incomingState, totalQuestions = 566) {
   if (!baseState && !incomingState) {
     return loadProgress(totalQuestions, null);
   }

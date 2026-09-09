@@ -113,7 +113,7 @@ export default function Dashboard({
   const handleStartDrill = (drillType) => {
     if (drillType === 'errors') {
       if (skillErrors.length > 0) {
-        onStartSerialErrorDrill(skillErrors);
+        onStartSerialErrorDrill(skillErrors, { resetForPractice: true });
       }
     } else if (drillType === 'hard') {
       const hardQuestions = activeSkillQuestions.filter(q => q.difficulty === 'Hard');
@@ -176,7 +176,7 @@ export default function Dashboard({
               </span>
             </div>
             <p style={{ fontSize: '0.82rem', color: '#666' }}>
-              Unofficial Independent Practice System • 314 Practice Questions
+              Unofficial Independent Practice System • {questions.length} Practice Questions
             </p>
           </div>
         </div>
@@ -388,7 +388,7 @@ export default function Dashboard({
               </button>
               {skillErrors.length > 0 && (
                 <button 
-                  onClick={() => onStartSerialErrorDrill(skillErrors)}
+                  onClick={() => onStartSerialErrorDrill(skillErrors, { resetForPractice: true })}
                   style={{
                     background: '#2563eb',
                     border: 'none',
@@ -402,9 +402,9 @@ export default function Dashboard({
                     alignItems: 'center',
                     gap: '4px'
                   }}
-                  title={`Drill ${skillErrors.length} missed ${activeSkill.name} questions`}
+                  title={`Practice ${skillErrors.length} missed ${activeSkill.name} questions fresh from scratch`}
                 >
-                  <span>▶</span> Serial Drill ({skillErrors.length})
+                  <span>🎯</span> Drill Fresh ({skillErrors.length})
                 </button>
               )}
             </div>
@@ -538,14 +538,24 @@ export default function Dashboard({
                 ✨ AI Recommendations & Drills
               </button>
               {skillErrors.length > 0 && (
-                <button 
-                  className="btn btn-danger" 
-                  style={{ padding: '9px 16px', fontSize: '0.92rem' }}
-                  onClick={() => onStartSerialErrorDrill(skillErrors)}
-                  title={`Review ${skillErrors.length} missed ${activeSkill.name} questions`}
-                >
-                  Review Missed Questions ({skillErrors.length})
-                </button>
+                <>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ padding: '9px 16px', fontSize: '0.92rem', background: '#2563eb' }}
+                    onClick={() => onStartSerialErrorDrill(skillErrors, { resetForPractice: true })}
+                    title={`Practice ${skillErrors.length} missed questions fresh from scratch`}
+                  >
+                    🎯 Practice Missed Fresh ({skillErrors.length})
+                  </button>
+                  <button 
+                    className="btn btn-danger" 
+                    style={{ padding: '9px 16px', fontSize: '0.92rem' }}
+                    onClick={() => onStartSerialErrorDrill(skillErrors, { resetForPractice: false })}
+                    title={`Review ${skillErrors.length} missed questions with previous answers marked`}
+                  >
+                    📖 Review Missed ({skillErrors.length})
+                  </button>
+                </>
               )}
               <button 
                 className="btn btn-primary" 
@@ -606,7 +616,7 @@ export default function Dashboard({
                     Guest Preview Mode: Free Access to First {GUEST_QUESTION_LIMIT_PER_SKILL} Questions per Module
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#0284c7', marginTop: '2px', lineHeight: 1.4 }}>
-                    You are exploring <strong>{activeSkill.name}</strong>. Sign in to unlock all 314 authentic questions. <em>All your guest answers and missed question logs will automatically sync and back up to your account with zero data loss!</em>
+                    You are exploring <strong>{activeSkill.name}</strong>. Sign in to unlock all {questions.length} authentic questions. <em>All your guest answers and missed question logs will automatically sync and back up to your account with zero data loss!</em>
                   </div>
                 </div>
               </div>
@@ -626,7 +636,7 @@ export default function Dashboard({
                   flexShrink: 0
                 }}
               >
-                Sign In / Unlock All 314 →
+                Sign In / Unlock All {questions.length} →
               </button>
             </div>
           )}

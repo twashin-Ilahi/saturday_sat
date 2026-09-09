@@ -124,7 +124,7 @@ export default function GuestLockModal({
             }}
           >
             <strong style={{ color: '#0f172a' }}>Why is this locked?</strong><br />
-            You're currently practicing in an offline guest session. You can practice the first <strong>{freeLimit} questions</strong> of {skillName} for free. To unlock the remaining <strong>{Math.max(0, totalSkillQuestions - freeLimit)} questions</strong> in this module (and all <strong>314 questions</strong> platform-wide), create a free account or sign in.
+            You're currently practicing in an offline guest session. You can practice the first <strong>{freeLimit} questions</strong> of {skillName} for free. To unlock the remaining <strong>{Math.max(0, totalSkillQuestions - freeLimit)} questions</strong> in this module (and all <strong>566 questions</strong> platform-wide), create a free account or sign in.
           </div>
 
           {/* Account Benefits */}
@@ -144,7 +144,7 @@ export default function GuestLockModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '9px', fontSize: '0.82rem', color: '#1e293b' }}>
                 <span style={{ color: '#16a34a', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                <span><strong>All 314 Authentic Questions:</strong> Transitions (70), Rhetorical Synthesis (82), Boundaries (84), and Form & Structure (78).</span>
+                <span><strong>All 566 Authentic Questions:</strong> Transitions (70), Rhetorical Synthesis (82), Standard English Conventions (162), and Information & Ideas (252).</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '9px', fontSize: '0.82rem', color: '#1e293b' }}>
                 <span style={{ color: '#16a34a', fontWeight: 700, flexShrink: 0 }}>✓</span>

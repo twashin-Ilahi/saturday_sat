@@ -6,7 +6,7 @@ export default function ProfileView({
   user,
   cloudSyncStatus = 'idle',
   currentState,
-  totalQuestions = 314,
+  totalQuestions = 566,
   onUpdateUser,
   onReturnToDashboard,
   onStartPractice,
