@@ -397,16 +397,16 @@ export default function BluebookTestView({
     "[BLANK]",
     '<span style="display:inline-block; min-width:60px; border-bottom:2px solid #000; margin:0 4px; vertical-align:bottom;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'
   );
-  if (renderedPassage.includes('\n•') || renderedPassage.includes('\n-') || renderedPassage.includes('\n\n•')) {
-    const blocks = renderedPassage.split(/\n\n+/);
-    renderedPassage = blocks.map(block => {
-      if (block.includes('•') || block.includes('-')) {
-        const items = block.split('\n').filter(Boolean).map(item => `<li>${item.replace(/^[•\-\*]\s*/, '')}</li>`).join('');
-        return `<ul style="margin: 12px 0 16px 24px; padding-left: 6px; list-style-type: disc; line-height: 1.8;">${items}</ul>`;
-      }
-      return `<p style="margin-bottom: 12px; line-height: 1.85;">${block.replace(/\n/g, '<br/>')}</p>`;
-    }).join('');
-  }
+
+  const blocks = renderedPassage.split(/\n\n+/);
+  renderedPassage = blocks.map(block => {
+    if (block.includes('•') || block.trim().startsWith('-')) {
+      const items = block.split('\n').filter(Boolean).map(item => `<li>${item.replace(/^[•\-\*]\s*/, '')}</li>`).join('');
+      return `<ul style="margin: 12px 0 16px 24px; padding-left: 6px; list-style-type: disc; line-height: 1.8;">${items}</ul>`;
+    }
+    return `<p style="margin-bottom: 12px; line-height: 1.85;">${block.replace(/\n/g, '<br/>')}</p>`;
+  }).join('');
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#ffffff', color: '#111827', overflow: 'hidden', userSelect: 'text' }}>
@@ -818,7 +818,7 @@ export default function BluebookTestView({
           alignItems: 'center',
           gap: '12px'
         }}>
-          <span>{practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : (practiceMode === 'focused' ? `🎯 FOCUSED PRACTICE: ${practiceFilterMeta?.difficulty || ''}` : "THIS IS A PRACTICE TEST")}</span>
+          <span>{practiceMode === 'serial-error' ? "🔁 SERIAL ERROR RECOVERY DRILL" : (practiceMode === 'focused' ? `🎯 FOCUSED PRACTICE: ${practiceFilterMeta?.label || ''}` : "THIS IS A PRACTICE TEST")}</span>
           {practiceMode === 'serial-error' && onResetAllDrillQuestions && (
             <button
               onClick={(e) => {

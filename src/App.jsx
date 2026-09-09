@@ -655,14 +655,18 @@ export default function App() {
   };
 
   const handleStartPractice = (index = 0, filterContext = null) => {
-    if (filterContext && filterContext.difficulty && filterContext.difficulty !== "All" && Array.isArray(filterContext.subsetIndices) && filterContext.subsetIndices.length > 0) {
+    if (filterContext && Array.isArray(filterContext.subsetIndices) && filterContext.subsetIndices.length > 0) {
       const subset = filterContext.subsetIndices;
       const subIdx = Math.max(0, subset.indexOf(index));
       setFocusedSubset(subset);
       setFocusedCurrentIndex(subIdx);
+      const difficultyText = filterContext.difficulty && filterContext.difficulty !== "All" ? ` (${filterContext.difficulty})` : "";
+      const label = filterContext.skill ? `${filterContext.skill}${difficultyText}` : (filterContext.difficulty || "Subset");
+      
       setFocusedMeta({
         difficulty: filterContext.difficulty,
-        label: `${filterContext.difficulty} Difficulty`,
+        skill: filterContext.skill,
+        label: label,
         total: subset.length
       });
       setPracticeMode('focused');

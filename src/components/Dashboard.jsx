@@ -580,9 +580,11 @@ export default function Dashboard({
                     return;
                   }
                   
-                  const filterContext = difficultyFilter !== "All"
-                    ? { difficulty: difficultyFilter, subsetIndices: targetList.map(sq => sq.originalIndex) }
-                    : null;
+                  const filterContext = { 
+                    difficulty: difficultyFilter, 
+                    skill: activeSkill.name,
+                    subsetIndices: targetList.map(sq => sq.originalIndex) 
+                  };
                   onStartPractice(targetIdx, filterContext);
                 }}
               >
@@ -773,9 +775,11 @@ export default function Dashboard({
                         setShowGuestLockModal(true);
                         return;
                       }
-                      const filterContext = difficultyFilter !== "All"
-                        ? { difficulty: difficultyFilter, subsetIndices: filteredQuestions.map(sq => sq.originalIndex) }
-                        : null;
+                      const filterContext = { 
+                        difficulty: difficultyFilter,
+                        skill: activeSkill.name,
+                        subsetIndices: filteredQuestions.map(sq => sq.originalIndex)
+                      };
                       onJumpToQuestion(idx, filterContext);
                     }}
                     title={isLocked ? `Q${idx + 1} (${q.difficulty}) - Locked for Guest (Login Required)` : `Q${idx + 1} (${q.difficulty}) - ${q.id} ${isChecked ? (isCorrect ? '- Correct' : '- Incorrect') : '- Unanswered'}`}
