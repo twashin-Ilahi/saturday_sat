@@ -398,10 +398,37 @@ export default function BluebookTestView({
     '<span style="display:inline-block; min-width:60px; border-bottom:2px solid #000; margin:0 4px; vertical-align:bottom;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'
   );
 
+  // Clean up incorrectly wrapped sentences from PDF extraction
+  // 1. Merge if line ends in a letter/comma and next line starts with a lowercase letter
+  renderedPassage = renderedPassage.replace(/([a-zA-Z,;—])\s*\n+\s*([a-z])/g, '$1 $2');
+  
+  // 2. Merge if a line is long (likely a sentence wrap) and doesn't end with sentence-ending punctuation
+  const lines = renderedPassage.split(/\n+/);
+  if (lines.length > 0) {
+    let cleanedLines = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      const prev = lines[i-1].trim();
+      const curr = lines[i].trim();
+      if (!prev || !curr) continue;
+      const endsWithSentenceEnd = /[.!?:"”]$/.test(prev);
+      
+      if (!endsWithSentenceEnd && prev.length > 65) {
+        cleanedLines[cleanedLines.length - 1] += ' ' + curr;
+      } else {
+        cleanedLines.push(curr);
+      }
+    }
+    renderedPassage = cleanedLines.join('\n\n');
+  }
+
+  // Format blocks into paragraphs or lists
   const blocks = renderedPassage.split(/\n\n+/);
   renderedPassage = blocks.map(block => {
     if (block.includes('•') || block.trim().startsWith('-')) {
-      const items = block.split('\n').filter(Boolean).map(item => `<li>${item.replace(/^[•\-\*]\s*/, '')}</li>`).join('');
+      const items = block.split('\n').filter(Boolean).map(item => {
+        const cleanedItem = item.replace(/^[•\-\*]\s*/, '');
+        return `<li>${cleanedItem}</li>`;
+      }).join('');
       return `<ul style="margin: 12px 0 16px 24px; padding-left: 6px; list-style-type: disc; line-height: 1.8;">${items}</ul>`;
     }
     return `<p style="margin-bottom: 12px; line-height: 1.85;">${block.replace(/\n/g, '<br/>')}</p>`;
