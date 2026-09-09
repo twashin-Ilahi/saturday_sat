@@ -26,10 +26,15 @@ export default function Dashboard({
   onExport,
   onImport,
 }) {
-  const [selectedSection, setSelectedSection] = useState("Reading and Writing");
-  const [selectedSkillId, setSelectedSkillId] = useState("transitions");
-  const [difficultyFilter, setDifficultyFilter] = useState("All"); // All | Easy | Medium | Hard
-  const [statusFilter, setStatusFilter] = useState("All"); // All | Unanswered | Missed | Correct
+  const [selectedSection, setSelectedSection] = useState(() => localStorage.getItem("sat_dashboard_section") || "Reading and Writing");
+  const [selectedSkillId, setSelectedSkillId] = useState(() => localStorage.getItem("sat_dashboard_skill") || "transitions");
+  const [difficultyFilter, setDifficultyFilter] = useState(() => localStorage.getItem("sat_dashboard_diff") || "All");
+  const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem("sat_dashboard_status") || "All");
+
+  React.useEffect(() => { localStorage.setItem("sat_dashboard_section", selectedSection); }, [selectedSection]);
+  React.useEffect(() => { localStorage.setItem("sat_dashboard_skill", selectedSkillId); }, [selectedSkillId]);
+  React.useEffect(() => { localStorage.setItem("sat_dashboard_diff", difficultyFilter); }, [difficultyFilter]);
+  React.useEffect(() => { localStorage.setItem("sat_dashboard_status", statusFilter); }, [statusFilter]);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showGuestLockModal, setShowGuestLockModal] = useState(false);
