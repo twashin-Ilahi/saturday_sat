@@ -402,7 +402,7 @@ export default function BluebookTestView({
   // 1. Merge if line ends in a letter/comma and next line starts with a lowercase letter
   renderedPassage = renderedPassage.replace(/([a-zA-Z,;—])\s*\n+\s*([a-z])/g, '$1 $2');
   
-  // 2. Merge if a line is long (likely a sentence wrap) and doesn't end with sentence-ending punctuation
+  // 2. Merge if a line is long (likely a sentence wrap) and doesn't end with sentence-ending punctuation or an HTML tag
   const lines = renderedPassage.split(/\n+/);
   if (lines.length > 0) {
     let cleanedLines = [lines[0]];
@@ -410,9 +410,10 @@ export default function BluebookTestView({
       const prev = lines[i-1].trim();
       const curr = lines[i].trim();
       if (!prev || !curr) continue;
-      const endsWithSentenceEnd = /[.!?:"”]$/.test(prev);
+      const endsWithSentenceEnd = /[.!?:"”>]$/.test(prev);
+      const currSeemsLikeTableRow = /^[0-9]/.test(curr) || /[0-9]$/.test(curr);
       
-      if (!endsWithSentenceEnd && prev.length > 65) {
+      if (!endsWithSentenceEnd && prev.length > 65 && !currSeemsLikeTableRow) {
         cleanedLines[cleanedLines.length - 1] += ' ' + curr;
       } else {
         cleanedLines.push(curr);
@@ -424,7 +425,11 @@ export default function BluebookTestView({
   // Format blocks into paragraphs or lists
   const blocks = renderedPassage.split(/\n\n+/);
   renderedPassage = blocks.map(block => {
-    if (block.includes('•') || block.trim().startsWith('-')) {
+    const trimmed = block.trim();
+    if (trimmed.startsWith('<div') && trimmed.endsWith('</div>')) {
+      return trimmed; // Return raw HTML blocks (like graphs) without <p> wrappers
+    }
+    if (block.includes('•') || trimmed.startsWith('-')) {
       const items = block.split('\n').filter(Boolean).map(item => {
         const cleanedItem = item.replace(/^[•\-\*]\s*/, '');
         return `<li>${cleanedItem}</li>`;
